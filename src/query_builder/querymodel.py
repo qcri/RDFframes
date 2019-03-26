@@ -1,0 +1,380 @@
+import weakref
+from orderedset import OrderedSet
+from collections import OrderedDict
+
+from src.utils.helper_functions import is_uri
+from src.query_builder.sparqlbuilder import SPARQLBuilder
+
+
+__author__ = """
+Ghadeer Abuoda <gabuoda@hbku.edu.qa>
+Aisha Mohamed <ahmohamed@qf.org.qa>
+"""
+
+
+class QueryModel(object):
+    """
+       The QueryModel class represents the intermediate object between the DAG graph and the ultimate SPARQL query.
+       """
+    def __init__(self):
+        """
+        Initializing the QueryModel
+        QueryModel is a representation of a sparql query. It has a place holder for every
+        possible componne of a sparql query
+        """
+
+        self.prefixes = {}          # a dictionary of prefix_name: prefix_URI
+
+        self.variables = set()      # a set of all variables in the query.
+        self.from_clause = []       # a list of graph URIs
+        self.filter_clause = {}     # a dictionary of column name as key and associated conditions as a value
+        self.groupBy_columns = OrderedSet() # a set of columns for the groupby modifier, it's a subset of self.variables
+        self.aggregate_clause = {}  # a dictionary of new_aggregation_col_name: (aggregate function, src_column_name)
+        self.having_clause = {}     # a dictionary of new_aggregation_col_name : condition
+        self.order_clause = OrderedDict() # a dictionary of columns and the specifier (ASC, DSC)
+
+        self.limit = 0              # represents the number of rows to be returned by the query.
+        self.offset = 0             # represents the offset in terms of the number of rows
+
+        self.triples = []           # list of triples in the form (subject, predicate, object, is_optional flag)
+        self.subqueries = []        # list of subqueries
+
+        self.select_columns = OrderedSet()    # list of columns to be selected ,  set()
+        self.auto_generated_select_columns = OrderedSet()
+
+        self.querybuilder = None # a SPARQLbuilder that converts the query model to a string
+        self.parent_query_model = None # a pointer to the parent query if this is a subquery
+
+    def add_prefixes(self, prefixes):
+        """
+        Add a dictionary of prefixs to the sparql queries
+        :param prefixes: a dictionary of prefixes where the key is the prefix name and the value is the prefix URI
+        """
+        if not self.is_subquery():
+            self.prefixes.update(prefixes)
+
+    def add_graphs(self, graphs):
+        """
+        Add a list of graphs to the from clause
+        :param graphs: a list of graphs' URIs
+        """
+        #if not self.is_subquery():
+        self.from_clause.extend(graphs)
+
+    def add_triple(self, subject, predicate, object, is_optional=False):
+        """
+         add a triple to the list of the triples in the query model.
+         :param subject: subject of the triple
+         :param object: object of the triple
+         :param predicate: predicate of the triple
+         :param is_optional: a flag indicating if the triple is optional or not
+         """
+        if (subject, predicate, object, is_optional) not in self.triples:
+            self.triples.append((subject, predicate, object, is_optional))
+            self.add_variable(subject)
+            self.add_variable(object)
+            self.add_variable(predicate)
+
+    def add_subquery(self, subquery):   # subquery type is query_builder
+        """
+        adds a subquery to the query model
+        :param subquery:
+        :return:
+        """
+        self.subqueries.append(subquery)
+        subquery.parent_query_model = weakref.ref(self)
+        subquery.from_clause.clear()
+
+    def add_variable(self, col_name):
+        """
+        add a variable (column name) to the list of the variables of a single SPARQL query (mainly to represent
+         Select variables) .
+         :param col_name: represents the column name after being parced from the corresponding DAG node.
+
+        """
+        if not is_uri(col_name) and col_name.find(":") < 0:
+            self.variables.add(col_name)
+
+    def add_group_columns(self, col_names):
+        """
+         add a columns  to the list of the group by columns.
+        :param col_names: represents the column name that will group the records based on it.
+        """
+        self.groupBy_columns = self.groupBy_columns.union(col_names)
+
+    def add_aggregate_pair(self, src_col_name, func_name, new_col_name, agg_param=None):
+        """
+         add a pair of column, function name to the list that forms the aggregation clause
+         :param src_col_name: the column name to be aggregated
+         :param new_col_name: the new column name
+         :param func_name: represents aggregation function on the corresponding column
+         :param agg_param: aggregation parameter like distinct with count
+         """
+        if new_col_name not in self.aggregate_clause:
+            self.aggregate_clause[new_col_name] = []
+        self.aggregate_clause[new_col_name].append((func_name, agg_param, src_col_name))
+        self.variables.add(new_col_name)
+
+    def add_filter_condition(self, col_name, condition):
+        """
+        add a pair of (column, condition) to the list of conditions of the filter clause
+        :param col_name: represents the column name at which the condition will be applied.
+        :param condition: represents the filtering criterion ( Operator, Value)
+         """
+        if col_name not in self.variables:
+            self.add_variable(col_name)
+        if col_name in self.filter_clause:
+            self.filter_clause[col_name].append(condition)
+        else:
+            self.filter_clause[col_name] = [condition]
+
+    def add_having_condition(self, agg_col_name, condition):
+        """
+        add a pair of (column, condition) to the list of conditions of the filter clause
+        :param agg_col_name: represents the column name where the filtering will occur.
+        :param condition: represents the having criterion ( Operator Value)
+        """
+        if agg_col_name not in self.having_clause:
+            self.having_clause[agg_col_name] = []
+        func_name, agg_param, src_col_name = self.aggregate_clause[agg_col_name][0]
+        self.having_clause[agg_col_name].append([func_name, agg_param, src_col_name, condition])
+
+    def add_order_columns(self, sorting_cols):
+        """
+        add a pair of (column, specifier) to the list of sorting options.
+        :param sorting_cols: list of pairs of (column name, sort order) that will be used for sorting
+        """
+        for col, order in sorting_cols.items():
+            self.order_clause[col] = order
+
+    def set_limit(self, limit):
+        """
+        :param limit: the value that represents the number of results to be returned
+        :return: none
+        """
+        self.limit = limit
+
+    def set_offset(self, offset):
+        """
+
+        :param offset: the value that represents the number of NEXT results to be returned
+        :return: none
+        """
+        self.offset = offset
+
+    def add_select_column(self, col_name):
+        """
+        :param col_name:
+        :return:
+        """
+        self.select_columns.add(col_name)
+
+    def auto_add_select_column(self, col_name):
+        self.auto_generated_select_columns.add(col_name)
+
+    def rem_select_column(self, col_name):
+        self.select_columns.remove(col_name)
+
+    def transfer_grouping_to_subquery(self, subquery):
+        grouping_cols = self.groupBy_columns
+
+        for g_col in grouping_cols:
+            involved_triples = [triple for triple in self.triples
+                                if g_col == triple[0] or g_col == triple[2]]
+            for t in involved_triples:
+                subquery.add_triple(*t)
+
+        subquery.groupBy_columns = OrderedSet(grouping_cols)
+        subquery.select_columns = set(grouping_cols)
+        subquery.having_clause = dict(self.having_clause)
+        subquery.aggregate_clause = dict(self.aggregate_clause)
+
+        self.groupBy_columns.clear()
+        self.having_clause.clear()
+        self.aggregate_clause.clear()
+        self.add_subquery(subquery)
+
+    def wrap_in_a_parent_query(self):
+        """
+        wraps the current query in a subquery and returns a new query model that contains one graph pattern which is
+        the current query as a subquery
+        :return: a new QueryModel that wraps the current query model
+        """
+        # initialize the parent query with the graph uri, the prefixes and the variables in the inner query
+        parent_query = QueryModel()
+        parent_query.add_prefixes(self.prefixes)
+        parent_query.add_graphs(self.from_clause)
+        # TODO: Decide which variables to add to the parent query
+        # TODO: Decide on which select columns to pass to the parent query(select columns added by user should be added)
+        to_add_to_select = []
+        to_rem_from_select = []
+        for var in self.select_columns:
+            # TODO: if select column in groupby or aggregation: add it to selected columns by the user in inner query
+            #  and the outer query.
+            #  else: find the relevant graph patterns and move them to the outer query and
+            #  remove the select column from select clause in inner query
+            if var in self.groupBy_columns or self.aggregate_clause:
+                to_add_to_select.append(var)
+            else:
+                # add basic graph patterns
+                involved_triples = [triple for triple in self.triples
+                                        if var == triple[0] or var == triple[2]]
+                for t in involved_triples:
+                    parent_query.add_triple(*t)
+                # add filter patterns
+                if var in self.filter_clause:
+                    for condition in self.filter_clause[var]:
+                        parent_query.add_filter_condition(var, condition)
+                # add subqueries
+                # TODO: Is it query.select or query.variables
+                for subquery in self.subqueries:
+                    if var in subquery.select_columns:
+                        parent_query.add_subquery(subquery)
+                to_rem_from_select.append(var)
+            parent_query.add_select_column(var)
+            parent_query.add_variable(var)
+
+        for var in to_add_to_select:
+            self.add_select_column(var)
+        for var in to_rem_from_select:
+            self.rem_select_column(var)
+
+        # set the limit and offset of the outer query. don't allow limit and offset in the inner query
+        parent_query.set_limit(self.limit)
+        parent_query.set_offset(self.offset)
+        parent_query.add_order_columns(self.order_clause)
+        # add self to the subqueries in the parent subquery
+        parent_query.add_subquery(self)
+        self.parent_query_model = parent_query
+
+        # clean the inner query (self)
+        self.prefixes = {}
+        self.from_clause = []
+        self.limit = 0
+        self.offset = 0
+        self.order_clause = OrderedDict()
+        self.from_clause = []
+
+        return parent_query
+
+    def transfer_select_triples_to_parent_query(self, parent_ds_cols):
+        # transfer the order by, the filter clause,
+        for col in parent_ds_cols:
+            triples_list = [subquery.triples for subquery in self.subqueries]
+            involved_triples = [triple for triples in triples_list for triple in triples  if col == triple[0] or col == triple[2]]
+            for t in involved_triples:
+                if t not in self.triples:
+                    self.add_triple(*t)
+
+
+    def is_defined_variable(self, var):
+        return var in self.variables or any([subquery.is_defined_variable(var) for subquery in self.subqueries])
+
+    def is_grouped(self):
+        return len(self.groupBy_columns) > 0
+
+    def is_sorted(self):
+        return len(self.order_clause) > 0
+
+    def to_sparql(self):
+        self.validate()
+        self.querybuilder = SPARQLBuilder()
+        return self.querybuilder.to_sparql(self)
+
+    def is_aggregate_col(self, src_col_name):
+        if src_col_name in self.aggregate_clause:
+            return True
+        #for col, lst in self.aggregate_clause.items():
+        #   if src_col_name == lst[0][2]:
+        #       return True
+        return False
+
+    def is_subquery(self):
+        return self.parent_query_model is not None
+
+    def all_variables(self):
+        if len(self.subqueries) == 0:
+            return self.variables
+
+        all_vars = set().union(self.variables)
+
+        for subq in self.subqueries:
+            all_vars = all_vars.union(subq.all_variables())
+
+        return all_vars
+
+    def is_valid_prefix(self, prefix):
+        if prefix in self.prefixes.keys():
+            return True
+        else:
+            return False
+
+    def validate(self):
+        """
+        validate the columns and parameters data in the query model and reports and inconsistencies.
+        1) validate the namespance in the preidcate to match the given in the graphs' prefixes
+        2)
+        :return: True if valid and False if not
+        """
+        ## add the aggregation to expandable group
+
+        ## group by in expandable dataset, raise exception if the select cols not in the group by
+        ### validate the prefix in the triple
+        if self.parent_query_model is None:
+            for triple in self.triples:
+                if not is_uri(triple[1]):
+                    if triple[1].find(":") >= 0:
+                        prefix= triple[1].split(":")
+                        if(len(prefix)>=1):
+                            if not self.is_valid_prefix(prefix[0]):
+                                raise Exception("Not a valid Prefix in triple {}".format(triple))
+                    else:
+                        # predicate is a variable
+                        pass
+
+        if self.parent_query_model is None:
+            for col_name in  self.filter_clause:
+                if col_name.find(':') != -1:
+                    prefix = col_name.split(":")
+                    if (len(prefix) >= 1):
+                        if not self.is_valid_prefix(prefix[0]):
+                            raise Exception("Not a valid Prefix in filter {}".format(col_name))
+
+
+        for subquery in self.subqueries:
+            subquery_variables_set = set(subquery.variables)
+            my_variables_set = set(self.variables)
+            intersection_variables = my_variables_set.intersection(subquery_variables_set)
+            if len(intersection_variables) < 0:
+                raise Exception("No common variables between the main query and the subquery")
+
+        all_vars = self.all_variables()
+        missing_vars = set()
+
+        for sel_col in self.select_columns:
+            if sel_col not in all_vars:
+                missing_vars.add(sel_col)
+
+        if len(missing_vars) > 0:
+            raise Exception('Variables {} are not defined in the query\'s body'.format(', '.join(missing_vars)))
+
+        # filter_clause validation
+        for col_name in  self.filter_clause:
+            if col_name not in all_vars:
+                raise Warning('Cannot add filter on {}, is not part of the query variables'.format(col_name))
+
+        for col in self.order_clause:
+            if col not in self.variables:
+                raise Warning('{} cannot be a sorting column, it should be part of variables'.format(col))
+
+        for col_name in self.having_clause:
+            if not self.is_aggregate_col(col_name):
+                raise Warning('{} is not an aggregate column, cannot be added to having clause'.format(col_name))
+
+    def __repr__(self):
+        return self.to_sparql()
+
+    def __str__(self):
+        return self.to_sparql()
+
+
