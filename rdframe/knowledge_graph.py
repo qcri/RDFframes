@@ -1,5 +1,3 @@
-"""Main class represents a SPARQL query that generates a table like dataset
-"""
 from rdframe.dataset.expandable_dataset import ExpandableDataset
 from rdframe.dataset.rdfpredicate import RDFPredicate, PredicateDirection
 from rdframe.dataset.aggregation_fn_data import AggregationData
