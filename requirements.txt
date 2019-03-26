@@ -8,7 +8,6 @@ networkx==2.2
 numpy==1.15.4
 orderedset==2.0.1
 pandas==0.23.4
-py-dag==3.0.1
 pyodbc==4.0.23
 pyparsing==2.2.0
 python-dateutil==2.7.5
@@ -17,4 +16,3 @@ rdflib==4.2.2
 six==1.11.0
 SPARQLWrapper==1.8.2
 SQLAlchemy==1.2.7
-virtuoso==0.12.6
