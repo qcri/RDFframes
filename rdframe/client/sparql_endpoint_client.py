@@ -1,7 +1,7 @@
 import sys
 import io
 
-from SPARQLWrapper import SPARQLWrapper, CSV
+from SPARQLWrapper import SPARQLWrapper, CSV, JSON, TSV
 import pandas as pd
 
 from rdframe.utils.constants import _TIMEOUT, ReturnFormat, _MAX_ROWS
@@ -10,7 +10,7 @@ from rdframe.client.client import Client
 __author__ = "Aisha Mohamed <ahmohamed@qf.org.qa>"
 
 
-class SPARQLWrapperClient(Client):
+class SPARQLEndpointClient(Client):
     """
     class for sparql client that handles communication with a sparql end-point
     over http using the sparql wrapper library.
@@ -22,19 +22,8 @@ class SPARQLWrapperClient(Client):
         :param endpoint: string of the SPARQL endpoint's URI hostname:port
         :type endpoint: string
         """
-        #TODO: check that the endpoint string is a URI
-        super(SPARQLWrapperClient, self).__init__(endpoint=endpoint)
+        super(SPARQLEndpointClient, self).__init__(endpoint=endpoint)
         self.endpoint = endpoint
-
-    def is_alive(self, endpoint=None):
-        """
-        :param endpoint string of the SPARQL endpoint's URI
-        :type endpoint string
-        :return if endpoint is not None return Ture if endpoint is alive else
-            return False. if endpoint is None return True if self.endpoint is
-            alive and False otherwise.
-        """
-        pass
 
     def get_endpoint(self):
         """
@@ -49,7 +38,7 @@ class SPARQLWrapperClient(Client):
         """
         self.endpoint = endpoint
 
-    def execute_query(self, query, timeout=_TIMEOUT, limit=_MAX_ROWS, return_format=ReturnFormat.DataFrame, output_file=None):
+    def execute_query(self, query, timeout=_TIMEOUT, limit=_MAX_ROWS, return_format=ReturnFormat.CSV, output_file=None):
         """
         Connects to a sparql endpoint
         :param query:
@@ -62,8 +51,8 @@ class SPARQLWrapperClient(Client):
         offset = 0
         results_string = "" # where all the results are concatenated
         header = ""
-        continue_straming = True
-        while continue_straming:
+        continue_streaming = True
+        while continue_streaming:
             if limit > 1:
                 query_string = query+" OFFSET {} LIMIT {}".format(str(offset), str(limit))
             else:
@@ -73,11 +62,12 @@ class SPARQLWrapperClient(Client):
             try:
                 client.setReturnFormat(CSV)
                 res = client.query().convert().decode("utf8").split("\n",1)
+
                 header = res[0]
                 results = res[1] # string
                 # if the number of rows is less then the maximum number of rows
                 if results.count('\n') < _MAX_ROWS:
-                    continue_straming = False
+                    continue_streaming = False
                 continue_streaming = True
                 offset += limit
             except Exception as e:

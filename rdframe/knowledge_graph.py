@@ -17,7 +17,7 @@ class KnowledgeGraph:
     applying any operations on them
     """
 
-    def __init__(self, graph_name, graph_uri, prefixes=None):
+    def __init__(self, graph_name=None, graph_uri=None, prefixes=None):
         """
         Initializes the object with one graph. Other graphs can be added using
         add_graph method.
@@ -45,8 +45,16 @@ class KnowledgeGraph:
         :type prefixes: a dictionary where the key and value are strings.
         :return:
         """
-        self.graphs[graph_name] = graph_uri
         if graph_name is not None:
+            if len(graph_name) <= 0:
+                raise Exception("Graph name cannot be an empty string.")
+            self.graphs[graph_name] = graph_uri
+            if prefixes is not None:
+                self.__add_graph_prefixes(graph_name, prefixes)
+            else:
+                self.__load_default_prefixes(graph_name)
+        else:
+            graph_name = ""
             if prefixes is not None:
                 self.__add_graph_prefixes(graph_name, prefixes)
             else:

@@ -11,7 +11,10 @@ class Queue2QueryModelConverter(object):
         self.dataset = dataset
         self.query_model = QueryModel()
         # add the graph URIs
-        self.query_model.add_graphs(self.dataset.graph.graphs.values())
+        if self.dataset.graph.graphs is not None:
+            self.query_model.add_graphs(self.dataset.graph.graphs.values())
+        else:
+            self.query_model.add_graphs([])
         # add the prefixes
         for prefixes in self.dataset.graph.graph_prefixes.values():
             self.query_model.add_prefixes(prefixes)
