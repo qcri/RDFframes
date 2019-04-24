@@ -26,7 +26,8 @@ graph = KnowledgeGraph(prefixes={
                            })
 ```
 
-Then create a ``Dataset`` using one of our convenience functions. 
+Then create a ``Dataset`` using one of our convenience functions. All the convenience functions are methods in the
+```KnowledgeGraph``` class. 
 For example, the following code retrieves all instances of the class ``swrc:InProceedings``:
 
 ```python
