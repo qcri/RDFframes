@@ -61,5 +61,23 @@ grouped_dataset = grouped_dataset.count(aggregation_fn_data=[AggregationData('pa
         .filter(conditions_dict={'papers_count': ['>= 20']})
 ```
 
+## Convenience Functions to create an initial dataset
+
+To create an initial ```Dataset```, you need to use one of the convenience functions. The API 
+provides convenience functions that can be used by most of the machine learning and data analytics tasks including:
+
+```python
+KnowledgeGraph.classes_and_freq()
+```
+This function retrieves all the classes in the graph and all the number of instances of each class.
+It returns a table of two columns, the first one contains the name of the class and the second one
+contains the name of the frequency of the clases.
+```python
+KnowledgeGraph.features_and_freq(class_name)
+```
+Retrieves all the features of the instances of the class ```class_name``` and how many instances have each features.
+This is critical for many machine learning tasks as knowing how many observed features of entities helps us decide 
+on which features to use for.
+
 
 
