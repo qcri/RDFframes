@@ -48,14 +48,15 @@ class Dataset:
         """
         pass
 
-    def join(self, other_dataset, join_col_name, other_dataset_join_col_name=None, join_type=JoinType.InnerJoin):
+    def join(self, dataset2, join_col_name1, join_col_name2=None, new_column_name=None, join_type=JoinType.InnerJoin):
         """
-        Join the self dataset with the passed dataset based on a common column holding the same name
-        :param other_dataset: the other dataset to merge with
-        :param join_col_name: the join column of the self dataset
-        :param other_dataset_join_col_name: the join column in the other dataset, if None use join_col_name
-        :param join_type: the join operation type: inner, left outer, right outer, by default inner join is performed
-        :return: the same dataset object, but logically with the columns from other_dataset appended to myself.
+        Join this dataset with datset 2.
+        :param dataset2:
+        :param join_col_name1:
+        :param join_col_name2:
+        :param new_column_name:
+        :param join_type:
+        :return:
         """
         pass
 
@@ -211,6 +212,11 @@ class Dataset:
     def add_column(self, column):
         if not is_uri(column) and column.find(":") < 0:
             self.columns.append(column)
+
+    def rem_column(self, column):
+        if column in self.columns:
+            self.columns.remove(column)
+
 
 
 

@@ -124,19 +124,15 @@ class SPARQLBuilder(object):
                 is_optional = False
                 for triple in self.query_model.triples:
                     if not is_uri(triple[1]) and triple[1].find(":") < 0:
-                        triple = (triple[0], "?"+triple[1], triple[2], triple[3])
-                    if triple[3] is True:
-                        is_optional = True
-                        triple_string = "\t?%s %s ?%s" % (triple[0], triple[1], triple[2]) + " .\n"
-                        optional_string += triple_string
-                    else:
+                        triple = (triple[0], "?"+triple[1], triple[2])
                         if ':' in triple[2]:  # is a URI not a variable
                             where_string += '\t?%s %s %s' % (triple[0], triple[1], triple[2]) + " .\n"
                         else:
                             where_string += '\t?%s %s ?%s' % (triple[0], triple[1], triple[2]) + " .\n"
                 optional_string += "}"
-                if is_optional is True:
-                    where_string += '\t'.join(('\n'+optional_string.lstrip()).splitlines(True))
+                # TODO: optional_string = ??
+                #if is_optional is True:
+                #    where_string += '\t'.join(('\n'+optional_string.lstrip()).splitlines(True))
                 where_string += self.add_filter_clause()
                 if len(self.query_model.subqueries) > 0:
                     where_string += "\t\t" + self.add_subqueries()

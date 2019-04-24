@@ -9,6 +9,7 @@ class JoinType:
     InnerJoin = 'InnerJoin'
     LeftOuterJoin = 'LeftOuterJoin'
     RightOuterJoin = 'RightOuterJoin'
+    OuterJoin = "OuterJoin"
 
 
 class SortingOrder:

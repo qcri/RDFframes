@@ -7,6 +7,7 @@ from rdframe.query_buffer.query_operators.shared.expansion_operator import Expan
 from rdframe.query_buffer.query_operators.shared.filter_operator import FilterOperator
 from rdframe.query_buffer.query_operators.shared.groupby_operator import GroupByOperator
 from rdframe.query_buffer.query_operators.shared.select_operator import SelectOperator
+from rdframe.query_buffer.query_operators.expandable.join_operator import JoinOperator
 from rdframe.dataset.dataset import Dataset
 from rdframe.dataset.grouped_dataset import GroupedDataset
 from rdframe.utils.constants import JoinType, AggregationFunction
@@ -58,16 +59,41 @@ class ExpandableDataset(Dataset):
 
         return self
 
-    def join(self, other_dataset, join_col_name, other_dataset_join_col_name=None, join_type=JoinType.InnerJoin):
+    def join(self, dataset2, join_col_name1, join_col_name2=None, new_column_name=None, join_type=JoinType.InnerJoin):
         """
-        Join the self dataset with the passed dataset based on a common column holding the same name
-        :param other_dataset: the other dataset to merge with
-        :param join_col_name: the join column of the self dataset
-        :param other_dataset_join_col_name: the join column in the other dataset, if None use join_col_name
-        :param join_type: the join operation type: inner, left outer, right outer, by default inner join is performed
-        :return: the same dataset object, but logically with the columns from other_dataset appended to myself.
+        Join this dataset with datset 2. The join key in this dataset is join_col_name1.
+        The join key is dataset2 is join_col_name2 if passed. Otherwise, it is assumed to be the same (join_col_name1).
+        If new_col_name is passed, rename the join column in the new dataset to new_Col_name,.
+        :param dataset2:
+        :param join_col_name1:
+        :param join_col_name2:
+        :param new_column_name:
+        :param join_type:
+        :return:
         """
-        pass
+        if join_col_name2 is None:
+            if join_col_name1 not in dataset2.columns:
+                raise Exception(
+                    "No join key specified for dataset2 and join_col_name1 is not in dataset2")
+            join_col_name2 = join_col_name1
+            new_column_name = join_col_name1
+        elif join_col_name1 != join_col_name2 and new_column_name is None:
+            new_column_name = join_col_name1
+        elif new_column_name is not None:
+            self.rem_column(join_col_name1)
+            self.add_column(new_column_name)
+
+        node = JoinOperator(self.name, dataset2, join_col_name1, join_col_name2, join_type, new_column_name)
+
+        # ds1.columns = union(ds1.columns, ds2.columns)
+        for col in dataset2.columns:
+            if col not in self.columns and col != join_col_name2:
+                self.add_column(col)
+
+        self.query_queue.append_node(node)
+
+        # TODO: if we allow the join between different graphs, Union the graphs
+
 
     def filter(self, conditions_dict):
         """

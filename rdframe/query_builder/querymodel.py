@@ -36,8 +36,10 @@ class QueryModel(object):
         self.limit = 0              # represents the number of rows to be returned by the query.
         self.offset = 0             # represents the offset in terms of the number of rows
 
-        self.triples = []           # list of triples in the form (subject, predicate, object, is_optional flag)
-        self.subqueries = []        # list of subqueries
+        self.triples = []           # list of basic graph patterns in the form (subject, predicate, object) tuples
+        self.optionals = []         # list of lists. Each list contains (subject, predicate, object) optional patterns
+        self.subqueries = []        # list of subqueries. each subquery is a query model
+        self.unions = []            # list of subqueries to union with the current query model
 
         self.select_columns = OrderedSet()    # list of columns to be selected ,  set()
         self.auto_generated_select_columns = OrderedSet()
@@ -58,10 +60,10 @@ class QueryModel(object):
         Add a list of graphs to the from clause
         :param graphs: a list of graphs' URIs
         """
-        #if not self.is_subquery():
-        self.from_clause.extend(graphs)
+        if not self.is_subquery():
+            self.from_clause.extend(graphs)
 
-    def add_triple(self, subject, predicate, object, is_optional=False):
+    def add_triple(self, subject, predicate, object):
         """
          add a triple to the list of the triples in the query model.
          :param subject: subject of the triple
@@ -69,8 +71,8 @@ class QueryModel(object):
          :param predicate: predicate of the triple
          :param is_optional: a flag indicating if the triple is optional or not
          """
-        if (subject, predicate, object, is_optional) not in self.triples:
-            self.triples.append((subject, predicate, object, is_optional))
+        if (subject, predicate, object) not in self.triples:
+            self.triples.append((subject, predicate, object))
             self.add_variable(subject)
             self.add_variable(object)
             self.add_variable(predicate)
@@ -92,8 +94,11 @@ class QueryModel(object):
          :param col_name: represents the column name after being parced from the corresponding DAG node.
 
         """
-        if not is_uri(col_name) and col_name.find(":") < 0:
-            self.variables.add(col_name)
+        if not is_uri(col_name):
+            if col_name.find(":") < 0:
+                self.variables.add(col_name)
+            elif col_name[:col_name.find(":")] not in self.prefixes:
+                self.variables.add(col_name)
 
     def add_group_columns(self, col_names):
         """
@@ -105,7 +110,7 @@ class QueryModel(object):
     def add_aggregate_pair(self, src_col_name, func_name, new_col_name, agg_param=None):
         """
          add a pair of column, function name to the list that forms the aggregation clause
-         :param src_col_name: the column name to be aggregated
+         :param src_col_name: the source column name to be aggregated
          :param new_col_name: the new column name
          :param func_name: represents aggregation function on the corresponding column
          :param agg_param: aggregation parameter like distinct with count
