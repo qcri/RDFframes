@@ -117,7 +117,7 @@ class KnowledgeGraph:
         #           .expand('class', [RDFPredicate('rdf:type', entities_col_name, PredicateDirection.INCOMING)])
         #            .filter(conditions_dict={'class': ['= {}'.format(class_name)]})
         return ExpandableDataset(self, new_dataset_name, class_name, class_name) \
-                    .expand(class_name, [RDFPredicate('rdf:type', entities_col_name, False,PredicateDirection.INCOMING)])
+                    .expand(class_name, [RDFPredicate('rdf:type', entities_col_name, False, PredicateDirection.INCOMING)]) ##changes
 
     def features(self, class_name, new_dataset_name='dataset', features_col_name='feature_uri'):
         """
