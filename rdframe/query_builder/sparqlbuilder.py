@@ -134,8 +134,6 @@ class SPARQLBuilder(object):
             - adds the filter conditions if needed
             - adds the subqueries if any exist
             """
-            triple2 =""
-            triple1 =""
             if len(self.query_model.triples) > 0 or len(self.query_model.subqueries) > 0:
                 where_string = "WHERE \n{ \n"
 
@@ -149,8 +147,6 @@ class SPARQLBuilder(object):
                     if not is_uri(triple[2]) and triple[2].find(":") < 0:
                         triple2 = "?" + triple[2]
                     triple = (triple[0], triple1, triple2)
-                    print("triple2", triple2)
-                    print(triple2)
                         #if ':' in triple[2]:  # is a URI not a variable
                          #   where_string += '\t?%s %s %s' % (triple[0], triple[1], triple[2]) + " .\n"
                         #else:

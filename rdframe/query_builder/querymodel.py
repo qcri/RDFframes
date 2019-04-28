@@ -61,7 +61,7 @@ class QueryModel(object):
         :param graphs: a list of graphs' URIs
         """
         if not self.is_subquery():
-            self.from_clause.extend(graphs)
+            self.from_clause.extend(graphs) #extend
 
     def add_optionals(self, subject, predicate, object):
         """
@@ -70,7 +70,9 @@ class QueryModel(object):
          :param object: object of the triple
          :param predicate: predicate of the triple
          """
+
         if (subject, predicate, object) not in self.optionals:
+
             self.optionals.append((subject, predicate, object))
             self.add_variable(subject)
             self.add_variable(object)
