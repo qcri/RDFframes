@@ -83,7 +83,10 @@ class ExpandableDataset(Dataset):
             self.rem_column(join_col_name1)
             self.add_column(new_column_name)
 
-        node = JoinOperator(self, dataset2, join_col_name1, join_col_name2, join_type, new_column_name)
+        if JoinType == JoinType.RightOuterJoin:
+            node = JoinOperator(dataset2,self, join_col_name1, join_col_name2, join_type, new_column_name)
+        else:
+            node = JoinOperator(self, dataset2, join_col_name1, join_col_name2, join_type, new_column_name)
 
         # ds1.columns = union(ds1.columns, ds2.columns)
         for col in dataset2.columns:
@@ -91,6 +94,9 @@ class ExpandableDataset(Dataset):
                 self.add_column(col)
 
         self.query_queue.append_node(node)
+
+
+
 
         # TODO: if we allow the join between different graphs, Union the graphs
 

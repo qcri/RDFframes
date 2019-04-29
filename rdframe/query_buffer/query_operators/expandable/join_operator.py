@@ -41,8 +41,8 @@ class JoinOperator(QueryQueueOperator):
         return 'Join'
 
     def visit_node(self, query_model, ds, parent):
-        print ("here", query_model.triples)
-        print("self.join_type", self.join_type)
+       #print ("here", query_model.triples)
+        #print("self.join_type", self.join_type)
         if self.join_type == JoinType.InnerJoin:
             # evaluate the query model of dataset2
             converter = Queue2QueryModelConverter(self.second_dataset)
@@ -67,11 +67,16 @@ class JoinOperator(QueryQueueOperator):
                 query_model.add_triple(*triple)
             # append the optional patterns in dataset2 to optionals in dataset1
             for op_triple in ds2_query_model.triples:
+                print("op_triple" ,op_triple)
                 query_model.add_optionals(*op_triple)
             
             # add the filter graph patterns in dataset2 to dataset1
+            #if ds2_query_model.filter_clause.items() is not None:
+            for column, condition in ds2_query_model.filter_clause:
+                query_model.add_filter_condition(column, condition)
 
-        elif self.join_type == JoinType.LeftOuterJoin:
+
+        elif self.join_type == JoinType.LeftOuterJoin or self.join_type == JoinType.RightOuterJoin:
                 print("optionals", query_model.optionals)
                 # evaluate the query model of dataset2
                 converter = Queue2QueryModelConverter(self.second_dataset)
@@ -97,12 +102,18 @@ class JoinOperator(QueryQueueOperator):
                 # add the basic and optionals graph patterns of dataset2 to dataset1 optionals
                 for triple in ds2_query_model.triples:
                     query_model.add_optionals(*triple)
+                ## TODO: change the structure of the optional block; the optional in the original query in first block then the optional block from the second query model
                 for triple in ds2_query_model.optionals:
                     query_model.add_optionals(*triple)
-                print("optionals", ds2_query_model.optionals)
-                print("optionals", query_model.optionals)
+                #print("optionals", ds2_query_model.optionals)
+                #print("optionals", query_model.optionals)
 
                 # add the filter graph patterns in dataset2 to dataset1
+                for column, condition in ds2_query_model.filter_clause:
+                    query_model.add_filter_condition(column,condition)
+
+
+
         return ds, query_model, None
 
 
