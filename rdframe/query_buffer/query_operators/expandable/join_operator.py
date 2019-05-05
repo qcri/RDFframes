@@ -21,11 +21,6 @@ class JoinOperator(QueryQueueOperator):
         :param second_col_name: the column name that the join operation will operate on in the second dataset
         :param join_type: one of [inner, left_orter, right_outer]
         """
-        # if join_type == JoinType.RightOuterJoin:
-        #     super(JoinOperator, self).__init__(src_dataset_name=dataset2.name)
-        #     self.dataset = dataset2
-        #     self.second_dataset = dataset1
-        # else:
         super(JoinOperator, self).__init__(src_dataset_name=dataset1.name)
         self.dataset = dataset1
         self.second_dataset = dataset2
