@@ -73,8 +73,8 @@ def test_join_query():
                              #class_col_name='tweet_class',
                              entities_col_name='tweet')
     dataset = dataset.expand(src_col_name='tweet', predicate_list=[
-        RDFPredicate('sioc:has_creater','tweep',False),
-        RDFPredicate('sioc:content' ,'text',False)
+        RDFPredicate('sioc:has_creater', 'tweep', False),
+        RDFPredicate('sioc:content', 'text', False)
     ])
 
     dataset2 = graph.entities(class_name='sioct:tweet',
@@ -86,7 +86,7 @@ def test_join_query():
         #RDFPredicate('sioc:content', 'text', True)
     ])
 
-    dataset.join(dataset2,'tweep','tweep','tweep', JoinType.InnerJoin)
+    dataset.join(dataset2,'tweep','tweep','tweep', JoinType.RightOuterJoin)
 
     sparql_query = dataset.to_sparql()
     print("sparql_query 1 =\n{}\n".format(sparql_query))

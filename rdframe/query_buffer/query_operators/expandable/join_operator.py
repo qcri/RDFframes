@@ -21,10 +21,15 @@ class JoinOperator(QueryQueueOperator):
         :param second_col_name: the column name that the join operation will operate on in the second dataset
         :param join_type: one of [inner, left_orter, right_outer]
         """
+        # if join_type == JoinType.RightOuterJoin:
+        #     super(JoinOperator, self).__init__(src_dataset_name=dataset2.name)
+        #     self.dataset = dataset2
+        #     self.second_dataset = dataset1
+        # else:
         super(JoinOperator, self).__init__(src_dataset_name=dataset1.name)
         self.dataset = dataset1
-        self.src_col_name = join_col_name1
         self.second_dataset = dataset2
+        self.src_col_name = join_col_name1
         self.second_col_name = join_col_name2
         self.join_type = join_type
         self.new_col_name = new_column_name
@@ -41,81 +46,59 @@ class JoinOperator(QueryQueueOperator):
         return 'Join'
 
     def visit_node(self, query_model, ds, parent):
-       #print ("here", query_model.triples)
-        #print("self.join_type", self.join_type)
+       # evaluate the query model of dataset2
+        converter = Queue2QueryModelConverter(self.second_dataset)
+        ds2_query_model = converter.to_query_model()
+
+        # TODO: Union the graphs in ds2 with ds1 and assign each graph pattern to a graph in case of joining two different graphs
+        # union the variables, the prefixes and select columns
+        query_model.variables = query_model.variables.union(ds2_query_model.variables)
+        prefixes2 = {}
+        for prefix in ds2_query_model.prefixes:
+           if prefix not in query_model.prefixes:
+               prefixes2[prefix] = ds2_query_model.prefixes[prefix]
+        query_model.add_prefixes(prefixes2)
+        query_model.select_columns = query_model.select_columns.union(ds2_query_model.select_columns)
+
+        query_model.set_offset(min(query_model.offset, ds2_query_model.offset))
+        query_model.set_limit(max(query_model.limit, ds2_query_model.limit))
+        query_model.add_order_columns(ds2_query_model.order_clause)
+
+        # add the filter graph patterns in dataset2 to dataset1
+        for column, condition in ds2_query_model.filter_clause:
+            query_model.add_filter_condition(column, condition)
+
         if self.join_type == JoinType.InnerJoin:
-            # evaluate the query model of dataset2
-            converter = Queue2QueryModelConverter(self.second_dataset)
-            ds2_query_model = converter.to_query_model()
-
-            # TODO: Union the graphs in ds2 with ds1 and assign each graph pattern to a graph in case of joining two different graphs
-            # union the variables, the prefixes and select columns
-            query_model.variables = query_model.variables.union(ds2_query_model.variables)
-            prefixes2 = {}
-            for prefix in ds2_query_model.prefixes:
-                if prefix not in query_model.prefixes:
-                    prefixes2[prefix] = ds2_query_model.prefixes[prefix]
-            query_model.add_prefixes(prefixes2)
-            query_model.select_columns = query_model.select_columns.union(ds2_query_model.select_columns)
-
-            query_model.set_offset(min(query_model.offset, ds2_query_model.offset))
-            query_model.set_limit(max(query_model.limit, ds2_query_model.limit))
-            query_model.add_order_columns(ds2_query_model.order_clause)
-
             # add the basic graph patterns in dataset2 to dataset1
             for triple in ds2_query_model.triples:
                 query_model.add_triple(*triple)
             # append the optional patterns in dataset2 to optionals in dataset1
-            for op_triple in ds2_query_model.triples:
-                print("op_triple" ,op_triple)
-                query_model.add_optionals(*op_triple)
-            
-            # add the filter graph patterns in dataset2 to dataset1
-            #if ds2_query_model.filter_clause.items() is not None:
-            for column, condition in ds2_query_model.filter_clause:
-                query_model.add_filter_condition(column, condition)
-
-
-        elif self.join_type == JoinType.LeftOuterJoin or self.join_type == JoinType.RightOuterJoin:
+            for op_triple in ds2_query_model.optionals:
+                print("op_triple", op_triple)
+                query_model.add_optional(*op_triple)
+        elif self.join_type == JoinType.LeftOuterJoin:
                 print("optionals", query_model.optionals)
-                # evaluate the query model of dataset2
-                converter = Queue2QueryModelConverter(self.second_dataset)
-                ds2_query_model = converter.to_query_model()
-                # rename the self.second_col_name to self.new_col_name in datase2
-
-                # rename the self.first_col_name to self.new_col_name in datase1
-
-                # TODO: Union the graphs in ds2 with ds1 and assign each graph pattern to a graph
-                # union the variables, the prefixes and select columns
-                query_model.variables = query_model.variables.union(ds2_query_model.variables)
-                prefixes2 = {}
-                for prefix in ds2_query_model.prefixes:
-                    if prefix not in query_model.prefixes:
-                        prefixes2[prefix] = ds2_query_model.prefixes[prefix]
-                query_model.add_prefixes(prefixes2)
-                query_model.select_columns = query_model.select_columns.union(ds2_query_model.select_columns)
-
-                query_model.set_offset(min(query_model.offset, ds2_query_model.offset))
-                query_model.set_limit(max(query_model.limit, ds2_query_model.limit))
-                query_model.add_order_columns(ds2_query_model.order_clause)
-
                 # add the basic and optionals graph patterns of dataset2 to dataset1 optionals
                 for triple in ds2_query_model.triples:
-                    query_model.add_optionals(*triple)
+                    query_model.add_optional(*triple)
                 ## TODO: change the structure of the optional block; the optional in the original query in first block then the optional block from the second query model
                 for triple in ds2_query_model.optionals:
-                    query_model.add_optionals(*triple)
+                    query_model.add_optional(*triple)
                 #print("optionals", ds2_query_model.optionals)
                 #print("optionals", query_model.optionals)
-
-                # add the filter graph patterns in dataset2 to dataset1
-                for column, condition in ds2_query_model.filter_clause:
-                    query_model.add_filter_condition(column,condition)
-
-
+        elif self.join_type == JoinType.RightOuterJoin:
+                # move all triples of dataset1 to optional
+                for triple in query_model.triples:
+                    query_model.add_optional(*triple)
+                query_model.rem_all_triples()
+                # add the triples in dataset2 to triples in dataset1
+                for triple in ds2_query_model.triples:
+                    query_model.add_triple(*triple)
+                # append the optional patterns in dataset2 to optionals in dataset1
+                for op_triple in ds2_query_model.optionals:
+                    query_model.add_optional(*op_triple)
 
         return ds, query_model, None
-
 
     def __repr__(self):
         """
