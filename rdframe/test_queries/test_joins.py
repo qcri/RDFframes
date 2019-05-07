@@ -59,13 +59,13 @@ def test_join_instead_of_expand(join_type):
     dataset = graph.entities(class_name='sioct:microblogPost',
                              new_dataset_name='dataset1',
                              entities_col_name='tweet')
-    dataset = dataset.expand(src_col_name='tweet', predicate_list=[RDFPredicate('sioc:has_creater', 'tweep', False)])
+    dataset1 = dataset.expand(src_col_name='tweet', predicate_list=[RDFPredicate('sioc:has_creater', 'tweep', False)])
 
-    dataset1 = dataset.expand(src_col_name='tweet', predicate_list=[RDFPredicate('sioc:content', 'text', False)])
+    dataset2 = dataset.expand(src_col_name='tweet', predicate_list=[RDFPredicate('sioc:content', 'text', False)])
 
-    dataset.join(dataset1, 'tweet', 'tweet', 'tweet', join_type)
+    dataset2.join(dataset1, 'tweet', 'tweet', 'tweet', join_type)
 
-    sparql_query = dataset.to_sparql()
+    sparql_query = dataset2.to_sparql()
     print("SPARQL query with {} =\n{}\n".format(join_type, sparql_query))
 
 
@@ -121,7 +121,7 @@ if __name__ == '__main__':
     # test_expandable_expandable_join(JoinType.InnerJoin, True, True)
     # test_expandable_expandable_join(JoinType.LeftOuterJoin, True, True)
     # test_expandable_expandable_join(JoinType.RightOuterJoin, True, True)
-    # test_join_instead_of_expand(JoinType.InnerJoin)
-    test_expandable_expandable_3_joins(JoinType.InnerJoin)
+    test_join_instead_of_expand(JoinType.InnerJoin)
+    # test_expandable_expandable_3_joins(JoinType.InnerJoin)
 
 
