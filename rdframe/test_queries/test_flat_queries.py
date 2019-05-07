@@ -77,7 +77,7 @@ def test_join_query():
         RDFPredicate('sioc:content', 'text', False)
     ])
 
-    dataset2 = graph.entities(class_name='sioct:tweet',
+    dataset2 = graph.entities(class_name='sioct:tweep',
                              new_dataset_name='dataset2',
                              # class_col_name='tweet_class',
                              entities_col_name='tweep')
