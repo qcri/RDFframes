@@ -84,7 +84,7 @@ class ExpandableDataset(Dataset):
             self.add_column(new_column_name)
 
         if JoinType == JoinType.RightOuterJoin:
-            node = JoinOperator(dataset2,self, join_col_name1, join_col_name2, join_type, new_column_name)
+            node = JoinOperator(dataset2, self, join_col_name1, join_col_name2, join_type, new_column_name)
         else:
             node = JoinOperator(self, dataset2, join_col_name1, join_col_name2, join_type, new_column_name)
 
