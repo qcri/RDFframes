@@ -63,21 +63,18 @@ class QueryModel(object):
         if not self.is_subquery():
             self.from_clause.extend(graphs) #extend
 
-    def add_optionals(self, subject, predicate, object):
+    def add_optional(self, subject, predicate, object):
         """
          add a triple to the list of the optional triples in the query model.
          :param subject: subject of the triple
          :param object: object of the triple
          :param predicate: predicate of the triple
          """
-
         if (subject, predicate, object) not in self.optionals:
-
             self.optionals.append((subject, predicate, object))
             self.add_variable(subject)
             self.add_variable(object)
             self.add_variable(predicate)
-
 
     def add_triple(self, subject, predicate, object):
         """
@@ -194,6 +191,9 @@ class QueryModel(object):
 
     def rem_select_column(self, col_name):
         self.select_columns.remove(col_name)
+
+    def rem_all_triples(self):
+        self.triples = []
 
     def transfer_grouping_to_subquery(self, subquery):
         grouping_cols = self.groupBy_columns
