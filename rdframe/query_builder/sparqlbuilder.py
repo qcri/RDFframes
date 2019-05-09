@@ -62,7 +62,7 @@ class SPARQLBuilder(object):
                         src_col_name = agg_part[0][2]
                         agg_col_name = "AS ?{}".format(col) if col is not None else ''
                         agg_parameter = agg_part[0][1] if agg_part[0][1] is not None else ''
-                        select_string += " (%s(%s ?%s) %s)" % (agg_func, agg_parameter, src_col_name, agg_col_name)
+                        select_string += " (%s(%s ?%s) %s) " % (agg_func, agg_parameter, src_col_name, agg_col_name)
                     else:
                         select_string += "?%s " % col
                 select_string += "\n"
