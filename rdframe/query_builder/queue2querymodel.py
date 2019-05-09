@@ -5,7 +5,7 @@ from queue import Queue
 
 class Queue2QueryModelConverter(object):
     """
-    Converts the query dag to a query model
+    Converts the query buffer to a query model
     """
     def __init__(self, dataset):
         self.dataset = dataset
@@ -30,7 +30,7 @@ class Queue2QueryModelConverter(object):
         return self.query_model
 
     def traverse_query(self):
-        self.__move_select_nodes_to_top()
+        # self.__move_select_nodes_to_top() ##FIXME: this causes problems with the join
         self.__process_queue(self.dataset)
 
     def __remove_select_nodes(self, ds):
