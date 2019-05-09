@@ -30,7 +30,7 @@ class Queue2QueryModelConverter(object):
         return self.query_model
 
     def traverse_query(self):
-        # self.__move_select_nodes_to_top() ##FIXME: this causes problems with the join
+        self.__move_select_nodes_to_top() ##FIXME: this causes problems with the join
         self.__process_queue(self.dataset)
 
     def __remove_select_nodes(self, ds):
