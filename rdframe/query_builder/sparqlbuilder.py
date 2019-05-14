@@ -109,6 +109,23 @@ class SPARQLBuilder(object):
                 subquery_string += "\t"+"{" + '\t\t'.join(('\n'+query_str.lstrip()).splitlines(True)) + "\n\t" + "}"
             return subquery_string
 
+        def add_optional_clause(self):
+            optional_string =""
+            if len(self.query_model.optionals) > 0:
+                optional_string = "OPTIONAL {  \n"
+                for triple in self.query_model.optionals:
+                    triple1 = triple[1]
+                    triple2 = triple[2]
+                    if not is_uri(triple[1]) and triple[1].find(":") < 0:
+                        triple1 = "?" + triple[1]
+                    if not is_uri(triple[2]) and triple[2].find(":") < 0:
+                        triple2 = "?" + triple[2]
+                    triple = (triple[0], triple1, triple2)
+                    optional_string += '\t?%s %s %s' % (triple[0], triple[1], triple[2]) + " .\n"
+                optional_string += "}"
+
+            return optional_string
+
         def add_where_clause(self):
             """
             prepare where clause of the query
@@ -118,21 +135,28 @@ class SPARQLBuilder(object):
             - adds the subqueries if any exist
             """
             if len(self.query_model.triples) > 0 or len(self.query_model.subqueries) > 0:
-
                 where_string = "WHERE \n{ \n"
-                optional_string = "OPTIONAL {  \n"
-                is_optional = False
+
+                #optional_string = "OPTIONAL {  \n"
+               #is_optional = False
                 for triple in self.query_model.triples:
+                    triple1 = triple[1]
+                    triple2 = triple[2]
                     if not is_uri(triple[1]) and triple[1].find(":") < 0:
-                        triple = (triple[0], "?"+triple[1], triple[2])
-                        if ':' in triple[2]:  # is a URI not a variable
-                            where_string += '\t?%s %s %s' % (triple[0], triple[1], triple[2]) + " .\n"
-                        else:
-                            where_string += '\t?%s %s ?%s' % (triple[0], triple[1], triple[2]) + " .\n"
-                optional_string += "}"
+                        triple1 = "?" + triple[1]
+                    if not is_uri(triple[2]) and triple[2].find(":") < 0:
+                        triple2 = "?" + triple[2]
+                    triple = (triple[0], triple1, triple2)
+                        #if ':' in triple[2]:  # is a URI not a variable
+                         #   where_string += '\t?%s %s %s' % (triple[0], triple[1], triple[2]) + " .\n"
+                        #else:
+                    where_string += '\t?%s %s %s' % (triple[0], triple[1], triple[2]) + " .\n"
+                #optional_string += "}"
                 # TODO: optional_string = ??
                 #if is_optional is True:
                 #    where_string += '\t'.join(('\n'+optional_string.lstrip()).splitlines(True))
+                optional_string = self.add_optional_clause()
+                where_string += '\t'.join(('\n' + optional_string.lstrip()).splitlines(True))
                 where_string += self.add_filter_clause()
                 if len(self.query_model.subqueries) > 0:
                     where_string += "\t\t" + self.add_subqueries()

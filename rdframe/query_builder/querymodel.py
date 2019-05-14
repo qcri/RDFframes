@@ -61,7 +61,20 @@ class QueryModel(object):
         :param graphs: a list of graphs' URIs
         """
         if not self.is_subquery():
-            self.from_clause.extend(graphs)
+            self.from_clause.extend(graphs) #extend
+
+    def add_optional(self, subject, predicate, object):
+        """
+         add a triple to the list of the optional triples in the query model.
+         :param subject: subject of the triple
+         :param object: object of the triple
+         :param predicate: predicate of the triple
+         """
+        if (subject, predicate, object) not in self.optionals:
+            self.optionals.append((subject, predicate, object))
+            self.add_variable(subject)
+            self.add_variable(object)
+            self.add_variable(predicate)
 
     def add_triple(self, subject, predicate, object):
         """
@@ -69,7 +82,6 @@ class QueryModel(object):
          :param subject: subject of the triple
          :param object: object of the triple
          :param predicate: predicate of the triple
-         :param is_optional: a flag indicating if the triple is optional or not
          """
         if (subject, predicate, object) not in self.triples:
             self.triples.append((subject, predicate, object))
@@ -179,6 +191,9 @@ class QueryModel(object):
 
     def rem_select_column(self, col_name):
         self.select_columns.remove(col_name)
+
+    def rem_all_triples(self):
+        self.triples = []
 
     def transfer_grouping_to_subquery(self, subquery):
         grouping_cols = self.groupBy_columns
@@ -305,8 +320,15 @@ class QueryModel(object):
 
         for subq in self.subqueries:
             all_vars = all_vars.union(subq.all_variables())
-
         return all_vars
+
+    # TODO: it's missing renaming vars in the filter clause
+    def rename_variable(self, old_name, new_name):
+        self.triples = [[new_name if element == old_name else element for element in triple] for triple in self.triples]
+        self.optionals = [[new_name if element == old_name else element for element in triple]
+                          for triple in self.optionals]
+        self.select_columns = OrderedSet([new_name if var == old_name else var for var in self.select_columns])
+        self.variables = {new_name if var == old_name else var for var in self.variables}
 
     def is_valid_prefix(self, prefix):
         if prefix in self.prefixes.keys():

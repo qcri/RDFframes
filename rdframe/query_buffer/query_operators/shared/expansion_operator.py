@@ -58,7 +58,7 @@ class ExpansionOperator(QueryQueueOperator):
         triple = None
 
         if self.expansion_direction == PredicateDirection.INCOMING:
-            triple = (self.new_col_name, self.predicate, self.src_col_name, self.is_optional)
+            triple = (self.new_col_name, self.predicate, self.src_col_name,self.is_optional)
         elif self.expansion_direction == PredicateDirection.OUTGOING:
             triple = (self.src_col_name, self.predicate, self.new_col_name, self.is_optional)
 
@@ -66,7 +66,11 @@ class ExpansionOperator(QueryQueueOperator):
         if self.already_in_outer_query(ds, query_model):
             query_model = query_model.wrap_in_a_parent_query()
         if triple is not None:
-            query_model.add_triple(*triple)
+            #print("self.is_optional", self.is_optional)
+            if self.is_optional:
+                query_model.add_optional(triple[0],triple[1],triple[2])
+            else:
+                query_model.add_triple(triple[0],triple[1],triple[2])
             vars = [variable for variable in [triple[0], triple[2]] if ":" not in variable]
             if len(vars) > 0:
                 query_model.transfer_select_triples_to_parent_query(vars)
