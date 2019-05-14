@@ -78,6 +78,34 @@ KnowledgeGraph.features_and_freq(class_name)
 Retrieves all the features of the instances of the class ```class_name``` and how many instances have each features.
 This is critical for many machine learning tasks as knowing how many observed features of entities helps us decide 
 on which features to use for.
+```python
+KnowledgeGraph.entities(class_name)
+```
+Retrieves all the instances of the class ```class_name```. This is the starting point for most machine 
+learning models. The return dataset contains one column of the entities of the specified class and can be
+expanded to add features of the instances.
+```python
+KnowledgeGraph.features(class_name)
+```
+Retrieves all the features of the class ```class_name```. This function can be used to explore the dataset and learn
+what features are available in the data for a specific class.
+```python
+KnowledgeGraph.entities_and_features(class_name, features, )
+```
+Retrieves all instances of the class ```class_name``` and the features of the instances specified in the list 
+```features```.
+```python
+KnowledgeGraph.num_entities(class_name)
+```
+Returns the number of instances of the class ```class_name``` in the dataset.
+```python
+KnowledgeGraph.feature_domain_range(feature)
+```
+Returieves the domain (subjects) and the range (objects) of the predicate ```feature``` occuring in the dataset.
+```python
+KnowledgeGraph.describe_entity(entity)
+```
+Returns the class and features of the entity.
 
 
 
