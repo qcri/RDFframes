@@ -67,7 +67,7 @@ class JoinOperator(QueryQueueOperator):
             for triple in ds2_query_model.triples:
                 query_model.add_triple(*triple)
             # append the optional patterns in dataset2 to optionals in dataset1
-            
+
             # add the filter graph patterns in dataset2 to dataset1
 
 
