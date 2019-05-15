@@ -39,6 +39,7 @@ class QueryModel(object):
         self.triples = []           # list of basic graph patterns in the form (subject, predicate, object) tuples
         self.optionals = []         # list of lists. Each list contains (subject, predicate, object) optional patterns
         self.subqueries = []        # list of subqueries. each subquery is a query model
+        self.optional_subqueries = []  # list of optional subqueries. each subquery is a query model
         self.unions = []            # list of subqueries to union with the current query model
 
         self.select_columns = OrderedSet()    # list of columns to be selected ,  set()
@@ -108,6 +109,16 @@ class QueryModel(object):
         :return:
         """
         self.subqueries.append(subquery)
+        subquery.parent_query_model = weakref.ref(self)
+        subquery.from_clause.clear()
+
+    def add_optional_subquery(self, subquery):   # subquery type is query_builder
+        """
+        adds a subquery to the query model
+        :param subquery:
+        :return:
+        """
+        self.optional_subqueries.append(subquery)
         subquery.parent_query_model = weakref.ref(self)
         subquery.from_clause.clear()
 
@@ -343,12 +354,14 @@ class QueryModel(object):
             all_vars = all_vars.union(subq.all_variables())
         return all_vars
 
-    # TODO: it's missing renaming vars in the filter clause
+    # TODO: it's missing renaming vars in the filter clause, order by clause, unions and subqueries
     def rename_variable(self, old_name, new_name):
         self.triples = [[new_name if element == old_name else element for element in triple] for triple in self.triples]
         self.optionals = [[new_name if element == old_name else element for element in triple]
                           for triple in self.optionals]
         self.select_columns = OrderedSet([new_name if var == old_name else var for var in self.select_columns])
+        self.auto_generated_select_columns = OrderedSet([new_name if var == old_name else var for var in self.auto_generated_select_columns])
+        self.groupBy_columns = OrderedSet([new_name if var == old_name else var for var in self.groupBy_columns])
         self.variables = {new_name if var == old_name else var for var in self.variables}
 
     def is_valid_prefix(self, prefix):

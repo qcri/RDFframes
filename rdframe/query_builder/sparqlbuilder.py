@@ -63,7 +63,7 @@ class SPARQLBuilder(object):
                         src_col_name = agg_part[0][2]
                         agg_col_name = "AS ?{}".format(col) if col is not None else ''
                         agg_parameter = agg_part[0][1] if agg_part[0][1] is not None else ''
-                        select_string += " (%s(%s ?%s) %s)" % (agg_func, agg_parameter, src_col_name, agg_col_name)
+                        select_string += " (%s(%s ?%s) %s) " % (agg_func, agg_parameter, src_col_name, agg_col_name)
                     else:
                         select_string += "?%s " % col
                 select_string += "\n"
@@ -108,6 +108,18 @@ class SPARQLBuilder(object):
             subquery_string = ""
             for query in self.query_model.subqueries:
                 subquery_string += "\n"
+                query_str = query.to_sparql()
+                subquery_string += "\t"+"{" + '\t\t'.join(('\n'+query_str.lstrip()).splitlines(True)) + "\n\t" + "}"
+            return subquery_string
+
+        def add_optional_subqueries(self):
+            """
+            attach the optional subquery to its outer query
+            :return: The SPARQL representation of the query
+            """
+            subquery_string = ""
+            for query in self.query_model.optional_subqueries:
+                subquery_string += "\n OPTIONAL"
                 query_str = query.to_sparql()
                 subquery_string += "\t"+"{" + '\t\t'.join(('\n'+query_str.lstrip()).splitlines(True)) + "\n\t" + "}"
             return subquery_string
@@ -171,6 +183,8 @@ class SPARQLBuilder(object):
                 if len(self.query_model.unions) >0:
                     #print("union comes from here")
                     where_string += self.add_union_query()
+                if len(self.query_model.optional_subqueries) > 0:
+                    where_string += "\t\t" + self.add_optional_subqueries()
                 if where_string != "":
                     where_string += "\n}"
                 self.query_string += where_string

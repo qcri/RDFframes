@@ -1,4 +1,3 @@
-from sparqlwrapper_client import SPARQLWrapperClient
 from rdframe.client.http_client import HttpClientDataFormat, HttpClient
 from rdframe.knowledge_graph import KnowledgeGraph
 from rdframe. dataset.rdfpredicate import RDFPredicate
@@ -34,13 +33,12 @@ def test_flat_query():
 
     dataset = graph.entities(class_name='sioct:microblogPost',
                              new_dataset_name='tweets',
-                             class_col_name='tweet_class',
                              entities_col_name='tweet')
     ds = dataset.expand(src_col_name='tweet', predicate_list=[
         RDFPredicate('sioc:has_creater', 'tweep')
     ]).group_by(['tweep']).count(
         aggregation_fn_data=[AggregationData('tweet', 'tweets_count')]).filter(
-        conditions_dict={'tweets_count': ['>= {}'.format(200), '<= {}'.format(300)]})
+        conditions_dict={'tweets_count': ['>= {}'.format(200), '<= {}'.format(300)]}).select_cols(['tweets_count'])
 
     ds = ds.expand(src_col_name='tweet', predicate_list=[
         RDFPredicate('sioc:content', 'text', optional=False),
@@ -50,14 +48,13 @@ def test_flat_query():
         RDFPredicate('sioc:mentions', 'users_mentioned', optional=True)
     ])
 
-    ds = ds.select_cols(['tweet', 'tweep', 'text', 'date', 'multimedia', 'hashtag', 'users_mentioned'])
+    ds = ds.select_cols(['tweet', 'tweep', 'text', 'date', 'multimedia', 'hashtag', 'users_mentioned', 'tweets_count'])
 
     print("Sparql Query = \n{}".format(ds.to_sparql()))
 
-    df = ds.execute(client, return_format=output_format)
-    print(df.head(10))
-
-    return df
+    # df = ds.execute(client, return_format=output_format)
+    # print(df.head(10))
+    # return df
 
 
 if __name__ == '__main__':

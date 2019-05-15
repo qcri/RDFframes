@@ -323,5 +323,5 @@ class HttpClient(Client):
             is_valid = (result == 0)
 
         if not is_valid:
-            print('missing endpoint data: endpoint {}, port {}'.format(self.endpoint_url, self.port))
+            print('missing endpoint data: endpoint {}, port {}'.format(self.endpoint_url, port))
 
