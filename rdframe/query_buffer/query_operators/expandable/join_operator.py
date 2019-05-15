@@ -3,7 +3,7 @@ from orderedset._orderedset import OrderedSet
 from rdframe.query_buffer.query_operators.query_queue_operator import QueryQueueOperator
 from rdframe.query_builder.queue2querymodel import Queue2QueryModelConverter
 from rdframe.utils.constants import JoinType
-
+from rdframe.query_builder.querymodel import QueryModel
 __author__ = """
 Abdurrahman Ghanem <abghanem@hbku.edu.qa>
 Aisha Mohamed <ahmohamed@qf.org.qa>
@@ -105,6 +105,76 @@ class JoinOperator(QueryQueueOperator):
             # append the optional patterns in dataset2 to optionals in dataset1
             for op_triple in ds2_query_model.optionals:
                 query_model.add_optional(*op_triple)
+
+        elif self.join_type == JoinType.OuterJoin:
+            # The join will build three queries and two sub-queries
+            # one contains the basic pattrens from the two dataset into one query
+            ds1_query_model = QueryModel()
+            inner_query_model=  QueryModel()
+            for triple in query_model.triples:
+                #print("original triples", triple)
+                ds1_query_model.add_triple(*triple)
+                inner_query_model.add_triple(*triple)
+            for op_triple in query_model.optionals:
+                #print("original optional ", op_triple)
+                ds1_query_model.add_optional(*op_triple)
+                inner_query_model.add_optional(*op_triple)
+
+            query_model.rem_all_triples()
+            query_model.rem_optionaltriples()
+
+            for triple in ds2_query_model.triples:
+               #query_model.add_triple(*triple)
+               inner_query_model.add_triple(*triple)
+
+            for op_triple in ds2_query_model.optionals:
+                #query_model.add_optional(*op_triple)
+                inner_query_model.add_optional(*op_triple)
+
+            ## one query with basic pattren from dataset1 and basic pattren from dataset2 as optional
+
+            ds1_triples = ds1_query_model.triples.copy()
+            ds1_optional = ds1_query_model.optionals.copy()
+
+            ds2_triples = ds2_query_model.triples.copy()
+            ds2_optional = ds2_query_model.optionals.copy()
+
+            for triple in ds2_triples:
+               ds1_query_model.add_optional(*triple)
+            for op_triple in ds2_optional:
+                ds1_query_model.add_optional(*op_triple)
+
+            ## one query with basic pattren from dataset 2 and basic pattren from dataset1 as optional
+            for triple in ds1_triples:
+                ds2_query_model.add_optional(*triple)
+            for op_triple in ds1_optional:
+                ds2_query_model.add_optional(*op_triple)
+
+            # add the two queries into the union of the main query
+            query_model.select_columns = query_model.select_columns.union(ds2_query_model.select_columns)
+            #if query_model.select_columns is not None:
+             #  ds2_query_model.select_columns = query_model.select_columns.union(ds2_query_model.select_columns)
+              # ds1_query_model.select_columns = query_model.select_columns.union(ds2_query_model.select_columns)
+            #ds2_query_model.select_columns = query_model.variables.copy()
+            #ds1_query_model.select_columns = query_model.variables.copy()
+            #print("ds1_query_model.variables ", ds1_query_model.variables)
+            #print("query_model.variables ", query_model.variables)
+            #ds1_query_model.rem_prefixes()
+            query_model.add_unions(ds1_query_model)
+            #ds2_query_model.rem_prefixes()
+            query_model.add_unions(ds2_query_model)
+            query_model.add_unions(inner_query_model)
+
+
+               # query_model.select_columns = ds1_query_model.select_columns.union(
+                #ds2_query_model.select_columns)
+
+                ## add filter to the main query
+                #for column, condition in ds2_query_model.filter_clause:
+                 #   query_model.add_filter_condition(column, condition)
+                #for column, condition in query_model.filter_clause:
+                   # query_model.add_filter_condition(column, condition)
+
 
         return ds, query_model, None
 

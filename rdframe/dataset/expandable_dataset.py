@@ -93,8 +93,6 @@ class ExpandableDataset(Dataset):
         self.query_queue.append_node(node)
 
 
-
-
         # TODO: if we allow the join between different graphs, Union the graphs
 
 

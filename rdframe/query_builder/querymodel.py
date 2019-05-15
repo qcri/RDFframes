@@ -47,6 +47,7 @@ class QueryModel(object):
         self.querybuilder = None # a SPARQLbuilder that converts the query model to a string
         self.parent_query_model = None # a pointer to the parent query if this is a subquery
 
+
     def add_prefixes(self, prefixes):
         """
         Add a dictionary of prefixs to the sparql queries
@@ -88,6 +89,17 @@ class QueryModel(object):
             self.add_variable(subject)
             self.add_variable(object)
             self.add_variable(predicate)
+
+    def add_unions(self, unionquery):  # subquery type is query_builder
+        """
+        adds a subquery to the query model
+        :param subquery:
+        :return:
+        """
+        self.unions.append(unionquery)
+        unionquery.parent_query_model = weakref.ref(self)
+        #unionquery.from_clause.clear()
+
 
     def add_subquery(self, subquery):   # subquery type is query_builder
         """
@@ -194,6 +206,15 @@ class QueryModel(object):
 
     def rem_all_triples(self):
         self.triples = []
+
+    def rem_from_clause(self):
+        self.from_clause =[]
+
+    def rem_prefixes(self):
+        self.prefixes= {}
+
+    def rem_optionaltriples(self):
+        self.optionals = []
 
     def transfer_grouping_to_subquery(self, subquery):
         grouping_cols = self.groupBy_columns
@@ -335,6 +356,39 @@ class QueryModel(object):
             return True
         else:
             return False
+
+    def get_triples(self):
+        triple_string = ""
+        for triple in self.triples:
+            triple1 = triple[1]
+            triple2 = triple[2]
+            if not is_uri(triple[1]) and triple[1].find(":") < 0:
+                triple1 = "?" + triple[1]
+            if not is_uri(triple[2]) and triple[2].find(":") < 0:
+                triple2 = "?" + triple[2]
+            triple = (triple[0], triple1, triple2)
+            triple_string += '\t?%s %s %s' % (triple[0], triple[1], triple[2]) + " .\n"
+        optional_string = self.get_optional_triples()
+        triple_string += '\t'.join(('\n' + optional_string.lstrip()).splitlines(True))
+        return triple_string
+
+    def get_optional_triples(self):
+        optional_string = ""
+        if len(self.optionals) > 0:
+            optional_string = "OPTIONAL {  \n"
+            for triple in self.optionals:
+                triple1 = triple[1]
+                triple2 = triple[2]
+                if not is_uri(triple[1]) and triple[1].find(":") < 0:
+                    triple1 = "?" + triple[1]
+                if not is_uri(triple[2]) and triple[2].find(":") < 0:
+                    triple2 = "?" + triple[2]
+                triple = (triple[0], triple1, triple2)
+                optional_string += '\t?%s %s %s' % (triple[0], triple[1], triple[2]) + " .\n"
+            optional_string += "}"
+
+        return optional_string
+
 
     def validate(self):
         """

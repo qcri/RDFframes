@@ -151,6 +151,7 @@ def test_expandable_expandable_join_w_selectcols():
 
 if __name__ == '__main__':
     # test_expandable_expandable_join(JoinType.InnerJoin)
+    test_expandable_expandable_join(JoinType.OuterJoin)
     # test_expandable_expandable_join(JoinType.LeftOuterJoin)
     # test_expandable_expandable_join(JoinType.RightOuterJoin)
     # test_expandable_expandable_join(JoinType.InnerJoin, True, True)
@@ -158,6 +159,6 @@ if __name__ == '__main__':
     # test_expandable_expandable_join(JoinType.RightOuterJoin, True, True)
     # test_join_instead_of_expand(JoinType.InnerJoin)
     # test_expandable_expandable_3_joins(JoinType.InnerJoin)
-    test_expandable_expandable_join_w_selectcols()
+    #test_expandable_expandable_join_w_selectcols()
 
 

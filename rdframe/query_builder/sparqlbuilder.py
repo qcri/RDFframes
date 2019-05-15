@@ -55,6 +55,7 @@ class SPARQLBuilder(object):
             """
             if len(self.query_model.select_columns) > 0 or len(self.query_model.auto_generated_select_columns) > 0:
                 select_string = "SELECT "
+                #print("self.query_model.select_columns", self.query_model.select_columns)
                 for col in self.query_model.select_columns.union(self.query_model.auto_generated_select_columns):
                     if col in self.query_model.aggregate_clause:
                         agg_part = self.query_model.aggregate_clause[col]
@@ -71,6 +72,7 @@ class SPARQLBuilder(object):
                 if self.query_model.parent_query_model is None and len(self.query_model.subqueries) <= 0 \
                         and len(self.query_model.groupBy_columns) <= 0:
                     common_variables = set(filter(lambda x: ':' not in x, self.query_model.variables))
+
                 elif self.query_model.parent_query_model is None and len(self.query_model.subqueries) <= 0 \
                         and len(self.query_model.groupBy_columns) > 0:
                     common_variables = set(self.query_model.groupBy_columns)
@@ -84,6 +86,7 @@ class SPARQLBuilder(object):
                 else:  # if this is a subquery
                     common_variables = self.query_model.groupBy_columns
                 select_string = "SELECT "
+                #print("self.query_model.common_variables", common_variables)
                 for col in common_variables:
                     select_string += "?%s " % col
                 select_string += "\n"
@@ -126,6 +129,9 @@ class SPARQLBuilder(object):
 
             return optional_string
 
+
+
+
         def add_where_clause(self):
             """
             prepare where clause of the query
@@ -134,7 +140,9 @@ class SPARQLBuilder(object):
             - adds the filter conditions if needed
             - adds the subqueries if any exist
             """
-            if len(self.query_model.triples) > 0 or len(self.query_model.subqueries) > 0:
+
+
+            if len(self.query_model.triples) > 0 or len(self.query_model.subqueries) > 0 or len(self.query_model.unions) >0:
                 where_string = "WHERE \n{ \n"
 
                 #optional_string = "OPTIONAL {  \n"
@@ -160,12 +168,40 @@ class SPARQLBuilder(object):
                 where_string += self.add_filter_clause()
                 if len(self.query_model.subqueries) > 0:
                     where_string += "\t\t" + self.add_subqueries()
+                if len(self.query_model.unions) >0:
+                    #print("union comes from here")
+                    where_string += self.add_union_query()
                 if where_string != "":
                     where_string += "\n}"
                 self.query_string += where_string
+             #elif len(self.query_model.unions) > 0:
+
 
             else:
                 self.query_string += "WHERE {}\n"
+
+
+        def add_union_query(self):
+            """
+
+            :return: The string of the main query with the union queries
+            """
+            unionQuery =""
+            all_union = ""
+            if self.query_model.unions is not None:
+                #print ("union 1",self.query_model.unions)
+                for i in range(0,len(self.query_model.unions)):
+                #for query in self.query_model.unions:
+                    unionQuery += " \n { \n"\
+                                  + self.query_model.unions[i].get_triples() #self.query_model.unions[i].to_sparql()
+                    unionQuery += "\n } \n "
+                    #print("unionQuery" ,unionQuery)
+                    if i < len(self.query_model.unions)-1:
+                       unionQuery += "\n UNION \n "
+
+
+            return unionQuery
+
 
         def add_order_clause(self):
             """
