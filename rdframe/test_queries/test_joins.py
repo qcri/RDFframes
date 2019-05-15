@@ -5,7 +5,7 @@ from rdframe.dataset.rdfpredicate import RDFPredicate
 from rdframe.dataset.aggregation_fn_data import AggregationData
 from rdframe.utils.constants import JoinType
 
-##FIXME: this function does not change the sparql variable names to include the new join column name
+
 def test_expandable_expandable_join(join_type, optional1=False, optional2=False):
     start = time.time()
     # create a knowledge graph to store the graph uri and prefixes
@@ -26,7 +26,7 @@ def test_expandable_expandable_join(join_type, optional1=False, optional2=False)
     dataset = dataset.expand(src_col_name='tweet', predicate_list=[
         RDFPredicate('sioc:has_creater', 'tweep', False),
         RDFPredicate('sioc:content', 'text', optional1)
-    ])
+    ]).select_cols(['tweep'])
 
     dataset2 = graph.entities(class_name='sioct:tweeter',
                              new_dataset_name='dataset2',
@@ -149,6 +149,40 @@ def test_expandable_expandable_join_w_selectcols():
         print("SPARQL query =\n{}\n".format(sparql_query))
 
 
+def test_expandable_grouped_join():
+    # create a knowledge graph to store the graph uri and prefixes
+    graph = KnowledgeGraph('twitter', 'https://twitter.com',
+                           prefixes={
+                               "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                               "sioc": "http://rdfs.org/sioc/ns#",
+                               "sioct": "http://rdfs.org/sioc/types#",
+                               "to": "http://twitter.com/ontology/",
+                               "dcterms": "http://purl.org/dc/terms/",
+                               "xsd": "http://www.example.org/",
+                               "foaf": "http://xmlns.com/foaf/0.1/"
+                           })
+    # return all the instances of the tweet class
+    dataset = graph.entities(class_name='sioct:microblogPost',
+                             new_dataset_name='dataset1',
+                             entities_col_name='tweet')
+    dataset = dataset.expand(src_col_name='tweet', predicate_list=[
+        RDFPredicate('sioc:has_creater', 'tweep', False),
+        RDFPredicate('sioc:content', 'text', False)
+    ])
+
+    dataset2 = graph.entities(class_name='sioct:microblogPost',
+                             new_dataset_name='tweets',
+                             entities_col_name='tweet')
+    dataset2 = dataset2.expand(src_col_name='tweet', predicate_list=[
+        RDFPredicate('sioc:has_creater', 'tweeter')
+    ]).group_by(['tweeter']).count(
+        aggregation_fn_data=[AggregationData('tweet', 'tweets_count')]).filter(
+        conditions_dict={'tweets_count': ['>= {}'.format(200), '<= {}'.format(300)]})
+    dataset.join(dataset2, 'tweep', 'tweeter', 'user', JoinType.InnerJoin)
+
+    sparql_query = dataset.to_sparql()
+    print("SPARQL query =\n{}\n".format(sparql_query))
+
 if __name__ == '__main__':
     # test_expandable_expandable_join(JoinType.InnerJoin)
     # test_expandable_expandable_join(JoinType.LeftOuterJoin)
@@ -158,6 +192,7 @@ if __name__ == '__main__':
     # test_expandable_expandable_join(JoinType.RightOuterJoin, True, True)
     # test_join_instead_of_expand(JoinType.InnerJoin)
     # test_expandable_expandable_3_joins(JoinType.InnerJoin)
-    test_expandable_expandable_join_w_selectcols()
+    # test_expandable_expandable_join_w_selectcols()
+    test_expandable_grouped_join()
 
 

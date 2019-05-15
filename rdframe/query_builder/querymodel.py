@@ -322,12 +322,14 @@ class QueryModel(object):
             all_vars = all_vars.union(subq.all_variables())
         return all_vars
 
-    # TODO: it's missing renaming vars in the filter clause
+    # TODO: it's missing renaming vars in the filter clause, order by clause, unions and subqueries
     def rename_variable(self, old_name, new_name):
         self.triples = [[new_name if element == old_name else element for element in triple] for triple in self.triples]
         self.optionals = [[new_name if element == old_name else element for element in triple]
                           for triple in self.optionals]
         self.select_columns = OrderedSet([new_name if var == old_name else var for var in self.select_columns])
+        self.auto_generated_select_columns = OrderedSet([new_name if var == old_name else var for var in self.auto_generated_select_columns])
+        self.groupBy_columns = OrderedSet([new_name if var == old_name else var for var in self.groupBy_columns])
         self.variables = {new_name if var == old_name else var for var in self.variables}
 
     def is_valid_prefix(self, prefix):
