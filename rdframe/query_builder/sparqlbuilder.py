@@ -109,6 +109,18 @@ class SPARQLBuilder(object):
                 subquery_string += "\t"+"{" + '\t\t'.join(('\n'+query_str.lstrip()).splitlines(True)) + "\n\t" + "}"
             return subquery_string
 
+        def add_optional_subqueries(self):
+            """
+            attach the optional subquery to its outer query
+            :return: The SPARQL representation of the query
+            """
+            subquery_string = ""
+            for query in self.query_model.optional_subqueries:
+                subquery_string += "\n OPTIONAL"
+                query_str = query.to_sparql()
+                subquery_string += "\t"+"{" + '\t\t'.join(('\n'+query_str.lstrip()).splitlines(True)) + "\n\t" + "}"
+            return subquery_string
+
         def add_optional_clause(self):
             optional_string =""
             if len(self.query_model.optionals) > 0:
@@ -160,6 +172,8 @@ class SPARQLBuilder(object):
                 where_string += self.add_filter_clause()
                 if len(self.query_model.subqueries) > 0:
                     where_string += "\t\t" + self.add_subqueries()
+                if len(self.query_model.optional_subqueries) > 0:
+                    where_string += "\t\t" + self.add_optional_subqueries()
                 if where_string != "":
                     where_string += "\n}"
                 self.query_string += where_string

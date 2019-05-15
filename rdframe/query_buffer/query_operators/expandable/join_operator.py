@@ -109,6 +109,17 @@ class JoinOperator(QueryQueueOperator):
                     query_model.add_optional(*op_triple)
         else:
             if self.join_type == JoinType.InnerJoin:
+                # add query model 2 as a subquery
+                query_model.add_subquery(ds2_query_model)
+            if self.join_type == JoinType.LeftOuterJoin:
+                # make the subquery optional
+                query_model.add_optional_subquery(ds2_query_model)
+            if self.join_type == JoinType.RightOuterJoin:
+                # move all triples of dataset1 to optional
+                for triple in query_model.triples:
+                    query_model.add_optional(*triple)
+                query_model.rem_all_triples()
+                # add query model 2 as a subquery
                 query_model.add_subquery(ds2_query_model)
 
         return ds, query_model, None

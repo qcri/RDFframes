@@ -149,7 +149,7 @@ def test_expandable_expandable_join_w_selectcols():
         print("SPARQL query =\n{}\n".format(sparql_query))
 
 
-def test_expandable_grouped_join():
+def test_expandable_grouped_join(join_type):
     # create a knowledge graph to store the graph uri and prefixes
     graph = KnowledgeGraph('twitter', 'https://twitter.com',
                            prefixes={
@@ -178,10 +178,11 @@ def test_expandable_grouped_join():
     ]).group_by(['tweeter']).count(
         aggregation_fn_data=[AggregationData('tweet', 'tweets_count')]).filter(
         conditions_dict={'tweets_count': ['>= {}'.format(200), '<= {}'.format(300)]})
-    dataset.join(dataset2, 'tweep', 'tweeter', 'user', JoinType.InnerJoin)
+    dataset.join(dataset2, 'tweep', 'tweeter', 'user', join_type)
 
     sparql_query = dataset.to_sparql()
-    print("SPARQL query =\n{}\n".format(sparql_query))
+    print("SPARQL query with {} =\n{}\n".format(join_type, sparql_query))
+
 
 if __name__ == '__main__':
     # test_expandable_expandable_join(JoinType.InnerJoin)
@@ -193,6 +194,8 @@ if __name__ == '__main__':
     # test_join_instead_of_expand(JoinType.InnerJoin)
     # test_expandable_expandable_3_joins(JoinType.InnerJoin)
     # test_expandable_expandable_join_w_selectcols()
-    test_expandable_grouped_join()
+    test_expandable_grouped_join(JoinType.InnerJoin)
+    test_expandable_grouped_join(JoinType.LeftOuterJoin)
+    test_expandable_grouped_join(JoinType.RightOuterJoin)
 
 
