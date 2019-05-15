@@ -105,7 +105,6 @@ class JoinOperator(QueryQueueOperator):
             # append the optional patterns in dataset2 to optionals in dataset1
             for op_triple in ds2_query_model.optionals:
                 query_model.add_optional(*op_triple)
->>>>>>> 2fadd3e5baef70c49ac2fd21d41c44ffe95f80f6
 
         return ds, query_model, None
 
