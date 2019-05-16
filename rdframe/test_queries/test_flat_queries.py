@@ -229,13 +229,10 @@ def test_groupby_aggregation_query():
     print("sparql_query 1 =\n{}\n".format(sparql_query))
 
 if __name__ == '__main__':
-<<<<<<< HEAD
   # test_simple_query()
    #test_expand_query()
-=======
    # test_simple_query()
    test_expand_query()
->>>>>>> 873f1b1dca2f6f5fc0ea5060bb11edf5bc1308a9
    #test_select_query()
    test_filter_query()
    #test_join_query()
