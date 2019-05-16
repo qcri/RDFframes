@@ -55,8 +55,8 @@ class JoinOperator(QueryQueueOperator):
             query_model.rename_variable(self.src_col_name, self.new_col_name)
 
         # rename all variables of the second query model if necessary
-        if self.second_col_name != self.new_col_name:
-            ds2_query_model.rename_variable(self.second_col_name, self.new_col_name)
+       # if self.second_col_name != self.new_col_name:
+        #    ds2_query_model.rename_variable(self.second_col_name, self.new_col_name)
 
         # union the prefixes
         prefixes2 = {}
@@ -107,22 +107,7 @@ class JoinOperator(QueryQueueOperator):
                 # append the optional patterns in dataset2 to optionals in dataset1
                 for op_triple in ds2_query_model.optionals:
                     query_model.add_optional(*op_triple)
-        else:
-            if self.join_type == JoinType.InnerJoin:
-                # add query model 2 as a subquery
-                query_model.add_subquery(ds2_query_model)
-            if self.join_type == JoinType.LeftOuterJoin:
-                # make the subquery optional
-                query_model.add_optional_subquery(ds2_query_model)
-            if self.join_type == JoinType.RightOuterJoin:
-                # move all triples of dataset1 to optional
-                for triple in query_model.triples:
-                    query_model.add_optional(*triple)
-                query_model.rem_all_triples()
-                # add query model 2 as a subquery
-                query_model.add_subquery(ds2_query_model)
-
-            if self.join_type == JoinType.OuterJoin:
+            elif  self.join_type == JoinType.OuterJoin:
                # The join will build three queries and two sub-queries
                 # one contains the basic pattrens from the two dataset into one query
                 ds1_query_model = QueryModel()
@@ -139,18 +124,15 @@ class JoinOperator(QueryQueueOperator):
                 query_model.rem_optionaltriples()
 
                 for triple in ds2_query_model.triples:
-                    #query_model.add_triple(*triple)
                     inner_query_model.add_triple(*triple)
 
                 for op_triple in ds2_query_model.optionals:
-                #query_model.add_optional(*op_triple)
                     inner_query_model.add_optional(*op_triple)
 
             ## one query with basic pattren from dataset1 and basic pattren from dataset2 as optional
 
                 ds1_triples = ds1_query_model.triples.copy()
                 ds1_optional = ds1_query_model.optionals.copy()
-
                 ds2_triples = ds2_query_model.triples.copy()
                 ds2_optional = ds2_query_model.optionals.copy()
 
@@ -172,6 +154,22 @@ class JoinOperator(QueryQueueOperator):
                 #ds2_query_model.rem_prefixes()
                 query_model.add_unions(ds2_query_model)
                 query_model.add_unions(inner_query_model)
+        else:
+            if self.join_type == JoinType.InnerJoin:
+                # add query model 2 as a subquery
+                query_model.add_subquery(ds2_query_model)
+            if self.join_type == JoinType.LeftOuterJoin:
+                # make the subquery optional
+                query_model.add_optional_subquery(ds2_query_model)
+            if self.join_type == JoinType.RightOuterJoin:
+                # move all triples of dataset1 to optional
+                for triple in query_model.triples:
+                    query_model.add_optional(*triple)
+                query_model.rem_all_triples()
+                # add query model 2 as a subquery
+                query_model.add_subquery(ds2_query_model)
+
+
 
         return ds, query_model, None
 

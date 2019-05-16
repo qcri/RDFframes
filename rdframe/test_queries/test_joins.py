@@ -35,7 +35,7 @@ def test_expandable_expandable_join(join_type, optional1=False, optional2=False)
         RDFPredicate('sioc:has_name', 'name', optional2)
     ])
 
-    dataset.join(dataset2,'tweep','tweeter','user', join_type)
+    dataset.join(dataset2,'tweep','tweeter','tweep', join_type)
 
     sparql_query = dataset.to_sparql()
     print("SPARQL query with {} =\n{}\n".format(join_type, sparql_query))

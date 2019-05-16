@@ -181,7 +181,6 @@ class SPARQLBuilder(object):
                 if len(self.query_model.subqueries) > 0:
                     where_string += "\t\t" + self.add_subqueries()
                 if len(self.query_model.unions) >0:
-                    #print("union comes from here")
                     where_string += self.add_union_query()
                 if len(self.query_model.optional_subqueries) > 0:
                     where_string += "\t\t" + self.add_optional_subqueries()
@@ -203,13 +202,10 @@ class SPARQLBuilder(object):
             unionQuery =""
             all_union = ""
             if self.query_model.unions is not None:
-                #print ("union 1",self.query_model.unions)
                 for i in range(0,len(self.query_model.unions)):
-                #for query in self.query_model.unions:
                     unionQuery += " \n { \n"\
-                                  + self.query_model.unions[i].get_triples() #self.query_model.unions[i].to_sparql()
+                                  + self.query_model.unions[i].get_triples()
                     unionQuery += "\n } \n "
-                    #print("unionQuery" ,unionQuery)
                     if i < len(self.query_model.unions)-1:
                        unionQuery += "\n UNION \n "
 
