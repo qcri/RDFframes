@@ -21,7 +21,6 @@ def test_expand_after_group_by():
     # return all the instances of the tweet class
     dataset = graph.entities(class_name='sioct:microblogPost',
                              new_dataset_name='tweets',
-                             class_col_name='tweet_class',
                              entities_col_name='tweet')
     sparql_query = dataset.to_sparql()
     print("sparql_query 1 =\n{}\n".format(sparql_query))

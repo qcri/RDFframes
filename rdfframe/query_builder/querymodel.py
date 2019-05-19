@@ -445,26 +445,6 @@ class QueryModel(object):
 
             return final_qm
 
-            #self.variables = set()  # a set of all variables in the query.
-            #self.filter_clause = {}  # a dictionary of column name as key and associated conditions as a value
-            #self.groupBy_columns = OrderedSet()  # a set of columns for the groupby modifier, it's a subset of self.variables
-            #self.aggregate_clause = {}  # a dictionary of new_aggregation_col_name: (aggregate function, src_column_name)
-            #self.having_clause = {}  # a dictionary of new_aggregation_col_name : condition
-
-
-            #self.triples = []  # list of basic graph patterns in the form (subject, predicate, object) tuples
-            #self.optionals = []  # list of lists. Each list contains (subject, predicate, object) optional patterns
-            #self.subqueries = []  # list of subqueries. each subquery is a query model
-            #self.optional_subqueries = []  # list of optional subqueries. each subquery is a query model
-            #self.unions = []  # list of subqueries to union with the current query model
-
-            #self.select_columns = OrderedSet()  # list of columns to be selected ,  set()
-            #self.auto_generated_select_columns = OrderedSet()
-
-            #self.querybuilder = None  # a SPARQLbuilder that converts the query model to a string
-            #self.parent_query_model = None  # a pointer to the parent query if this is a subquery
-
-
 
 
 

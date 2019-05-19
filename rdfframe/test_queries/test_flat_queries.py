@@ -4,12 +4,13 @@ from rdfframe.knowledge_graph import KnowledgeGraph
 from rdfframe.dataset.rdfpredicate import RDFPredicate
 from rdfframe.dataset.aggregation_fn_data import AggregationData
 from rdfframe.utils.constants import JoinType
+from rdfframe.client.http_client import HttpClient, HttpClientDataFormat
 
 
 def test_simple_query():
     start = time.time()
     # create a knowledge graph to store the graph uri and prefixes
-    graph = KnowledgeGraph('twitter', 'https://twitter.com',
+    graph = KnowledgeGraph('twitter', 'https://twitter.com/',
                            prefixes={
                                "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
                                "sioc": "http://rdfs.org/sioc/ns#",
@@ -20,12 +21,28 @@ def test_simple_query():
                                "foaf": "http://xmlns.com/foaf/0.1/"
                            })
     # return all the instances of the tweet class
-    dataset = graph.entities(class_name='sioct:microblogPost',
+    dataset = graph.entities(class_name='sioct:MicroblogPost',
                              new_dataset_name='tweets',
-                             #class_col_name='tweet_class',
                              entities_col_name='tweet')
     sparql_query = dataset.to_sparql()
     print("sparql_query 1 =\n{}\n".format(sparql_query))
+
+    endpoint = 'http://10.161.202.101:8890/sparql/'
+    port = 8890
+    output_format = HttpClientDataFormat.PANDAS_DF
+    max_rows = 1000000
+    timeout = 12000
+    default_graph_url = 'http://twitter.com/'
+    client = HttpClient(endpoint_url=endpoint,
+                        port=port,
+                        return_format=output_format,
+                        timeout=timeout,
+                        default_graph_uri=default_graph_url,
+                        max_rows=max_rows
+                        )
+
+    df = dataset.execute(client, return_format=output_format)
+    print(df.head(10))
 
 
 def test_expand_query():
@@ -48,7 +65,7 @@ def test_expand_query():
                              entities_col_name='tweet')
     dataset = dataset.expand(src_col_name='tweet', predicate_list=[
         RDFPredicate('sioc:has_creater','tweep',False),
-        RDFPredicate('sioc:content' ,'text',True)
+        RDFPredicate('sioc:content','text',True)
     ])
     sparql_query = dataset.to_sparql()
     print("sparql_query 1 =\n{}\n".format(sparql_query))
@@ -215,7 +232,7 @@ def test_groupby_aggregation_query():
                                "foaf": "http://xmlns.com/foaf/0.1/"
                            })
     # return all the instances of the tweet class
-    dataset = graph.entities(class_name='sioct:microblogPost',
+    dataset = graph.entities(class_name='sioc:microblogPost',
                              new_dataset_name='tweets',
                              #class_col_name='tweet_class',
                              entities_col_name='tweet')
@@ -229,12 +246,12 @@ def test_groupby_aggregation_query():
     print("sparql_query 1 =\n{}\n".format(sparql_query))
 
 if __name__ == '__main__':
-  # test_simple_query()
+    test_simple_query()
    #test_expand_query()
    # test_simple_query()
-   test_expand_query()
+   #test_expand_query()
    #test_select_query()
-   test_filter_query()
+   #test_filter_query()
    #test_join_query()
     #test_sort_limit_offset_query()
     #test_groupby_query()

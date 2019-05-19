@@ -4,6 +4,7 @@ from rdfframe.knowledge_graph import KnowledgeGraph
 from rdfframe.dataset.rdfpredicate import RDFPredicate
 from rdfframe.dataset.aggregation_fn_data import AggregationData
 from rdfframe.utils.constants import JoinType
+from rdfframe.client.http_client import HttpClient, HttpClientDataFormat
 
 
 def test_expandable_expandable_join(join_type, optional1=False, optional2=False):
@@ -75,7 +76,7 @@ def test_join_instead_of_expand(join_type):
 def test_expandable_expandable_3_joins(join_type):
     start = time.time()
     # create a knowledge graph to store the graph uri and prefixes
-    graph = KnowledgeGraph('twitter', 'https://twitter.com',
+    graph = KnowledgeGraph('twitter', 'https://twitter.com/',
                            prefixes={
                                "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
                                "sioc": "http://rdfs.org/sioc/ns#",
@@ -154,7 +155,7 @@ def test_expandable_expandable_join_w_selectcols():
 
 def test_expandable_grouped_join(join_type):
     # create a knowledge graph to store the graph uri and prefixes
-    graph = KnowledgeGraph('twitter', 'https://twitter.com',
+    graph = KnowledgeGraph('twitter', 'https://twitter.com/',
                            prefixes={
                                "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
                                "sioc": "http://rdfs.org/sioc/ns#",
@@ -173,7 +174,6 @@ def test_expandable_grouped_join(join_type):
         RDFPredicate('sioc:content', 'text', False)
     ])
 
-
     dataset2 = graph.entities(class_name='sioct:microblogPost',
                              new_dataset_name='tweets',
                              entities_col_name='tweet')
@@ -188,6 +188,22 @@ def test_expandable_grouped_join(join_type):
     sparql_query = dataset.to_sparql()
     print("SPARQL query with {} =\n{}\n".format(join_type, sparql_query))
 
+    endpoint = 'http://10.161.202.101:8890/sparql/'
+    port = 8890
+    output_format = HttpClientDataFormat.PANDAS_DF
+    max_rows = 1000000
+    timeout = 12000
+    default_graph_url = 'http://twitter.com/'
+    client = HttpClient(endpoint_url=endpoint,
+                        port=port,
+                        return_format=output_format,
+                        timeout=timeout,
+                        default_graph_uri=default_graph_url,
+                        max_rows=max_rows
+                        )
+
+    df = dataset.execute(client, return_format=output_format)
+    print(df.head(10))
 
 if __name__ == '__main__':
     # test_expandable_expandable_join(JoinType.InnerJoin)

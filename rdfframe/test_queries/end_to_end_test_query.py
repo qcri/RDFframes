@@ -52,9 +52,9 @@ def test_flat_query():
 
     print("Sparql Query = \n{}".format(ds.to_sparql()))
 
-    # df = ds.execute(client, return_format=output_format)
-    # print(df.head(10))
-    # return df
+    df = ds.execute(client, return_format=output_format)
+    print(df.head(10))
+    return df
 
 
 if __name__ == '__main__':
