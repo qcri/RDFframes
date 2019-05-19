@@ -53,6 +53,10 @@ class SPARQLBuilder(object):
             """
             add select columns from querymodel into the SPARQL query
             """
+            if self.query_model.select_all == True:
+                select_string = "SELECT * "
+                self.query_string += select_string
+                return
             if len(self.query_model.select_columns) > 0 or len(self.query_model.auto_generated_select_columns) > 0:
                 select_string = "SELECT "
                 #print("self.query_model.select_columns", self.query_model.select_columns)
@@ -200,14 +204,13 @@ class SPARQLBuilder(object):
             :return: The string of the main query with the union queries
             """
             unionQuery =""
-            all_union = ""
             if self.query_model.unions is not None:
                 for i in range(0,len(self.query_model.unions)):
-                    unionQuery += " \n { \n"\
-                                  + self.query_model.unions[i].get_triples()
-                    unionQuery += "\n } \n "
+                    unionQuery += " \n {"\
+                                  + self.query_model.unions[i].to_sparql()
+                    unionQuery += "\n }"
                     if i < len(self.query_model.unions)-1:
-                       unionQuery += "\n UNION \n "
+                       unionQuery += "\n UNION "
 
 
             return unionQuery

@@ -1,9 +1,9 @@
-from orderedset._orderedset import OrderedSet
+from rdfframe.query_buffer.query_operators.query_queue_operator import QueryQueueOperator
+from rdfframe.query_builder.queue2querymodel import Queue2QueryModelConverter
+from rdfframe.utils.constants import JoinType
+from rdfframe.query_builder.querymodel import QueryModel
 
-from rdframe.query_buffer.query_operators.query_queue_operator import QueryQueueOperator
-from rdframe.query_builder.queue2querymodel import Queue2QueryModelConverter
-from rdframe.utils.constants import JoinType
-from rdframe.query_builder.querymodel import QueryModel
+
 __author__ = """
 Ghadeer Abuoda <gabuoda@hbku.edu.qa>
 Aisha Mohamed <ahmohamed@qf.org.qa>
@@ -108,7 +108,7 @@ class JoinOperator(QueryQueueOperator):
                 for op_triple in ds2_query_model.optionals:
                     query_model.add_optional(*op_triple)
             elif  self.join_type == JoinType.OuterJoin:
-               # The join will build three queries and two sub-queries
+                # The join will build three queries and two sub-queries
                 # one contains the basic pattrens from the two dataset into one query
                 ds1_query_model = QueryModel()
                 inner_query_model=  QueryModel()
@@ -129,7 +129,7 @@ class JoinOperator(QueryQueueOperator):
                 for op_triple in ds2_query_model.optionals:
                     inner_query_model.add_optional(*op_triple)
 
-            ## one query with basic pattren from dataset1 and basic pattren from dataset2 as optional
+                ## one query with basic pattren from dataset1 and basic pattren from dataset2 as optional
 
                 ds1_triples = ds1_query_model.triples.copy()
                 ds1_optional = ds1_query_model.optionals.copy()
@@ -141,35 +141,40 @@ class JoinOperator(QueryQueueOperator):
                 for op_triple in ds2_optional:
                     ds1_query_model.add_optional(*op_triple)
 
-            ## one query with basic pattren from dataset 2 and basic pattren from dataset1 as optional
+                ## one query with basic pattren from dataset 2 and basic pattren from dataset1 as optional
                 for triple in ds1_triples:
                     ds2_query_model.add_optional(*triple)
                 for op_triple in ds1_optional:
                     ds2_query_model.add_optional(*op_triple)
 
-            # add the two queries into the union of the main query
+                # add the two queries into the union of the main query
                 query_model.select_columns = query_model.select_columns.union(ds2_query_model.select_columns)
 
                 query_model.add_unions(ds1_query_model)
                 #ds2_query_model.rem_prefixes()
                 query_model.add_unions(ds2_query_model)
                 query_model.add_unions(inner_query_model)
-        else:
+        else: # ds3 is a grouped dataset
             if self.join_type == JoinType.InnerJoin:
                 # add query model 2 as a subquery
                 query_model.add_subquery(ds2_query_model)
-            if self.join_type == JoinType.LeftOuterJoin:
+            elif self.join_type == JoinType.LeftOuterJoin:
                 # make the subquery optional
                 query_model.add_optional_subquery(ds2_query_model)
-            if self.join_type == JoinType.RightOuterJoin:
+            elif self.join_type == JoinType.RightOuterJoin:
                 # move all triples of dataset1 to optional
                 for triple in query_model.triples:
                     query_model.add_optional(*triple)
                 query_model.rem_all_triples()
                 # add query model 2 as a subquery
                 query_model.add_subquery(ds2_query_model)
-
-
+            elif self.join_type == JoinType.OuterJoin:
+                # Union query model 1 with query model 2
+                if self.src_col_name != self.new_col_name:
+                    query_model.rename_variable(self.src_col_name, self.new_col_name)
+                if self.second_col_name != self.new_col_name:
+                    ds2_query_model.rename_variable(self.second_col_name, self.new_col_name)
+                query_model = query_model.union(ds2_query_model)
 
         return ds, query_model, None
 

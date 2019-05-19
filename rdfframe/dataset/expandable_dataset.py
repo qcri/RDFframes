@@ -71,16 +71,18 @@ class ExpandableDataset(Dataset):
         :param join_type:
         :return:
         """
+        # specify the join key in dataset2
         if join_col_name2 is None:
             if join_col_name1 not in dataset2.columns:
                 raise Exception(
                     "No join key specified for dataset2 and join_col_name1 is not in dataset2")
-            join_col_name2 = join_col_name1
+            else:
+                join_col_name2 = join_col_name1
+        # find the new column name
+        if new_column_name is None:
             new_column_name = join_col_name1
-        elif join_col_name1 != join_col_name2 and new_column_name is None:
-            new_column_name = join_col_name1
-        elif new_column_name is not None:
-            self.rem_column(join_col_name1)
+        else: # new_column_name is not None
+            # TODO: self.rem_column(join_col_name1)
             self.add_column(new_column_name)
 
         node = JoinOperator(self, dataset2, join_col_name1, join_col_name2, join_type, new_column_name)

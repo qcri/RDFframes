@@ -1,5 +1,5 @@
-from rdframe.query_buffer.query_queue import QueryQueue
-from rdframe.query_buffer.query_operators.query_queue_operator import QueryQueueOperator
+from rdfframe.query_buffer.query_queue import QueryQueue
+from rdfframe.query_buffer.query_operators.query_queue_operator import QueryQueueOperator
 
 
 __author__ = """

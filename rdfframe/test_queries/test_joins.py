@@ -56,12 +56,15 @@ def test_join_instead_of_expand(join_type):
                                "foaf": "http://xmlns.com/foaf/0.1/"
                            })
     # return all the instances of the tweet class
-    dataset = graph.entities(class_name='sioct:microblogPost',
+    dataset1 = graph.entities(class_name='sioct:microblogPost',
                              new_dataset_name='dataset',
-                             entities_col_name='tweet')
-    dataset1 = dataset.expand(src_col_name='tweet', predicate_list=[RDFPredicate('sioc:has_creater', 'tweep', False)])
+                             entities_col_name='tweet')\
+        .expand(src_col_name='tweet', predicate_list=[RDFPredicate('sioc:has_creater', 'tweep', False)])
 
-    dataset2 = dataset.expand(src_col_name='tweet', predicate_list=[RDFPredicate('sioc:content', 'text', False)])
+    dataset2 = graph.entities(class_name='sioct:microblogPost',
+                             new_dataset_name='dataset',
+                             entities_col_name='tweet')\
+        .expand(src_col_name='tweet', predicate_list=[RDFPredicate('sioc:content', 'text', False)])
 
     dataset2.join(dataset1, 'tweet', 'tweet', 'tweet', join_type)
 
@@ -170,6 +173,7 @@ def test_expandable_grouped_join(join_type):
         RDFPredicate('sioc:content', 'text', False)
     ])
 
+
     dataset2 = graph.entities(class_name='sioct:microblogPost',
                              new_dataset_name='tweets',
                              entities_col_name='tweet')
@@ -179,6 +183,7 @@ def test_expandable_grouped_join(join_type):
         aggregation_fn_data=[AggregationData('tweet', 'tweets_count')]).filter(
         conditions_dict={'tweets_count': ['>= {}'.format(200), '<= {}'.format(300)]})
     dataset.join(dataset2, 'tweep', 'tweeter', 'user', join_type)
+    dataset.select_cols(['user'])
 
     sparql_query = dataset.to_sparql()
     print("SPARQL query with {} =\n{}\n".format(join_type, sparql_query))
@@ -186,7 +191,7 @@ def test_expandable_grouped_join(join_type):
 
 if __name__ == '__main__':
     # test_expandable_expandable_join(JoinType.InnerJoin)
-    test_expandable_expandable_join(JoinType.OuterJoin)
+    #test_expandable_expandable_join(JoinType.OuterJoin)
     # test_expandable_expandable_join(JoinType.LeftOuterJoin)
     # test_expandable_expandable_join(JoinType.RightOuterJoin)
     # test_expandable_expandable_join(JoinType.InnerJoin, True, True)
@@ -199,5 +204,6 @@ if __name__ == '__main__':
     #test_expandable_grouped_join(JoinType.InnerJoin)
     #test_expandable_grouped_join(JoinType.LeftOuterJoin)
     #test_expandable_grouped_join(JoinType.RightOuterJoin)
+    test_expandable_grouped_join(JoinType.OuterJoin)
 
 

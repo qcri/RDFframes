@@ -53,12 +53,16 @@ class GroupedDataset(Dataset):
             src_col_name predicate.uri new_col_val
         if predicate.direction = ingoing:
             new_col_val predicate.uri src_col_name
-        :param src_col_name: the starting column that will be expanded
+        if optional flaf is True: add the graph pattern to an optional block
+        :param src_col_name: the starting column that will be expanded. has to be a group_by column, an aggregation
+            column or a column added after the dataset was grouped.
         :param predicate_list: list of instances of RDFPredicate, each containing 1) predicate URI, 2) new column name
         and 3) ingoing or outgoing flag
         :return: the same dataset object, but logically a new column is appended. Actually a new Operator representing
         the operation is added to the query_buffer for each predicate.
         """
+        if src_col_name not in self.columns:
+                        raise Exception("{} doesn't exist in the dataset".format(src_col_name))
         for predicate in predicate_list:
             operator = ExpansionOperator(self.name, src_col_name, predicate.uri, predicate.new_col_name,
                                          predicate.direction, is_optional=predicate.optional)
@@ -86,11 +90,17 @@ class GroupedDataset(Dataset):
         {'col_name': [pred1, pred2 ... etc], ...}
         :return: the same dataset object logically with the filtered column.
         """
+        all_cols = self.columns
+        invalid_cols = [col for col in conditions_dict.keys() if col not in all_cols]
+
+        if len(invalid_cols) > 0:
+            raise Exception('Columns {} are not defined in the dataset'.format(invalid_cols))
+
         for src_col_name in conditions_dict:
             if src_col_name in self.agg_columns:
                 operator = HavingOperator(self.name, src_col_name, conditions_dict[src_col_name])
                 self.query_queue.append_node(operator)
-            else:
+            else: # groupby column or added after groupby
                 for col, conditions in conditions_dict.items():
                     for cond in conditions:
                         operator = FilterOperator(self.name, col, cond)
@@ -103,11 +113,13 @@ class GroupedDataset(Dataset):
         :param col_list: list of column names to return
         :return: the same dataset
         """
-        all_cols = [col for col in set(self.columns + self.parent_dataset.columns)]
+        #all_cols = [col for col in set(self.columns + self.parent_dataset.columns)]
+        all_cols = self.columns
         invalid_cols = [col for col in col_list if col not in all_cols]
 
         if len(invalid_cols) > 0:
-            raise Exception('Columns {} are not defined'.format(invalid_cols))
+            raise Exception('Columns {} are not defined in the dataset'.format(invalid_cols))
+
         select_node = SelectOperator(self.name, col_list)
         self.query_queue.append_node(select_node)
 
@@ -126,6 +138,8 @@ class GroupedDataset(Dataset):
         return GroupedDataset(self, groupby_cols_list, groupby_node, groupby_ds_name)
 
     # aggregate functions
+    # TODO: add the case when the aggregation column is one of the grouping columns
+    # TODO: add the count without a src_col_name
 
     def sum(self, aggregation_fn_data):
         """
@@ -136,12 +150,12 @@ class GroupedDataset(Dataset):
         """
         for agg_fn_data in aggregation_fn_data:
             agg_col = agg_fn_data.src_col_name
-            if agg_col not in self.grouping_cols:
+            if agg_col not in self.grouping_cols and agg_col in self.parent_dataset.columns:
                 tag = agg_fn_data.new_col_name
                 param = agg_fn_data.agg_parameter
                 agg_node = GroupedAggregationOperator(self.name, agg_col, AggregationFunction.SUM, tag, param)
                 self.query_queue.append_node(agg_node)
-                self.columns.append(tag)
+                self.add_column(tag)
                 self.agg_columns.append(tag)
         return self
 
@@ -158,12 +172,12 @@ class GroupedDataset(Dataset):
         """
         for agg_fn_data in aggregation_fn_data:
             agg_col = agg_fn_data.src_col_name
-            if agg_col not in self.grouping_cols:
+            if agg_col not in self.grouping_cols and agg_col in self.parent_dataset.columns:
                 tag = agg_fn_data.new_col_name
                 param = agg_fn_data.agg_parameter
                 agg_node = GroupedAggregationOperator(self.name, agg_col, AggregationFunction.AVG, tag, param)
                 self.query_queue.append_node(agg_node)
-                self.columns.append(tag)
+                self.add_column(tag)
                 self.agg_columns.append(tag)
         return self
 
@@ -179,12 +193,12 @@ class GroupedDataset(Dataset):
         """
         for agg_fn_data in aggregation_fn_data:
             agg_col = agg_fn_data.src_col_name
-            if agg_col not in self.grouping_cols:
+            if agg_col not in self.grouping_cols and agg_col in self.parent_dataset.columns:
                 tag = agg_fn_data.new_col_name
                 param = agg_fn_data.agg_parameter
                 agg_node = GroupedAggregationOperator(self.name, agg_col, AggregationFunction.MIN, tag, param)
                 self.query_queue.append_node(agg_node)
-                self.columns.append(tag)
+                self.add_column(tag)
                 self.agg_columns.append(tag)
         return self
 
@@ -200,12 +214,12 @@ class GroupedDataset(Dataset):
         """
         for agg_fn_data in aggregation_fn_data:
             agg_col = agg_fn_data.src_col_name
-            if agg_col not in self.grouping_cols:
+            if agg_col not in self.grouping_cols and agg_col in self.parent_dataset.columns:
                 tag = agg_fn_data.new_col_name
                 param = agg_fn_data.agg_parameter
                 agg_node = GroupedAggregationOperator(self.name, agg_col, AggregationFunction.MAX, tag, param)
                 self.query_queue.append_node(agg_node)
-                self.columns.append(tag)
+                self.add_column(tag)
                 self.agg_columns.append(tag)
         return self
 
@@ -221,13 +235,13 @@ class GroupedDataset(Dataset):
         """
         for agg_fn_data in aggregation_fn_data:
             agg_col = agg_fn_data.src_col_name
-            if agg_col not in self.grouping_cols:
+            if agg_col not in self.grouping_cols and agg_col in self.parent_dataset.columns:
                 tag = agg_fn_data.new_col_name
                 param = agg_fn_data.agg_parameter
 
                 agg_node = GroupedAggregationOperator(self.name, agg_col, AggregationFunction.COUNT, tag, param)
                 self.query_queue.append_node(agg_node)
-                self.columns.append(tag)
+                self.add_column(tag)
                 self.agg_columns.append(tag)
         return self
 

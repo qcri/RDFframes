@@ -26,7 +26,7 @@ class QueryModel(object):
         self.prefixes = {}          # a dictionary of prefix_name: prefix_URI
 
         self.variables = set()      # a set of all variables in the query.
-        self.from_clause = []       # a list of graph URIs
+        self.from_clause = set()       # a list of graph URIs
         self.filter_clause = {}     # a dictionary of column name as key and associated conditions as a value
         self.groupBy_columns = OrderedSet() # a set of columns for the groupby modifier, it's a subset of self.variables
         self.aggregate_clause = {}  # a dictionary of new_aggregation_col_name: (aggregate function, src_column_name)
@@ -44,6 +44,7 @@ class QueryModel(object):
 
         self.select_columns = OrderedSet()    # list of columns to be selected ,  set()
         self.auto_generated_select_columns = OrderedSet()
+        self.select_all = False
 
         self.querybuilder = None # a SPARQLbuilder that converts the query model to a string
         self.parent_query_model = None # a pointer to the parent query if this is a subquery
@@ -63,7 +64,7 @@ class QueryModel(object):
         :param graphs: a list of graphs' URIs
         """
         if not self.is_subquery():
-            self.from_clause.extend(graphs) #extend
+            self.from_clause = self.from_clause.union(graphs) #extend
 
     def add_optional(self, subject, predicate, object):
         """
@@ -97,6 +98,8 @@ class QueryModel(object):
         :param subquery:
         :return:
         """
+        if len(unionquery.select_columns)<= 0 and len(unionquery.auto_generated_select_columns)<= 0:
+            unionquery.select_all = True
         self.unions.append(unionquery)
         unionquery.parent_query_model = weakref.ref(self)
         #unionquery.from_clause.clear()
@@ -219,7 +222,7 @@ class QueryModel(object):
         self.triples = []
 
     def rem_from_clause(self):
-        self.from_clause =[]
+        self.from_clause = set()
 
     def rem_prefixes(self):
         self.prefixes= {}
@@ -245,6 +248,15 @@ class QueryModel(object):
         self.having_clause.clear()
         self.aggregate_clause.clear()
         self.add_subquery(subquery)
+
+    @staticmethod
+    def clean_inner_qm(qm):
+        # clean the inner query (self)
+        qm.rem_prefixes()
+        qm.rem_from_clause()
+        qm.limit = 0
+        qm.offset = 0
+        qm.order_clause = OrderedDict()
 
     def wrap_in_a_parent_query(self):
         """
@@ -301,11 +313,11 @@ class QueryModel(object):
 
         # clean the inner query (self)
         self.prefixes = {}
-        self.from_clause = []
+        self.rem_from_clause()
         self.limit = 0
         self.offset = 0
         self.order_clause = OrderedDict()
-        self.from_clause = []
+        self.rem_from_clause()
 
         return parent_query
 
@@ -336,9 +348,6 @@ class QueryModel(object):
     def is_aggregate_col(self, src_col_name):
         if src_col_name in self.aggregate_clause:
             return True
-        #for col, lst in self.aggregate_clause.items():
-        #   if src_col_name == lst[0][2]:
-        #       return True
         return False
 
     def is_subquery(self):
@@ -401,6 +410,62 @@ class QueryModel(object):
             optional_string += "}"
 
         return optional_string
+
+    def union(self, qm2):
+        """
+        union this query model with query model (qm2)
+        :param qm2:
+        :return: a query model that unions the current query model and qm2
+        """
+        final_qm = QueryModel()
+
+        if self.from_clause == qm2.from_clause:  # same graph
+            # add the graphs to the outer qm and remove them  from the inner qms
+            final_qm.add_graphs(self.from_clause)
+            final_qm.add_graphs(qm2.from_clause)
+
+            # union the prefixes and remove them  from the inner qms
+            # TODO: check that all namespaces that have the same prefix have the same uri
+            final_qm.add_prefixes(self.prefixes)
+            final_qm.add_prefixes(qm2.prefixes)
+
+            final_qm.variables = final_qm.variables.union(self.variables)
+            final_qm.variables = final_qm.variables.union(qm2.variables)
+
+            final_qm.set_offset(min(self.offset, qm2.offset))
+            final_qm.set_limit(max(self.limit, qm2.limit))
+            final_qm.add_order_columns(self.order_clause)
+            final_qm.add_order_columns(qm2.order_clause)
+
+            QueryModel.clean_inner_qm(self)
+            QueryModel.clean_inner_qm(qm2)
+
+            final_qm.add_unions(self)
+            final_qm.add_unions(qm2)
+
+            return final_qm
+
+            #self.variables = set()  # a set of all variables in the query.
+            #self.filter_clause = {}  # a dictionary of column name as key and associated conditions as a value
+            #self.groupBy_columns = OrderedSet()  # a set of columns for the groupby modifier, it's a subset of self.variables
+            #self.aggregate_clause = {}  # a dictionary of new_aggregation_col_name: (aggregate function, src_column_name)
+            #self.having_clause = {}  # a dictionary of new_aggregation_col_name : condition
+
+
+            #self.triples = []  # list of basic graph patterns in the form (subject, predicate, object) tuples
+            #self.optionals = []  # list of lists. Each list contains (subject, predicate, object) optional patterns
+            #self.subqueries = []  # list of subqueries. each subquery is a query model
+            #self.optional_subqueries = []  # list of optional subqueries. each subquery is a query model
+            #self.unions = []  # list of subqueries to union with the current query model
+
+            #self.select_columns = OrderedSet()  # list of columns to be selected ,  set()
+            #self.auto_generated_select_columns = OrderedSet()
+
+            #self.querybuilder = None  # a SPARQLbuilder that converts the query model to a string
+            #self.parent_query_model = None  # a pointer to the parent query if this is a subquery
+
+
+
 
 
     def validate(self):
