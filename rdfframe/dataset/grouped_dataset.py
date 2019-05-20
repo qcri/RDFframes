@@ -5,6 +5,7 @@ from rdfframe.query_buffer.query_operators.shared.expansion_operator import Expa
 from rdfframe.query_buffer.query_operators.shared.filter_operator import FilterOperator
 from rdfframe.query_buffer.query_operators.shared.groupby_operator import GroupByOperator
 from rdfframe.query_buffer.query_operators.shared.select_operator import SelectOperator
+from rdfframe.query_buffer.query_operators.shared.join_operator import JoinOperator
 from rdfframe.dataset.dataset import Dataset
 from rdfframe.utils.constants import AggregationFunction
 from rdfframe.utils.constants import JoinType
@@ -81,7 +82,31 @@ class GroupedDataset(Dataset):
         :param join_type:
         :return:
         """
-        pass
+        if join_col_name1 not in self.columns:
+            raise Exception("Join key {} doesn't exist in this dataset".format(join_col_name1))
+        # specify the join key in dataset2
+        if join_col_name2 is None:
+            if join_col_name1 not in dataset2.columns:
+                raise Exception(
+                    "No join key specified for dataset2 and join_col_name1 is not in dataset2")
+            else:
+                join_col_name2 = join_col_name1
+        # find the new column name
+        if new_column_name is None:
+            new_column_name = join_col_name1
+        else: # new_column_name is not None
+            # TODO: self.rem_column(join_col_name1)
+            self.add_column(new_column_name)
+
+        node = JoinOperator(self, dataset2, join_col_name1, join_col_name2, join_type, new_column_name)
+
+        # ds1.columns = union(ds1.columns, ds2.columns)
+        for col in dataset2.columns:
+            if col not in self.columns and col != join_col_name2:
+                self.add_column(col)
+
+        self.query_queue.append_node(node)
+        # TODO: if we allow the join between different graphs, Union the graphs
 
     def filter(self, conditions_dict):
         """

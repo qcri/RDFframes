@@ -445,9 +445,6 @@ class QueryModel(object):
 
             return final_qm
 
-
-
-
     def validate(self):
         """
         validate the columns and parameters data in the query model and reports and inconsistencies.

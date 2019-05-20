@@ -7,7 +7,7 @@ from rdfframe.query_buffer.query_operators.shared.expansion_operator import Expa
 from rdfframe.query_buffer.query_operators.shared.filter_operator import FilterOperator
 from rdfframe.query_buffer.query_operators.shared.groupby_operator import GroupByOperator
 from rdfframe.query_buffer.query_operators.shared.select_operator import SelectOperator
-from rdfframe.query_buffer.query_operators.expandable.join_operator import JoinOperator
+from rdfframe.query_buffer.query_operators.shared.join_operator import JoinOperator
 from rdfframe.dataset.dataset import Dataset
 from rdfframe.dataset.grouped_dataset import GroupedDataset
 from rdfframe.utils.constants import JoinType, AggregationFunction
