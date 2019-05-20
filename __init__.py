@@ -1,4 +1,4 @@
-from rdfframe.client.sparql_endpoint_client import SPARQLEndpointClient
-from rdfframe.client.http_client import HttpClient, HttpClientDataFormat
-from rdfframe.knowledge_graph import KnowledgeGraph
-from rdfframe.dataset.dataset import Dataset
+from rdfframes.client.sparql_endpoint_client import SPARQLEndpointClient
+from rdfframes.client.http_client import HttpClient, HttpClientDataFormat
+from rdfframes.knowledge_graph import KnowledgeGraph
+from rdfframes.dataset.dataset import Dataset
