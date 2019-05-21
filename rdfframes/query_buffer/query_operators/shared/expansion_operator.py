@@ -71,9 +71,9 @@ class ExpansionOperator(QueryQueueOperator):
                 query_model.add_optional(triple[0],triple[1],triple[2])
             else:
                 query_model.add_triple(triple[0],triple[1],triple[2])
-            vars = [variable for variable in [triple[0], triple[2]] if ":" not in variable]
-            if len(vars) > 0:
-                query_model.transfer_select_triples_to_parent_query(vars)
+            #vars = [variable for variable in [triple[0], triple[1], triple[2]] if ":" not in variable]
+            #if len(vars) > 0:
+            #    query_model.transfer_select_triples_to_parent_query(vars)
         else:
             return ds, query_model, None
 

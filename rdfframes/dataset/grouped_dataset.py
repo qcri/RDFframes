@@ -115,9 +115,7 @@ class GroupedDataset(Dataset):
         {'col_name': [pred1, pred2 ... etc], ...}
         :return: the same dataset object logically with the filtered column.
         """
-        all_cols = self.columns
-        invalid_cols = [col for col in conditions_dict.keys() if col not in all_cols]
-
+        invalid_cols = [col for col in conditions_dict.keys() if col not in self.columns]
         if len(invalid_cols) > 0:
             raise Exception('Columns {} are not defined in the dataset'.format(invalid_cols))
 
@@ -138,6 +136,10 @@ class GroupedDataset(Dataset):
         :param groupby_cols_list: list of column names to group the table by
         :return: GroupedDataset object derived from self dataset with groupby_cols_list as grouping columns
         """
+        invalid_cols = [col for col in groupby_cols_list if col not in self.columns]
+        if len(invalid_cols) > 0:
+            raise Exception('Columns {} are not defined in the dataset'.format(invalid_cols))
+
         groupby_ds_name = GroupedDataset.generated_grouped_ds_name(self.name, groupby_cols_list)
         groupby_node = GroupByOperator(self.name, groupby_cols_list, groupby_ds_name)
         self.query_queue.append_node(groupby_node)

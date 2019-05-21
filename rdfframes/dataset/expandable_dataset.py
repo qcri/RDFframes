@@ -104,12 +104,15 @@ class ExpandableDataset(Dataset):
         {'col_name': [pred1, pred2 ... etc], ...}
         :return: the same dataset object logically with the filtered column.
         """
+        invalid_cols = [col for col in conditions_dict.keys() if col not in self.columns]
+        if len(invalid_cols) > 0:
+            raise Exception('Columns {} are not defined in the dataset'.format(invalid_cols))
+
         for col, conditions in conditions_dict.items():
             for cond in conditions:
                 filter_node = FilterOperator(self.name, col, cond)
                 self.query_queue.append_node(filter_node)
         return self
-
 
     def group_by(self, groupby_cols_list):
         """
@@ -117,6 +120,10 @@ class ExpandableDataset(Dataset):
         :param groupby_cols_list: list of column names to group the table by
         :return: GroupedDataset object derived from self dataset with groupby_cols_list as grouping columns
         """
+        invalid_cols = [col for col in groupby_cols_list if col not in self.columns]
+        if len(invalid_cols) > 0:
+            raise Exception('Columns {} are not defined in the dataset'.format(invalid_cols))
+
         groupby_ds_name = GroupedDataset.generated_grouped_ds_name(self.name, groupby_cols_list)
         groupby_node = GroupByOperator(self.name, groupby_cols_list, groupby_ds_name)
 

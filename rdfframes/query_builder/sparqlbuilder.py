@@ -54,13 +54,15 @@ class SPARQLBuilder(object):
             add select columns from querymodel into the SPARQL query
             """
             if self.query_model.select_all == True:
-                select_string = "SELECT * "
+                select_string = "SELECT * \n"
                 self.query_string += select_string
                 return
-            if len(self.query_model.select_columns) > 0 or len(self.query_model.auto_generated_select_columns) > 0:
+            #if len(self.query_model.select_columns) > 0 or len(self.query_model.auto_generated_select_columns) > 0:
+            elif len(self.query_model.select_columns) > 0:
                 select_string = "SELECT "
                 #print("self.query_model.select_columns", self.query_model.select_columns)
-                for col in self.query_model.select_columns.union(self.query_model.auto_generated_select_columns):
+                #for col in self.query_model.select_columns.union(self.query_model.auto_generated_select_columns):
+                for col in self.query_model.select_columns:
                     if col in self.query_model.aggregate_clause:
                         agg_part = self.query_model.aggregate_clause[col]
                         agg_func = agg_part[0][0]
@@ -72,6 +74,7 @@ class SPARQLBuilder(object):
                         select_string += "?%s " % col
                 select_string += "\n"
             else:
+                """
                 # if a flat query
                 if self.query_model.parent_query_model is None and len(self.query_model.subqueries) <= 0 \
                         and len(self.query_model.groupBy_columns) <= 0:
@@ -94,6 +97,9 @@ class SPARQLBuilder(object):
                 for col in common_variables:
                     select_string += "?%s " % col
                 select_string += "\n"
+                """
+                select_string = "SELECT * \n"
+
             self.query_string += select_string
 
         def return_subquery(self, subquery):
@@ -145,9 +151,6 @@ class SPARQLBuilder(object):
 
             return optional_string
 
-
-
-
         def add_where_clause(self):
             """
             prepare where clause of the query
@@ -156,8 +159,6 @@ class SPARQLBuilder(object):
             - adds the filter conditions if needed
             - adds the subqueries if any exist
             """
-
-
             if len(self.query_model.triples) > 0 or len(self.query_model.subqueries) > 0 or len(self.query_model.unions) >0:
                 where_string = "WHERE \n{ \n"
 
