@@ -49,134 +49,169 @@ class JoinOperator(QueryQueueOperator):
         converter = Queue2QueryModelConverter(self.second_dataset)
         ds2_query_model = converter.to_query_model()
 
+        # join the two query models
+        joined_query_model = self.__join(query_model, ds2_query_model)
+
+        return ds, joined_query_model, None
+
+    def __join(self, query_model1, query_model2):
         # rename all variables of the first query model if necessary
-        # FIXME: if there is a select node after the join it may contain a variable name that does not exist anymore..
         if self.src_col_name != self.new_col_name:
-            query_model.rename_variable(self.src_col_name, self.new_col_name)
+            query_model1.rename_variable(self.src_col_name, self.new_col_name)
 
         # rename all variables of the second query model if necessary
-       # if self.second_col_name != self.new_col_name:
-        #    ds2_query_model.rename_variable(self.second_col_name, self.new_col_name)
+        if self.second_col_name != self.new_col_name:
+            query_model2.rename_variable(self.second_col_name, self.new_col_name)
 
         # union the prefixes
         prefixes2 = {}
-        for prefix in ds2_query_model.prefixes:
-            if prefix not in query_model.prefixes:
-                prefixes2[prefix] = ds2_query_model.prefixes[prefix]
-        query_model.add_prefixes(prefixes2)
+        for prefix in query_model2.prefixes:
+            if prefix not in query_model1.prefixes:
+                prefixes2[prefix] = query_model2.prefixes[prefix]
+        query_model1.add_prefixes(prefixes2)
 
-        if self.second_dataset.type() == "ExpandableDataset":
-            # TODO: Union the graphs in ds2 with ds1 and assign each graph pattern to a graph in case of joining two different graphs
-            # union the select columns
-            query_model.select_columns = query_model.select_columns.union(
-                ds2_query_model.select_columns)  # FIXME: there will be no select_cols in the query model because we always process the select node in the end
+        # union the select columns
+        query_model1.select_columns = query_model1.select_columns.union(query_model2.select_columns)
 
-            # union the variables
-            query_model.variables = query_model.variables.union(ds2_query_model.variables)
+        # union the variables
+        query_model1.variables = query_model1.variables.union(query_model2.variables)
 
-            query_model.set_offset(min(query_model.offset, ds2_query_model.offset))
-            query_model.set_limit(max(query_model.limit, ds2_query_model.limit))
-            query_model.add_order_columns(ds2_query_model.order_clause)
+        query_model1.set_offset(min(query_model1.offset, query_model2.offset))
+        query_model1.set_limit(max(query_model1.limit, query_model2.limit))
+        query_model1.add_order_columns(query_model2.order_clause)
 
-            # add the filter graph patterns in dataset2 to dataset1
-            for column, condition in ds2_query_model.filter_clause:
-                query_model.add_filter_condition(column, condition)
+        # add the filter graph patterns of dataset2 to dataset1
+        for column, condition in query_model2.filter_clause:
+            query_model1.add_filter_condition(column, condition)
 
-            if self.join_type == JoinType.InnerJoin:
-                # add the basic graph patterns in dataset2 to dataset1
-                for triple in ds2_query_model.triples:
-                    query_model.add_triple(*triple)
-                # append the optional patterns in dataset2 to optionals in dataset1
-                for op_triple in ds2_query_model.optionals:
-                    query_model.add_optional(*op_triple)
-            elif self.join_type == JoinType.LeftOuterJoin:
-                # add the basic and optionals graph patterns of dataset2 to dataset1 optionals
-                for triple in ds2_query_model.triples:
-                    query_model.add_optional(*triple)
-                ## TODO: change the structure of the optional block; the optional in the original query in first block then the optional block from the second query model
-                for triple in ds2_query_model.optionals:
-                    query_model.add_optional(*triple)
-            elif self.join_type == JoinType.RightOuterJoin:
-                # move all triples of dataset1 to optional
-                for triple in query_model.triples:
-                    query_model.add_optional(*triple)
-                query_model.rem_all_triples()
-                # add the triples in dataset2 to triples in dataset1
-                for triple in ds2_query_model.triples:
-                    query_model.add_triple(*triple)
-                # append the optional patterns in dataset2 to optionals in dataset1
-                for op_triple in ds2_query_model.optionals:
-                    query_model.add_optional(*op_triple)
-            elif  self.join_type == JoinType.OuterJoin:
-                # The join will build three queries and two sub-queries
-                # one contains the basic pattrens from the two dataset into one query
-                ds1_query_model = QueryModel()
-                inner_query_model=  QueryModel()
+        if self.dataset.type() == "ExpandableDataset":
+            if self.second_dataset.type() == "ExpandableDataset":
+                query_model = self.__join_expandable_expandable(query_model1, query_model2, self.join_type)
+            else:  # ds2 is grouped
+                query_model = self.__join_expandable_grouped(query_model1, query_model2, self.join_type)
+        else:  # ds1 is grouped
+            if self.second_dataset.type() == "ExpandableDataset":  # ds2 is expandable
+                # move everything we joined so far to query_model2
+                query_model2.prefixes = query_model1.prefixes
+                query_model2.select_columns = query_model1.select_columns
+                query_model2.variables = query_model1.variables
+                query_model2.offset = query_model1.offset
+                query_model2.limit = query_model1.limit
+                query_model2.order_clause = query_model1.order_clause
+                query_model2.filter_clause = query_model1.filter_clause
+                if self.join_type == JoinType.LeftOuterJoin:
+                    query_model = self.__join_expandable_grouped(query_model2, query_model1, JoinType.RightOuterJoin)
+                elif self.join_type == JoinType.RightOuterJoin:
+                    query_model = self.__join_expandable_grouped(query_model2, query_model1, JoinType.LeftOuterJoin)
+                else:
+                    query_model = self.__join_expandable_grouped(query_model2, query_model1, self.join_type)
+            else:  # ds2 is grouped
+                query_model = self.__join_grouped_grouped(query_model1, query_model2)
 
-                for triple in query_model.triples:
-                   ds1_query_model.add_triple(*triple)
-                   inner_query_model.add_triple(*triple)
-                for op_triple in query_model.optionals:
-                    ds1_query_model.add_optional(*op_triple)
-                    inner_query_model.add_optional(*op_triple)
+        return query_model
 
-                query_model.rem_all_triples()
-                query_model.rem_optionaltriples()
+    def __join_expandable_expandable(self, query_model1, query_model2):
+        # TODO: Union the graphs in ds2 with ds1 and assign each graph pattern to a graph in case of joining two different graphs
 
-                for triple in ds2_query_model.triples:
-                    inner_query_model.add_triple(*triple)
+        if self.join_type == JoinType.InnerJoin:
+            # add the basic graph patterns in dataset2 to dataset1
+            for triple in query_model2.triples:
+                query_model1.add_triple(*triple)
+            # append the optional patterns in dataset2 to optionals in dataset1
+            for op_triple in query_model2.optionals:
+                query_model1.add_optional(*op_triple)
+        elif self.join_type == JoinType.LeftOuterJoin:
+            # add the basic and optionals graph patterns of dataset2 to dataset1 optionals
+            for triple in query_model2.triples:
+                query_model1.add_optional(*triple)
+            ## TODO: change the structure of the optional block; the optional in the original query in first block then the optional block from the second query model
+            for triple in query_model2.optionals:
+                query_model1.add_optional(*triple)
+        elif self.join_type == JoinType.RightOuterJoin:
+            # move all triples of dataset1 to optional
+            for triple in query_model1.triples:
+                query_model1.add_optional(*triple)
+            query_model1.rem_all_triples()
+            # add the triples in dataset2 to triples in dataset1
+            for triple in query_model2.triples:
+                query_model1.add_triple(*triple)
+            # append the optional patterns in dataset2 to optionals in dataset1
+            for op_triple in query_model2.optionals:
+                query_model1.add_optional(*op_triple)
+        else:  # outer join
+            # The join will build three queries and two sub-queries
+            # one contains the basic pattrens from the two dataset into one query
+            ds1_query_model = QueryModel()
+            inner_query_model = QueryModel()
 
-                for op_triple in ds2_query_model.optionals:
-                    inner_query_model.add_optional(*op_triple)
+            for triple in query_model1.triples:
+                ds1_query_model.add_triple(*triple)
+                inner_query_model.add_triple(*triple)
+            for op_triple in query_model1.optionals:
+                ds1_query_model.add_optional(*op_triple)
+                inner_query_model.add_optional(*op_triple)
 
-                ## one query with basic pattren from dataset1 and basic pattren from dataset2 as optional
+            query_model1.rem_all_triples()
+            query_model1.rem_optionaltriples()
 
-                ds1_triples = ds1_query_model.triples.copy()
-                ds1_optional = ds1_query_model.optionals.copy()
-                ds2_triples = ds2_query_model.triples.copy()
-                ds2_optional = ds2_query_model.optionals.copy()
+            for triple in query_model2.triples:
+                inner_query_model.add_triple(*triple)
 
-                for triple in ds2_triples:
-                    ds1_query_model.add_optional(*triple)
-                for op_triple in ds2_optional:
-                    ds1_query_model.add_optional(*op_triple)
+            for op_triple in query_model2.optionals:
+                inner_query_model.add_optional(*op_triple)
 
-                ## one query with basic pattren from dataset 2 and basic pattren from dataset1 as optional
-                for triple in ds1_triples:
-                    ds2_query_model.add_optional(*triple)
-                for op_triple in ds1_optional:
-                    ds2_query_model.add_optional(*op_triple)
+            ## one query with basic pattern from dataset1 and basic pattern from dataset2 as optional
+            ds1_triples = ds1_query_model.triples.copy()
+            ds1_optional = ds1_query_model.optionals.copy()
+            ds2_triples = query_model2.triples.copy()
+            ds2_optional = query_model2.optionals.copy()
 
-                # add the two queries into the union of the main query
-                query_model.select_columns = query_model.select_columns.union(ds2_query_model.select_columns)
+            for triple in ds2_triples:
+                ds1_query_model.add_optional(*triple)
+            for op_triple in ds2_optional:
+                ds1_query_model.add_optional(*op_triple)
 
-                query_model.add_unions(ds1_query_model)
-                #ds2_query_model.rem_prefixes()
-                query_model.add_unions(ds2_query_model)
-                query_model.add_unions(inner_query_model)
-        else: # ds3 is a grouped dataset
-            if self.join_type == JoinType.InnerJoin:
-                # add query model 2 as a subquery
-                query_model.add_subquery(ds2_query_model)
-            elif self.join_type == JoinType.LeftOuterJoin:
-                # make the subquery optional
-                query_model.add_optional_subquery(ds2_query_model)
-            elif self.join_type == JoinType.RightOuterJoin:
-                # move all triples of dataset1 to optional
-                for triple in query_model.triples:
-                    query_model.add_optional(*triple)
-                query_model.rem_all_triples()
-                # add query model 2 as a subquery
-                query_model.add_subquery(ds2_query_model)
-            elif self.join_type == JoinType.OuterJoin:
-                # Union query model 1 with query model 2
-                if self.src_col_name != self.new_col_name:
-                    query_model.rename_variable(self.src_col_name, self.new_col_name)
-                if self.second_col_name != self.new_col_name:
-                    ds2_query_model.rename_variable(self.second_col_name, self.new_col_name)
-                query_model = query_model.union(ds2_query_model)
+            ## one query with basic pattren from dataset 2 and basic pattren from dataset1 as optional
+            for triple in ds1_triples:
+                query_model2.add_optional(*triple)
+            for op_triple in ds1_optional:
+                query_model2.add_optional(*op_triple)
 
-        return ds, query_model, None
+            # add the two queries into the union of the main query
+            query_model1.select_columns = query_model1.select_columns.union(query_model2.select_columns)
+
+            query_model1.add_unions(ds1_query_model)
+            # ds2_query_model.rem_prefixes()
+            query_model1.add_unions(query_model2)
+            query_model1.add_unions(inner_query_model)
+
+        return query_model1
+
+    # first query_model1 comes always from an expandable dataset and query_model2 from a grouped dataset
+    def __join_expandable_grouped(self, query_model1, query_model2, join_type):
+        if join_type == JoinType.InnerJoin:
+            # add query model 2 as a subquery
+            query_model1.add_subquery(query_model2)
+        elif join_type == JoinType.LeftOuterJoin:
+            # make the subquery optional
+            query_model1.add_optional_subquery(query_model2)
+        elif join_type == JoinType.RightOuterJoin:
+            # move all triples of dataset1 to optional
+            for triple in query_model1.triples:
+                query_model1.add_optional(*triple)
+            query_model1.rem_all_triples()
+            # add query model 2 as a subquery
+            query_model1.add_subquery(query_model2)
+        else:  # outer join
+            # Union query model 1 with query model 2
+            query_model1 = query_model1.union(query_model2)
+
+        return query_model1
+
+    # TODO: implement this
+    def __join_grouped_grouped(self, query_model1, query_model2):
+
+        return query_model1
 
     def __repr__(self):
         """
