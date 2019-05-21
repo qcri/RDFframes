@@ -43,12 +43,11 @@ class QueryModel(object):
         self.unions = []            # list of subqueries to union with the current query model
 
         self.select_columns = OrderedSet()    # list of columns to be selected ,  set()
-        self.auto_generated_select_columns = OrderedSet()
+        #self.auto_generated_select_columns = OrderedSet()
         self.select_all = False
 
         self.querybuilder = None # a SPARQLbuilder that converts the query model to a string
         self.parent_query_model = None # a pointer to the parent query if this is a subquery
-
 
     def add_prefixes(self, prefixes):
         """
@@ -98,7 +97,8 @@ class QueryModel(object):
         :param subquery:
         :return:
         """
-        if len(unionquery.select_columns)<= 0 and len(unionquery.auto_generated_select_columns)<= 0:
+        #if len(unionquery.select_columns)<= 0 and len(unionquery.auto_generated_select_columns)<= 0:
+        if len(unionquery.select_columns) <= 0:
             unionquery.select_all = True
         self.unions.append(unionquery)
         unionquery.parent_query_model = weakref.ref(self)
@@ -212,8 +212,8 @@ class QueryModel(object):
         """
         self.select_columns.add(col_name)
 
-    def auto_add_select_column(self, col_name):
-        self.auto_generated_select_columns.add(col_name)
+    #def auto_add_select_column(self, col_name):
+    #    self.auto_generated_select_columns.add(col_name)
 
     def rem_select_column(self, col_name):
         self.select_columns.remove(col_name)
@@ -312,12 +312,13 @@ class QueryModel(object):
         self.parent_query_model = parent_query
 
         # clean the inner query (self)
-        self.prefixes = {}
-        self.rem_from_clause()
-        self.limit = 0
-        self.offset = 0
-        self.order_clause = OrderedDict()
-        self.rem_from_clause()
+        QueryModel.clean_inner_qm(self)
+        #self.prefixes = {}
+        #self.rem_from_clause()
+        #self.limit = 0
+        #self.offset = 0
+        #self.order_clause = OrderedDict()
+        #self.rem_from_clause()
 
         return parent_query
 
@@ -369,7 +370,7 @@ class QueryModel(object):
         self.optionals = [[new_name if element == old_name else element for element in triple]
                           for triple in self.optionals]
         self.select_columns = OrderedSet([new_name if var == old_name else var for var in self.select_columns])
-        self.auto_generated_select_columns = OrderedSet([new_name if var == old_name else var for var in self.auto_generated_select_columns])
+        #self.auto_generated_select_columns = OrderedSet([new_name if var == old_name else var for var in self.auto_generated_select_columns])
         self.groupBy_columns = OrderedSet([new_name if var == old_name else var for var in self.groupBy_columns])
         self.variables = {new_name if var == old_name else var for var in self.variables}
 

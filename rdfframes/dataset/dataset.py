@@ -1,13 +1,16 @@
 """Main class represents a SPARQL query that generates a table-like dataset
 """
+import copy
 
 from rdfframes.query_buffer.query_operators.shared.limit_operator import LimitOperator
 from rdfframes.query_buffer.query_operators.shared.offset_operator import OffsetOperator
 from rdfframes.query_buffer.query_operators.shared.sort_operator import SortOperator
+from rdfframes.query_buffer.query_operators.shared.select_operator import SelectOperator
 from rdfframes.query_buffer.query_queue import QueryQueue
 from rdfframes.query_builder.queue2querymodel import Queue2QueryModelConverter
 from rdfframes.utils.constants import JoinType
 from rdfframes.utils.helper_functions import is_uri
+
 
 __author__ = """
 Abdurrahman Ghanem <abghanem@hbku.edu.qa>
@@ -33,6 +36,7 @@ class Dataset:
         self.name = dataset_name
         self.query_queue = QueryQueue(self)
         self.columns = []
+        self.old_columns = []
 
     def expand(self, src_col_name, predicate_list):
         """
@@ -73,9 +77,21 @@ class Dataset:
         """
         Select the columns of interest from the returned dataset when executing the SPARQL query
         :param col_list: list of column names to return
-        :return: the same dataset
+        :return: a dataset that contains only the selected columns and the rows that have a value for at least one of
+            the selected columns
         """
-        pass
+        invalid_cols = [col for col in col_list if col not in self.columns]
+        if len(invalid_cols) > 0:
+            raise Exception('Columns {} are not defined in the dataset'.format(invalid_cols))
+
+        select_node = SelectOperator(self.name, col_list)
+        self.query_queue.append_node(select_node)
+
+        # change the dataset to contain only the new columns
+        self.old_columns = copy.copy(self.columns)
+        self.columns = col_list
+
+        return self
 
     def group_by(self, groupby_cols_list):
         """

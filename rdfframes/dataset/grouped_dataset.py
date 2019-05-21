@@ -4,7 +4,6 @@ from rdfframes.query_buffer.query_operators.grouped.having_operator import Havin
 from rdfframes.query_buffer.query_operators.shared.expansion_operator import ExpansionOperator
 from rdfframes.query_buffer.query_operators.shared.filter_operator import FilterOperator
 from rdfframes.query_buffer.query_operators.shared.groupby_operator import GroupByOperator
-from rdfframes.query_buffer.query_operators.shared.select_operator import SelectOperator
 from rdfframes.query_buffer.query_operators.shared.join_operator import JoinOperator
 from rdfframes.dataset.dataset import Dataset
 from rdfframes.utils.constants import AggregationFunction
@@ -63,7 +62,8 @@ class GroupedDataset(Dataset):
         the operation is added to the query_buffer for each predicate.
         """
         if src_col_name not in self.columns:
-                        raise Exception("{} doesn't exist in the dataset".format(src_col_name))
+            raise Exception("{} doesn't exist in the dataset".format(src_col_name))
+
         for predicate in predicate_list:
             operator = ExpansionOperator(self.name, src_col_name, predicate.uri, predicate.new_col_name,
                                          predicate.direction, is_optional=predicate.optional)
@@ -130,24 +130,6 @@ class GroupedDataset(Dataset):
                     for cond in conditions:
                         operator = FilterOperator(self.name, col, cond)
                         self.query_queue.append_node(operator)
-        return self
-
-    def select_cols(self, col_list):
-        """
-        Select the columns of interest from the returned dataset when executing the SPARQL query
-        :param col_list: list of column names to return
-        :return: the same dataset
-        """
-        #all_cols = [col for col in set(self.columns + self.parent_dataset.columns)]
-        all_cols = self.columns
-        invalid_cols = [col for col in col_list if col not in all_cols]
-
-        if len(invalid_cols) > 0:
-            raise Exception('Columns {} are not defined in the dataset'.format(invalid_cols))
-
-        select_node = SelectOperator(self.name, col_list)
-        self.query_queue.append_node(select_node)
-
         return self
 
     def group_by(self, groupby_cols_list):

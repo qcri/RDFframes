@@ -32,7 +32,7 @@ class SelectOperator(QueryQueueOperator):
 
     def visit_node(self, query_model, ds, parent):
         return_query_model = query_model
-
+        """
         if self.requires_nested_query(ds):  # there is a select column that is not in the inner query
             parent_ds_cols = [col for col in self.selected_cols if col not in ds.columns]
             if len(query_model.subqueries) > 0:
@@ -41,7 +41,7 @@ class SelectOperator(QueryQueueOperator):
             else:
                 return_query_model = query_model.wrap_in_a_parent_query()
                 return_query_model.transfer_select_triples_to_parent_query(parent_ds_cols)
-
+        """
         for col in self.selected_cols:
             return_query_model.add_select_column(col)
 

@@ -6,7 +6,6 @@ from rdfframes.query_buffer.query_operators.expandable.aggregation_operator impo
 from rdfframes.query_buffer.query_operators.shared.expansion_operator import ExpansionOperator
 from rdfframes.query_buffer.query_operators.shared.filter_operator import FilterOperator
 from rdfframes.query_buffer.query_operators.shared.groupby_operator import GroupByOperator
-from rdfframes.query_buffer.query_operators.shared.select_operator import SelectOperator
 from rdfframes.query_buffer.query_operators.shared.join_operator import JoinOperator
 from rdfframes.dataset.dataset import Dataset
 from rdfframes.dataset.grouped_dataset import GroupedDataset
@@ -34,7 +33,6 @@ class ExpandableDataset(Dataset):
         :param seed_col_name: the name of the seed column
         """
         super(ExpandableDataset, self).__init__(graph, dataset_name)
-
         # creating and appending the root node to the query tree
         seed_node = SeedOperator(dataset_name, seed_uri_list, seed_col_name)
         self.query_queue.append_node(seed_node)
@@ -50,6 +48,9 @@ class ExpandableDataset(Dataset):
         :return: the same dataset object, but logically a new column is appended. Actually a new node representing the
         operation is added to the query_buffer
         """
+        if src_col_name not in self.columns:
+            raise Exception("column {} not in the dataset".format(src_col_name))
+
         for predicate in predicate_list:
             node = ExpansionOperator(self.name, src_col_name, predicate.uri, predicate.new_col_name,
                                      predicate.direction, is_optional=predicate.optional)
@@ -71,11 +72,12 @@ class ExpandableDataset(Dataset):
         :param join_type:
         :return:
         """
+        if join_col_name1 not in self.columns:
+            raise Exception("column {} not in the dataset".format(join_col_name1))
         # specify the join key in dataset2
         if join_col_name2 is None:
             if join_col_name1 not in dataset2.columns:
-                raise Exception(
-                    "No join key specified for dataset2 and join_col_name1 is not in dataset2")
+                raise Exception("No join key specified for dataset2 and join_col_name1 is not in dataset2")
             else:
                 join_col_name2 = join_col_name1
         # find the new column name
@@ -108,16 +110,6 @@ class ExpandableDataset(Dataset):
                 self.query_queue.append_node(filter_node)
         return self
 
-    def select_cols(self, col_list):
-        """
-        Select the columns of interest from the returned dataset when executing the SPARQL query
-        :param col_list: list of column names to return
-        :return: the same dataset
-        """
-        select_node = SelectOperator(self.name, col_list)
-        self.query_queue.append_node(select_node)
-
-        return self
 
     def group_by(self, groupby_cols_list):
         """

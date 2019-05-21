@@ -53,13 +53,15 @@ class GroupByOperator(QueryQueueOperator):
                     for subquery in query_model.subqueries:
                         if g_col in subquery.select_columns:
                             return_query_model.add_subquery(subquery)
-                return_query_model.subqueries[len(return_query_model.subqueries) - 1].auto_add_select_column(g_col)
+                #return_query_model.subqueries[len(return_query_model.subqueries) - 1].auto_add_select_column(g_col)
+                return_query_model.subqueries[len(return_query_model.subqueries) - 1].select_all = True
             # add the select columns and group by columns to the inner query
             return_query_model.subqueries[len(return_query_model.subqueries)-1].add_group_columns(self.grouping_cols)
         else:
             # add select and group by columns
-            for g_col in self.grouping_cols:
-                return_query_model.auto_add_select_column(g_col)
+            #for g_col in self.grouping_cols:
+            #    return_query_model.auto_add_select_column(g_col)
+            return_query_model.select_all = True
             return_query_model.add_group_columns(self.grouping_cols)
 
         return ds, return_query_model, self.grouped_dataset
