@@ -80,10 +80,6 @@ class JoinOperator(QueryQueueOperator):
         query_model1.set_limit(max(query_model1.limit, query_model2.limit))
         query_model1.add_order_columns(query_model2.order_clause)
 
-        # add the filter graph patterns of dataset2 to dataset1
-        for column, condition in query_model2.filter_clause:
-            query_model1.add_filter_condition(column, condition)
-
         if self.dataset.type() == "ExpandableDataset":
             if self.second_dataset.type() == "ExpandableDataset":
                 query_model = self.__join_expandable_expandable(query_model1, query_model2, self.join_type)
@@ -112,6 +108,10 @@ class JoinOperator(QueryQueueOperator):
 
     def __join_expandable_expandable(self, query_model1, query_model2):
         # TODO: Union the graphs in ds2 with ds1 and assign each graph pattern to a graph in case of joining two different graphs
+
+        # add the filter graph patterns of dataset2 to dataset1
+        for column, condition in query_model2.filter_clause:
+            query_model1.add_filter_condition(column, condition)
 
         if self.join_type == JoinType.InnerJoin:
             # add the basic graph patterns in dataset2 to dataset1
