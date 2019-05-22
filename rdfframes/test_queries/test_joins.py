@@ -296,11 +296,14 @@ if __name__ == '__main__':
     # test_expandable_expandable_join_w_selectcols()
     # test_expandable_grouped_join(JoinType.InnerJoin)
     # test_expandable_grouped_join(JoinType.LeftOuterJoin)
-    test_expandable_grouped_join(JoinType.RightOuterJoin)
+    # test_expandable_grouped_join(JoinType.RightOuterJoin)
     # test_expandable_grouped_join(JoinType.OuterJoin)
     # test_grouped_expandable_join(JoinType.InnerJoin)
-    test_grouped_expandable_join(JoinType.LeftOuterJoin)
+    # test_grouped_expandable_join(JoinType.LeftOuterJoin)
     # test_grouped_expandable_join(JoinType.RightOuterJoin)
-    # test_grouped_grouped_join(JoinType.InnerJoin)
+    test_grouped_grouped_join(JoinType.InnerJoin)
+    test_grouped_grouped_join(JoinType.LeftOuterJoin)
+    test_grouped_grouped_join(JoinType.RightOuterJoin)
+    test_grouped_grouped_join(JoinType.OuterJoin)
 
 

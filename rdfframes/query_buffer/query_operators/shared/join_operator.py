@@ -86,9 +86,9 @@ class JoinOperator(QueryQueueOperator):
 
         if self.dataset.type() == "ExpandableDataset":
             if self.second_dataset.type() == "ExpandableDataset":
-                query_model = self.__join_expandable_expandable(query_model1, query_model2)
+                query_model = self.__join_expandable_expandable(query_model1, query_model2, self.join_type)
             else:  # ds2 is grouped
-                query_model = self.__join_expandable_grouped(query_model1, query_model2)
+                query_model = self.__join_expandable_grouped(query_model1, query_model2, self.join_type)
         else:  # ds1 is grouped
             if self.second_dataset.type() == "ExpandableDataset":  # ds2 is expandable
                 # move everything we joined so far to query_model2
@@ -152,7 +152,7 @@ class JoinOperator(QueryQueueOperator):
                 inner_query_model.add_optional(*op_triple)
 
             query_model1.rem_all_triples()
-            query_model1.rem_optionaltriples()
+            query_model1.rem_optional_triples()
 
             for triple in query_model2.triples:
                 inner_query_model.add_triple(*triple)
@@ -188,14 +188,14 @@ class JoinOperator(QueryQueueOperator):
         return query_model1
 
     # first query_model1 comes always from an expandable dataset and query_model2 from a grouped dataset
-    def __join_expandable_grouped(self, query_model1, query_model2, join_type):
-        if join_type == JoinType.InnerJoin:
+    def __join_expandable_grouped(self, query_model1, query_model2):
+        if self.join_type == JoinType.InnerJoin:
             # add query model 2 as a subquery
             query_model1.add_subquery(query_model2)
-        elif join_type == JoinType.LeftOuterJoin:
+        elif self.join_type == JoinType.LeftOuterJoin:
             # make the subquery optional
             query_model1.add_optional_subquery(query_model2)
-        elif join_type == JoinType.RightOuterJoin:
+        elif self.join_type == JoinType.RightOuterJoin:
             # move all triples of dataset1 to optional
             for triple in query_model1.triples:
                 query_model1.add_optional(*triple)
@@ -208,10 +208,38 @@ class JoinOperator(QueryQueueOperator):
 
         return query_model1
 
-    # TODO: implement this
     def __join_grouped_grouped(self, query_model1, query_model2):
 
-        return query_model1
+        joined_query_model = QueryModel()
+
+        joined_query_model.prefixes = query_model1.prefixes # all prefixes are already in query_model1
+        joined_query_model.variables = query_model1.variables  # all prefixes are already in query_model1
+
+        # add subqueries
+        if self.join_type == JoinType.InnerJoin:
+            joined_query_model.add_subquery(query_model1)
+            joined_query_model.add_subquery(query_model2)
+        elif self.join_type == JoinType.LeftOuterJoin:
+            joined_query_model.add_subquery(query_model1)
+            joined_query_model.add_optional_subquery(query_model2)
+        elif self.join_type == JoinType.RightOuterJoin:
+            joined_query_model.add_optional_subquery(query_model1)
+            joined_query_model.add_subquery(query_model2)
+        else:  # outer join
+            inner_join = joined_query_model.copy()
+            inner_join.add_subquery(query_model1)
+            inner_join.add_subquery(query_model2)
+            left_outer_join = joined_query_model.copy()
+            left_outer_join.add_subquery(query_model1)
+            left_outer_join.add_optional_subquery(query_model2)
+            right_outer_join = joined_query_model.copy()
+            right_outer_join.add_optional_subquery(query_model1)
+            right_outer_join.add_subquery(query_model2)
+            joined_query_model.add_unions(inner_join)
+            joined_query_model.add_unions(left_outer_join)
+            joined_query_model.add_unions(right_outer_join)
+
+        return joined_query_model
 
     def __repr__(self):
         """

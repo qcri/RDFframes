@@ -1,6 +1,7 @@
 import weakref
 from orderedset import OrderedSet
 from collections import OrderedDict
+import copy
 
 from rdfframes.utils.helper_functions import is_uri
 from rdfframes.query_builder.sparqlbuilder import SPARQLBuilder
@@ -9,6 +10,7 @@ from rdfframes.query_builder.sparqlbuilder import SPARQLBuilder
 __author__ = """
 Ghadeer Abuoda <gabuoda@hbku.edu.qa>
 Aisha Mohamed <ahmohamed@qf.org.qa>
+Zoi Kaoudi <zkaoudi@hbku.edu.qa>
 """
 
 
@@ -225,9 +227,9 @@ class QueryModel(object):
         self.from_clause = set()
 
     def rem_prefixes(self):
-        self.prefixes= {}
+        self.prefixes = {}
 
-    def rem_optionaltriples(self):
+    def rem_optional_triples(self):
         self.optionals = []
 
     def transfer_grouping_to_subquery(self, subquery):
@@ -507,6 +509,10 @@ class QueryModel(object):
         for col_name in self.having_clause:
             if not self.is_aggregate_col(col_name):
                 raise Warning('{} is not an aggregate column, cannot be added to having clause'.format(col_name))
+
+    def copy(self):
+        return copy.deepcopy(self)
+
 
     def __repr__(self):
         return self.to_sparql()
