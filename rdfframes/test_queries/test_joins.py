@@ -235,9 +235,10 @@ def test_grouped_expandable_join(join_type):
     ]).group_by(['tweeter']).count(
         aggregation_fn_data=[AggregationData('tweet', 'tweets_count')]).filter(
         conditions_dict={'tweets_count': ['>= {}'.format(200), '<= {}'.format(300)]})
-
-    dataset2.join(dataset, 'tweeter', 'tweep', 'user', join_type)
+    dataset2= dataset2.expand(src_col_name='tweeter', predicate_list=[ RDFPredicate('sioc:type', 'user')])
+    dataset2.join(dataset, 'user', 'tweep', 'user', join_type)
     dataset2.select_cols(['user'])
+
 
     sparql_query = dataset2.to_sparql()
     print("SPARQL query with {} =\n{}\n".format(join_type, sparql_query))
@@ -284,7 +285,7 @@ def test_grouped_grouped_join(join_type):
 
 if __name__ == '__main__':
     # test_expandable_expandable_join(JoinType.InnerJoin)
-    test_expandable_expandable_join(JoinType.OuterJoin)
+    #test_expandable_expandable_join(JoinType.OuterJoin)
     # test_expandable_expandable_join(JoinType.LeftOuterJoin)
     # test_expandable_expandable_join(JoinType.RightOuterJoin)
     # test_expandable_expandable_join(JoinType.InnerJoin, True, True)
@@ -300,7 +301,8 @@ if __name__ == '__main__':
     #test_expandable_grouped_join(JoinType.OuterJoin)
     # test_grouped_expandable_join(JoinType.InnerJoin)
     # test_grouped_expandable_join(JoinType.LeftOuterJoin)
-    # test_grouped_expandable_join(JoinType.RightOuterJoin)
+    ### test the join on non-groupby columns
+    test_grouped_expandable_join(JoinType.RightOuterJoin)
     #test_grouped_grouped_join(JoinType.InnerJoin)
     #test_grouped_grouped_join(JoinType.LeftOuterJoin)
     #test_grouped_grouped_join(JoinType.RightOuterJoin)

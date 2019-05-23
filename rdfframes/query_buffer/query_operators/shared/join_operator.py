@@ -84,7 +84,7 @@ class JoinOperator(QueryQueueOperator):
             if self.second_dataset.type() == "ExpandableDataset":
                 query_model = self.__join_expandable_expandable(query_model1, query_model2)#, self.join_type)
             else:  # ds2 is grouped
-                query_model = self.__join_expandable_grouped(query_model1, query_model2, self.join_type)
+                query_model = self.__join_expandable_grouped(query_model1, query_model2)#, self.join_type)
         else:  # ds1 is grouped
 
             if self.second_dataset.type() == "ExpandableDataset":  # ds2 is expandable
@@ -97,11 +97,11 @@ class JoinOperator(QueryQueueOperator):
                 query_model2.order_clause = query_model1.order_clause
                 query_model2.filter_clause = query_model1.filter_clause
                 if self.join_type == JoinType.LeftOuterJoin:
-                    query_model = self.__join_expandable_grouped(query_model2, query_model1, JoinType.RightOuterJoin)
+                    query_model = self.__join_expandable_grouped(query_model2, query_model1)#, JoinType.RightOuterJoin)
                 elif self.join_type == JoinType.RightOuterJoin:
-                    query_model = self.__join_expandable_grouped(query_model2, query_model1, JoinType.LeftOuterJoin)
+                    query_model = self.__join_expandable_grouped(query_model2, query_model1)#, JoinType.LeftOuterJoin)
                 else:
-                    query_model = self.__join_expandable_grouped(query_model2, query_model1, self.join_type)
+                    query_model = self.__join_expandable_grouped(query_model2, query_model1)#, self.join_type)
             else:  # ds2 is grouped
                 query_model = self.__join_grouped_grouped(query_model1, query_model2)
 
