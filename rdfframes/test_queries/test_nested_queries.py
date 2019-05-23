@@ -1,7 +1,7 @@
 import time
 
 from rdfframes.knowledge_graph import KnowledgeGraph
-from rdfframes.dataset.rdfpredicate import RDFPredicate
+from rdfframes.dataset.rdfpredicate import RDFPredicate, PredicateDirection
 from rdfframes.dataset.aggregation_fn_data import AggregationData
 
 
@@ -41,8 +41,14 @@ def test_expand_after_group_by():
     print("sparql_query 3 =\n{}\n".format(sparql_query))
 
     # expand these tweets by the following features: date, media, hashtags, users mentioned
+    gds = gds.expand(src_col_name='tweep', predicate_list=[
+        RDFPredicate('sioc:has_creater', 'tweet', directionality=PredicateDirection.INCOMING)])
+    sparql_query = gds.to_sparql()
+    print("sparql_query 3.1 =\n{}\n".format(sparql_query))
+
     gds = gds.expand(src_col_name='tweet', predicate_list=[
         RDFPredicate('dcterms:created', 'date'),
+        RDFPredicate('sioc:content', 'text'),
         RDFPredicate('to:hasmedia', 'multimedia'),
         RDFPredicate('to:hashashtag', 'hashtag'),
         RDFPredicate('sioc:mentions', 'users_mentioned')
@@ -136,8 +142,8 @@ def test_select_non_group_by_col():
 
 
 if __name__ == '__main__':
-    #test_expand_after_group_by()
+    test_expand_after_group_by()
     #test_filter_after_group_by()
-    test_select_non_group_by_col()
+    #test_select_non_group_by_col()
 
 

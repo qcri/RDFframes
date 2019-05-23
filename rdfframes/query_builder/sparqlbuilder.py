@@ -60,12 +60,12 @@ class SPARQLBuilder(object):
                 select_string = "SELECT * \n"
                 self.query_string += select_string
                 return
-            #if len(self.query_model.select_columns) > 0 or len(self.query_model.auto_generated_select_columns) > 0:
-            elif len(self.query_model.select_columns) > 0:
+            elif len(self.query_model.select_columns) > 0 or len(self.query_model.auto_generated_select_columns) > 0:
+            #elif len(self.query_model.select_columns) > 0:
                 select_string = "SELECT "
                 #print("self.query_model.select_columns", self.query_model.select_columns)
-                #for col in self.query_model.select_columns.union(self.query_model.auto_generated_select_columns):
-                for col in self.query_model.select_columns:
+                for col in self.query_model.select_columns.union(self.query_model.auto_generated_select_columns):
+                #for col in self.query_model.select_columns:
                     if col in self.query_model.aggregate_clause:
                         agg_part = self.query_model.aggregate_clause[col]
                         agg_func = agg_part[0][0]
@@ -82,7 +82,6 @@ class SPARQLBuilder(object):
                 if self.query_model.parent_query_model is None and len(self.query_model.subqueries) <= 0 \
                         and len(self.query_model.groupBy_columns) <= 0:
                     common_variables = set(filter(lambda x: ':' not in x, self.query_model.variables))
-
                 elif self.query_model.parent_query_model is None and len(self.query_model.subqueries) <= 0 \
                         and len(self.query_model.groupBy_columns) > 0:
                     common_variables = set(self.query_model.groupBy_columns)
@@ -96,7 +95,6 @@ class SPARQLBuilder(object):
                 else:  # if this is a subquery
                     common_variables = self.query_model.groupBy_columns
                 select_string = "SELECT "
-                #print("self.query_model.common_variables", common_variables)
                 for col in common_variables:
                     select_string += "?%s " % col
                 select_string += "\n"
@@ -355,7 +353,6 @@ class SPARQLBuilder(object):
                             cond_list += cond_string
                         else:
                             cond_list += cond_string
-
                 if having_clause != "":
                     # having_clause+=" && "
                     having_clause += cond_list + ")\n"

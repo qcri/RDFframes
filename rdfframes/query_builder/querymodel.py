@@ -45,7 +45,7 @@ class QueryModel(object):
         self.unions = []            # list of subqueries to union with the current query model
 
         self.select_columns = OrderedSet()    # list of columns to be selected ,  set()
-        #self.auto_generated_select_columns = OrderedSet()
+        self.auto_generated_select_columns = OrderedSet()
         self.select_all = False
 
         self.querybuilder = None # a SPARQLbuilder that converts the query model to a string
@@ -99,8 +99,8 @@ class QueryModel(object):
         :param subquery:
         :return:
         """
-        #if len(unionquery.select_columns)<= 0 and len(unionquery.auto_generated_select_columns)<= 0:
-        if len(unionquery.select_columns) <= 0:
+        if len(unionquery.select_columns)<= 0 and len(unionquery.auto_generated_select_columns)<= 0:
+        #if len(unionquery.select_columns) <= 0:
             unionquery.select_all = True
         self.unions.append(unionquery)
         unionquery.parent_query_model = weakref.ref(self)
@@ -214,8 +214,8 @@ class QueryModel(object):
         """
         self.select_columns.add(col_name)
 
-    #def auto_add_select_column(self, col_name):
-    #    self.auto_generated_select_columns.add(col_name)
+    def auto_add_select_column(self, col_name):
+        self.auto_generated_select_columns.add(col_name)
 
     def rem_select_column(self, col_name):
         self.select_columns.remove(col_name)
@@ -297,11 +297,10 @@ class QueryModel(object):
                     if var in subquery.select_columns:
                         parent_query.add_subquery(subquery)
                 to_rem_from_select.append(var)
-            parent_query.add_select_column(var)
+            parent_query.auto_add_select_column(var)
             parent_query.add_variable(var)
-
         for var in to_add_to_select:
-            self.add_select_column(var)
+            self.auto_add_select_column(var)
         for var in to_rem_from_select:
             self.rem_select_column(var)
 
@@ -372,7 +371,7 @@ class QueryModel(object):
         self.optionals = [[new_name if element == old_name else element for element in triple]
                           for triple in self.optionals]
         self.select_columns = OrderedSet([new_name if var == old_name else var for var in self.select_columns])
-        #self.auto_generated_select_columns = OrderedSet([new_name if var == old_name else var for var in self.auto_generated_select_columns])
+        self.auto_generated_select_columns = OrderedSet([new_name if var == old_name else var for var in self.auto_generated_select_columns])
         self.groupBy_columns = OrderedSet([new_name if var == old_name else var for var in self.groupBy_columns])
         self.variables = {new_name if var == old_name else var for var in self.variables}
 

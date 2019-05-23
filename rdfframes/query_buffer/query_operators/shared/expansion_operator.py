@@ -65,6 +65,7 @@ class ExpansionOperator(QueryQueueOperator):
         # any expand operations on a grouped dataset result in a subquery
         if self.already_in_outer_query(ds, query_model):
             query_model = query_model.wrap_in_a_parent_query()
+            print("After wrapping becaue of the expansion, I should have nothing in the select node of the parent query")
         if triple is not None:
             #print("self.is_optional", self.is_optional)
             if self.is_optional:
