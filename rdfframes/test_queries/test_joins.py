@@ -284,7 +284,7 @@ def test_grouped_grouped_join(join_type):
 
 if __name__ == '__main__':
     # test_expandable_expandable_join(JoinType.InnerJoin)
-    #test_expandable_expandable_join(JoinType.OuterJoin)
+    test_expandable_expandable_join(JoinType.OuterJoin)
     # test_expandable_expandable_join(JoinType.LeftOuterJoin)
     # test_expandable_expandable_join(JoinType.RightOuterJoin)
     # test_expandable_expandable_join(JoinType.InnerJoin, True, True)
@@ -297,13 +297,13 @@ if __name__ == '__main__':
     # test_expandable_grouped_join(JoinType.InnerJoin)
     # test_expandable_grouped_join(JoinType.LeftOuterJoin)
     # test_expandable_grouped_join(JoinType.RightOuterJoin)
-    # test_expandable_grouped_join(JoinType.OuterJoin)
+    #test_expandable_grouped_join(JoinType.OuterJoin)
     # test_grouped_expandable_join(JoinType.InnerJoin)
     # test_grouped_expandable_join(JoinType.LeftOuterJoin)
     # test_grouped_expandable_join(JoinType.RightOuterJoin)
-    test_grouped_grouped_join(JoinType.InnerJoin)
-    test_grouped_grouped_join(JoinType.LeftOuterJoin)
-    test_grouped_grouped_join(JoinType.RightOuterJoin)
-    test_grouped_grouped_join(JoinType.OuterJoin)
+    #test_grouped_grouped_join(JoinType.InnerJoin)
+    #test_grouped_grouped_join(JoinType.LeftOuterJoin)
+    #test_grouped_grouped_join(JoinType.RightOuterJoin)
+    #test_grouped_grouped_join(JoinType.OuterJoin)
 
 

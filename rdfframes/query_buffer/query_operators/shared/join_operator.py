@@ -82,10 +82,11 @@ class JoinOperator(QueryQueueOperator):
 
         if self.dataset.type() == "ExpandableDataset":
             if self.second_dataset.type() == "ExpandableDataset":
-                query_model = self.__join_expandable_expandable(query_model1, query_model2, self.join_type)
+                query_model = self.__join_expandable_expandable(query_model1, query_model2)#, self.join_type)
             else:  # ds2 is grouped
                 query_model = self.__join_expandable_grouped(query_model1, query_model2, self.join_type)
         else:  # ds1 is grouped
+
             if self.second_dataset.type() == "ExpandableDataset":  # ds2 is expandable
                 # move everything we joined so far to query_model2
                 query_model2.prefixes = query_model1.prefixes
@@ -142,6 +143,7 @@ class JoinOperator(QueryQueueOperator):
             # The join will build three queries and two sub-queries
             # one contains the basic pattrens from the two dataset into one query
             ds1_query_model = QueryModel()
+            ds2_query_model = QueryModel()
             inner_query_model = QueryModel()
 
             for triple in query_model1.triples:

@@ -97,6 +97,14 @@ class GroupedDataset(Dataset):
         else: # new_column_name is not None
             # TODO: self.rem_column(join_col_name1)
             self.add_column(new_column_name)
+        ## validate that the join key should be from the grouped cloums
+        if join_col_name1 not in self.grouping_cols:
+            raise Exception(
+                "Join key specified for dataset1 is not one of groupby columns in dataset1")
+        if  dataset2.type() == "GroupedDataset":
+            if join_col_name1 not in dataset2.grouping_cols:
+                raise Exception(
+                    "Join key specified for dataset2 is not one of groupby columns in dataset2")
 
         node = JoinOperator(self, dataset2, join_col_name1, join_col_name2, join_type, new_column_name)
 
