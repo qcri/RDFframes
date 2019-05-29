@@ -110,8 +110,8 @@ class GroupedDataset(Dataset):
         #        raise Exception(
         #            "Join key specified for dataset2 is not one of groupby columns in dataset2")
 
-        node = JoinOperator(self, dataset2, join_col_name1, join_col_name2, join_type, new_column_name)
 
+        node = JoinOperator(self, dataset2, join_col_name1, join_col_name2, join_type, new_column_name)
         # ds1.columns = union(ds1.columns, ds2.columns)
         for col in dataset2.columns:
             if col not in self.columns and col != join_col_name2:
