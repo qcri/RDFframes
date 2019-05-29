@@ -42,7 +42,6 @@ def test_expandable_expandable_join(join_type, optional1=False, optional2=False)
     print("SPARQL query with {} =\n{}\n".format(join_type, sparql_query))
 
 
-##FIXME: this function causes an infinite loop
 def test_join_instead_of_expand(join_type):
     start = time.time()
     # create a knowledge graph to store the graph uri and prefixes
@@ -112,7 +111,7 @@ def test_expandable_expandable_3_joins(join_type):
         RDFPredicate('sioc:has_id', 'id', False)
     ])
 
-    dataset3.join(dataset2, 'follower', 'tweeter', 'follower', join_type)
+    dataset3.join(dataset2, 'tweeter', 'follower', 'follower', join_type)
 
     sparql_query = dataset3.to_sparql()
     print("SPARQL query with {} =\n{}\n".format(join_type, sparql_query))
@@ -236,7 +235,7 @@ def test_grouped_expandable_join(join_type):
         aggregation_fn_data=[AggregationData('tweet', 'tweets_count')]).filter(
         conditions_dict={'tweets_count': ['>= {}'.format(200), '<= {}'.format(300)]})
     dataset2= dataset2.expand(src_col_name='tweeter', predicate_list=[ RDFPredicate('sioc:type', 'user')])
-    dataset2.join(dataset, 'user', 'tweep', 'user', join_type)
+    dataset2.join(dataset, 'tweeter', 'tweep', 'user', join_type)
     dataset2.select_cols(['user'])
 
 
@@ -285,7 +284,7 @@ def test_grouped_grouped_join(join_type):
 
 if __name__ == '__main__':
     # test_expandable_expandable_join(JoinType.InnerJoin)
-    #test_expandable_expandable_join(JoinType.OuterJoin)
+    # test_expandable_expandable_join(JoinType.OuterJoin)
     # test_expandable_expandable_join(JoinType.LeftOuterJoin)
     # test_expandable_expandable_join(JoinType.RightOuterJoin)
     # test_expandable_expandable_join(JoinType.InnerJoin, True, True)
@@ -293,19 +292,18 @@ if __name__ == '__main__':
     # test_expandable_expandable_join(JoinType.RightOuterJoin, True, True)
     # test_join_instead_of_expand(JoinType.InnerJoin)
     # test_expandable_expandable_3_joins(JoinType.InnerJoin)
-    #test_expandable_expandable_join_w_selectcols()
     # test_expandable_expandable_join_w_selectcols()
     # test_expandable_grouped_join(JoinType.InnerJoin)
     # test_expandable_grouped_join(JoinType.LeftOuterJoin)
     # test_expandable_grouped_join(JoinType.RightOuterJoin)
-    #test_expandable_grouped_join(JoinType.OuterJoin)
+    # test_expandable_grouped_join(JoinType.OuterJoin)
     # test_grouped_expandable_join(JoinType.InnerJoin)
     # test_grouped_expandable_join(JoinType.LeftOuterJoin)
     ### test the join on non-groupby columns
-    test_grouped_expandable_join(JoinType.RightOuterJoin)
-    #test_grouped_grouped_join(JoinType.InnerJoin)
-    #test_grouped_grouped_join(JoinType.LeftOuterJoin)
-    #test_grouped_grouped_join(JoinType.RightOuterJoin)
-    #test_grouped_grouped_join(JoinType.OuterJoin)
+    # test_grouped_expandable_join(JoinType.RightOuterJoin)
+    test_grouped_grouped_join(JoinType.InnerJoin)
+    test_grouped_grouped_join(JoinType.LeftOuterJoin)
+    test_grouped_grouped_join(JoinType.RightOuterJoin)
+    test_grouped_grouped_join(JoinType.OuterJoin)
 
 
