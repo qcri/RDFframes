@@ -25,8 +25,7 @@ def test_simple_query():
         RDFPredicate('sioc:has_creater', 'tweep', False),
         RDFPredicate('sioc:content', 'text', False)
     ])
-    dataset = dataset.group_by(['tweep'])\
-        .count('tweep', 'tweep_count', unique=True)
+    dataset = dataset.group_by(['tweep']).count(src_col_name='tweep', new_col_name='tweep_count', unique=True)
     dataset.select_cols(['tweep_count'])
     sparql_query = dataset.to_sparql()
     print("sparql_query 1 =\n{}\n".format(sparql_query))
