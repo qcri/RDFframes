@@ -232,11 +232,10 @@ def test_grouped_expandable_join(join_type):
                              entities_col_name='tweet')
     dataset2 = dataset2.expand(src_col_name='tweet', predicate_list=[
         RDFPredicate('sioc:has_creater', 'tweeter')
-    ]).group_by(['tweeter']).count(
-        aggregation_fn_data=[AggregationData('tweet', 'tweets_count')]).filter(
+    ]).group_by(['tweeter']).count('tweet', 'tweets_count').filter(
         conditions_dict={'tweets_count': ['>= {}'.format(200), '<= {}'.format(300)]})
-    dataset2= dataset2.expand(src_col_name='tweeter', predicate_list=[ RDFPredicate('sioc:type', 'user')])
-    dataset2.join(dataset, 'user', 'tweep', 'user', join_type)
+    dataset2= dataset2.expand(src_col_name='tweeter', predicate_list=[ RDFPredicate('rdf:type', 'sioc:UserAccount')])
+    dataset2.join(dataset, 'tweeter', 'tweep', 'user', join_type)
     dataset2.select_cols(['user'])
 
 

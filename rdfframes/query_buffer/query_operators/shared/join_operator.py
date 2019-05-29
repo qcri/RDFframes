@@ -108,7 +108,8 @@ class JoinOperator(QueryQueueOperator):
         return query_model
 
     def __join_expandable_expandable(self, query_model1, query_model2):
-        # TODO: Union the graphs in ds2 with ds1 and assign each graph pattern to a graph in case of joining two different graphs
+        # TODO: Union the graphs in ds2 with ds1 and assign each graph pattern to a graph in
+        #  case of joining two different graphs
 
         # add the filter graph patterns of dataset2 to dataset1
         for column, condition in query_model2.filter_clause:
@@ -125,7 +126,8 @@ class JoinOperator(QueryQueueOperator):
             # add the basic and optionals graph patterns of dataset2 to dataset1 optionals
             for triple in query_model2.triples:
                 query_model1.add_optional(*triple)
-            ## TODO: change the structure of the optional block; the optional in the original query in first block then the optional block from the second query model
+            # TODO: change the structure of the optional block; the optional in the original query in first block then
+            #  the optional block from the second query model
             for triple in query_model2.optionals:
                 query_model1.add_optional(*triple)
         elif self.join_type == JoinType.RightOuterJoin:

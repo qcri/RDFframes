@@ -270,12 +270,10 @@ class QueryModel(object):
         parent_query = QueryModel()
         parent_query.add_prefixes(self.prefixes)
         parent_query.add_graphs(self.from_clause)
-        # TODO: Decide which variables to add to the parent query
-        # TODO: Decide on which select columns to pass to the parent query(select columns added by user should be added)
         to_add_to_select = []
         to_rem_from_select = []
         for var in self.select_columns:
-            # TODO: if select column in groupby or aggregation: add it to selected columns by the user in inner query
+            # Tif select column in groupby or aggregation: add it to selected columns by the user in inner query
             #  and the outer query.
             #  else: find the relevant graph patterns and move them to the outer query and
             #  remove the select column from select clause in inner query
@@ -292,7 +290,7 @@ class QueryModel(object):
                     for condition in self.filter_clause[var]:
                         parent_query.add_filter_condition(var, condition)
                 # add subqueries
-                # TODO: Is it query.select or query.variables
+                # Is it query.select or query.variables
                 for subquery in self.subqueries:
                     if var in subquery.select_columns:
                         parent_query.add_subquery(subquery)
@@ -365,7 +363,6 @@ class QueryModel(object):
             all_vars = all_vars.union(subq.all_variables())
         return all_vars
 
-    # TODO: it's missing renaming vars in the filter clause, order by clause, unions and subqueries
     def rename_variable(self, old_name, new_name):
         self.triples = [[new_name if element == old_name else element for element in triple] for triple in self.triples]
         self.optionals = [[new_name if element == old_name else element for element in triple]
@@ -374,6 +371,27 @@ class QueryModel(object):
         self.auto_generated_select_columns = OrderedSet([new_name if var == old_name else var for var in self.auto_generated_select_columns])
         self.groupBy_columns = OrderedSet([new_name if var == old_name else var for var in self.groupBy_columns])
         self.variables = {new_name if var == old_name else var for var in self.variables}
+        if old_name in self.order_clause:
+            self.order_clause[new_name] = self.order_clause[old_name]
+            del self.order_clause[old_name]
+        if old_name in self.filter_clause:
+            self.filter_clause[new_name] = self.filter_clause[old_name]
+            del self.filter_clause[old_name]
+        if old_name in self.having_clause:
+            self.having_clause[new_name] = self.having_clause[old_name]
+            del self.having_clause[old_name]
+        for var in self.aggregate_clause:
+            self.aggregate_clause[var] = [[new_name if element == old_name else element
+                                           for element in triple] for triple in self.aggregate_clause[var]]
+            if var == old_name:
+                self.aggregate_clause[new_name] = self.aggregate_clause[old_name]
+                del self.aggregate_clause[old_name]
+        for query in self.subqueries:
+            query.rename_variable(old_name, new_name)
+        for query in self.unions:
+            query.rename_variable(old_name, new_name)
+        for query in self.optional_subqueries:
+            query.rename_variable(old_name, new_name)
 
     def is_valid_prefix(self, prefix):
         if prefix in self.prefixes.keys():

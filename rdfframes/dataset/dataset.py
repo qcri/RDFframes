@@ -195,7 +195,7 @@ class Dataset:
         query_string = converter.to_query_model().to_sparql()
         return query_string
 
-    def execute(self, client=None, return_format=None, output_file=None):
+    def execute(self, client, return_format=None, output_file=None):
         """
         converts this dataset to a sparql query, send it to the sparql endpoint or RDF engine and
         returns the result in the specified return format
@@ -204,9 +204,8 @@ class Dataset:
         :param output_file: file to save the results in
         :return:
         """
-        # TODO: create a client if None
         query_string = self.to_sparql()
-        res = client.execute_query(query_string, return_format=return_format)
+        res = client.execute_query(query_string, return_format=return_format, output_file=output_file)
         return res
 
     def type(self):

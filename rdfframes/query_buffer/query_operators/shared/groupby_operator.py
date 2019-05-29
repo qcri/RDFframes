@@ -50,7 +50,6 @@ class GroupByOperator(QueryQueueOperator):
                     if g_col in query_model.filter_clause:
                         return_query_model.add_filter_condition(g_col, query_model.filter_clause[g_col])
                     # add subqueries
-                    # TODO: Is it query.select or query.variables
                     for subquery in query_model.subqueries:
                         if g_col in subquery.select_columns:
                             return_query_model.add_subquery(subquery)

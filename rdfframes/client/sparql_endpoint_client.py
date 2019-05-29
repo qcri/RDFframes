@@ -14,7 +14,6 @@ class SPARQLEndpointClient(Client):
     """
     class for sparql client that handles communication with a sparql end-point
     over http using the sparql wrapper library.
-    #TODO: allow the client to connect to more than one sparql end point
     """
     def __init__(self, endpoint):
         """

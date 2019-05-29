@@ -2,11 +2,12 @@
 """
 
 from rdfframes.query_buffer.query_operators.expandable.seed_operator import SeedOperator
-from rdfframes.query_buffer.query_operators.expandable.aggregation_operator import AggregationOperator
+from rdfframes.query_buffer.query_operators.shared.aggregation_operator import AggregationOperator
 from rdfframes.query_buffer.query_operators.shared.expansion_operator import ExpansionOperator
 from rdfframes.query_buffer.query_operators.shared.filter_operator import FilterOperator
 from rdfframes.query_buffer.query_operators.shared.groupby_operator import GroupByOperator
 from rdfframes.query_buffer.query_operators.shared.join_operator import JoinOperator
+from rdfframes.query_buffer.query_operators.shared.integer_count_node import IntegerCountOperator
 from rdfframes.dataset.dataset import Dataset
 from rdfframes.dataset.grouped_dataset import GroupedDataset
 from rdfframes.utils.constants import JoinType, AggregationFunction
@@ -37,6 +38,7 @@ class ExpandableDataset(Dataset):
         seed_node = SeedOperator(dataset_name, seed_uri_list, seed_col_name)
         self.query_queue.append_node(seed_node)
         self.columns.append(seed_col_name)
+        self.agg_columns = []
 
     def expand(self, src_col_name, predicate_list):
         """
@@ -80,11 +82,14 @@ class ExpandableDataset(Dataset):
                 raise Exception("No join key specified for dataset2 and join_col_name1 is not in dataset2")
             else:
                 join_col_name2 = join_col_name1
+        elif join_col_name2 not in dataset2.columns:
+            raise Exception("Join key {} doesn't exist in dataset 2".format(join_col_name2))
+
         # find the new column name
         if new_column_name is None:
             new_column_name = join_col_name1
         else: # new_column_name is not None
-            # TODO: self.rem_column(join_col_name1)
+            self.rem_column(join_col_name1)
             self.add_column(new_column_name)
 
         node = JoinOperator(self, dataset2, join_col_name1, join_col_name2, join_type, new_column_name)
@@ -135,80 +140,101 @@ class ExpandableDataset(Dataset):
 
     # aggregate functions
 
-    def sum(self, aggregation_fn_data):
+    def sum(self, src_col_name=None, new_col_name='sum'):
         """
-        Runs sum aggregate function on the pass rdframe columns list and returns the summation of the passed columns as
-        a list of scalar values
-        :param aggregation_fn_data: list of AggregationData class holding the aggregation functions' information
-        :return: the same dataset object
+        :param src_col_name: the column to find the sum of its values
+        :param new_col_name: the new column name of the sum
+        :return: if src_col_name is not None and is a groupby column, return a dataset with a new column name. else
+            return an integer
         """
-        for agg_fn_data in aggregation_fn_data:
-            agg_col = agg_fn_data.src_col_name
-            tag = agg_fn_data.new_col_name
-            param = agg_fn_data.agg_parameter
-            agg_node = AggregationOperator(self.name, agg_col, AggregationFunction.SUM, tag, param)
-            self.query_queue.append_node(agg_node)
+        if src_col_name not in self.columns:
+            raise Exception("Aggregation column {} doesn't exist in this dataset".format(src_col_name))
+        agg_col = src_col_name
+        # TODO: Don't allow any more operations on the dataset
+        agg_node = AggregationOperator(self.name, agg_col, AggregationFunction.SUM, new_col_name, None)
+        self.query_queue.append_node(agg_node)
+        self.add_column(new_col_name)
+        self.agg_columns.append(new_col_name)
         return self
 
-    def avg(self, aggregation_fn_data):
+    def avg(self, src_col_name=None, new_col_name='avg'):
         """
-        Runs average aggregate function on the pass rdframe columns list and returns the average of the passed columns as
-        a list of scalar values
-        :param aggregation_fn_data: list of AggregationData class holding the aggregation functions' information
-        :return: the same dataset object
+        :param src_col_name: the column to find the max of its values
+        :param new_col_name: the new column name of the max
+        :return: if src_col_name is not None and is a groupby column, return a dataset with a new column name. else
+            return an integer
         """
-        for agg_fn_data in aggregation_fn_data:
-            agg_col = agg_fn_data.src_col_name
-            tag = agg_fn_data.new_col_name
-            param = agg_fn_data.agg_parameter
-            agg_node = AggregationOperator(self.name, agg_col, AggregationFunction.AVG, tag, param)
-            self.query_queue.append_node(agg_node)
+        if src_col_name not in self.columns:
+            raise Exception("Aggregation column {} doesn't exist in this dataset".format(src_col_name))
+        agg_col = src_col_name
+        # TODO: Don't allow any more operations on the dataset
+        agg_node = AggregationOperator(self.name, agg_col, AggregationFunction.AVG, new_col_name, None)
+        self.query_queue.append_node(agg_node)
+        self.add_column(new_col_name)
+        self.agg_columns.append(new_col_name)
         return self
 
-    def min(self, aggregation_fn_data):
+    def min(self, src_col_name=None, new_col_name='min'):
         """
-        Runs min aggregate function on the pass rdframe columns list and returns the min of the passed columns as
-        a list of scalar values
-        :param aggregation_fn_data: list of AggregationData class holding the aggregation functions' information
-        :return: the same dataset
+        :param src_col_name: the column to find the min of its values
+        :param new_col_name: the new column name of the min
+        :return: if src_col_name is not None and is a groupby column, return a dataset with a new column name. else
+            return an integer
         """
-        for agg_fn_data in aggregation_fn_data:
-            agg_col = agg_fn_data.src_col_name
-            tag = agg_fn_data.new_col_name
-            param = agg_fn_data.agg_parameter
-            agg_node = AggregationOperator(self.name, agg_col, AggregationFunction.MIN, tag, param)
-            self.query_queue.append_node(agg_node)
+        if src_col_name not in self.columns:
+            raise Exception("Aggregation column {} doesn't exist in this dataset".format(src_col_name))
+        agg_col = src_col_name
+        # TODO: Don't allow any more operations on the dataset
+        agg_node = AggregationOperator(self.name, agg_col, AggregationFunction.MIN, new_col_name, None)
+        self.query_queue.append_node(agg_node)
+        self.add_column(new_col_name)
+        self.agg_columns.append(new_col_name)
         return self
 
-    def max(self, aggregation_fn_data):
+    def max(self, src_col_name=None, new_col_name='max'):
         """
-        Runs max aggregate function on the pass rdframe columns list and returns the max of the passed columns as
-        a list of scalar values
-        :param aggregation_fn_data:  list of AggregationData class holding the aggregation functions' information
-        :return: the same dataset object
+        :param src_col_name: the column to find the max of its values
+        :param new_col_name: the new column name of the max
+        :return: if src_col_name is not None and is a groupby column, return a dataset with a new column name. else
+            return an integer
         """
-        for agg_fn_data in aggregation_fn_data:
-            agg_col = agg_fn_data.src_col_name
-            tag = agg_fn_data.new_col_name
-            param = agg_fn_data.agg_parameter
-            agg_node = AggregationOperator(self.name, agg_col, AggregationFunction.MAX, tag, param)
-            self.query_queue.append_node(agg_node)
+        if src_col_name not in self.columns:
+            raise Exception("Aggregation column {} doesn't exist in this dataset".format(src_col_name))
+        agg_col = src_col_name
+        # TODO: Don't allow any more operations on the dataset
+        agg_node = AggregationOperator(self.name, agg_col, AggregationFunction.MAX, new_col_name, None)
+        self.query_queue.append_node(agg_node)
+        self.add_column(new_col_name)
+        self.agg_columns.append(new_col_name)
         return self
 
-    def count(self, aggregation_fn_data):
+    def count(self, src_col_name=None, new_col_name='count', unique=True):
         """
-        Runs count aggregate function on the pass rdframe columns list and returns the count of the passed columns as
-        a list of scalar values
-        :param aggregation_fn_data: list of AggregationData class holding the aggregation functions' information
-        :return: the same dataset and appends Aggregation node to the query tree
+        :param src_col_name: the column to count its values
+        :param new_col_name: the new column name of the count
+        :param unique: if True retun the number of unique values else return the size of the result set
+        :return: if src_col_name is not None and is a groupby column, return a dataset with a new column name. else
+            return an integer
         """
-        for agg_fn_data in aggregation_fn_data:
-            agg_col = agg_fn_data.src_col_name
-            tag = agg_fn_data.new_col_name
-            param = agg_fn_data.agg_parameter
-
-            agg_node = AggregationOperator(self.name, agg_col, AggregationFunction.COUNT, tag, param)
+        if unique:
+            param = "DISTINCT"
+        else:
+            param = None
+        if src_col_name is not None:
+            if src_col_name not in self.columns:
+                raise Exception("Aggregation column {} doesn't exist in this dataset".format(src_col_name))
+            agg_col = src_col_name
+            # TODO: Don't allow any more operations on the dataset
+            agg_node = AggregationOperator(self.name, agg_col, AggregationFunction.COUNT, new_col_name, param)
             self.query_queue.append_node(agg_node)
+            self.add_column(new_col_name)
+            self.agg_columns.append(new_col_name)
+        else:
+            # TODO: Don't allow any more operations on the dataser
+            agg_node = IntegerCountOperator(self.name, new_col_name, param)
+            self.query_queue.append_node(agg_node)
+            self.add_column(new_col_name)
+            self.agg_columns.append(new_col_name)
         return self
 
     def type(self):
