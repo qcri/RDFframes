@@ -40,6 +40,7 @@ class AggregationOperator(QueryQueueOperator):
 
     def visit_node(self, query_model, ds, parent):
         query_model.add_aggregate_pair(self.src_col_name, self.function, self.agg_tag, self.agg_parameter)
+        query_model.auto_add_select_column(self.agg_tag)
         return ds, query_model, None
 
     def __repr__(self):

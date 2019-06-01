@@ -178,8 +178,7 @@ def test_expandable_grouped_join(join_type):
                              entities_col_name='tweet')
     dataset2 = dataset2.expand(src_col_name='tweet', predicate_list=[
         RDFPredicate('sioc:has_creater', 'tweeter')
-    ]).group_by(['tweeter']).count(
-        aggregation_fn_data=[AggregationData('tweet', 'tweets_count')]).filter(
+    ]).group_by(['tweeter']).count('tweet', 'tweets_count').filter(
         conditions_dict={'tweets_count': ['>= {}'.format(200), '<= {}'.format(300)]})
     dataset.join(dataset2, 'tweep', 'tweeter', 'user', join_type)
     dataset.select_cols(['user'])
@@ -292,7 +291,7 @@ if __name__ == '__main__':
     # test_join_instead_of_expand(JoinType.InnerJoin)
     # test_expandable_expandable_3_joins(JoinType.InnerJoin)
     # test_expandable_expandable_join_w_selectcols()
-    # test_expandable_grouped_join(JoinType.InnerJoin)
+    test_expandable_grouped_join(JoinType.InnerJoin)
     # test_expandable_grouped_join(JoinType.LeftOuterJoin)
     # test_expandable_grouped_join(JoinType.RightOuterJoin)
     # test_expandable_grouped_join(JoinType.OuterJoin)
@@ -300,9 +299,9 @@ if __name__ == '__main__':
     # test_grouped_expandable_join(JoinType.LeftOuterJoin)
     ### test the join on non-groupby columns
     # test_grouped_expandable_join(JoinType.RightOuterJoin)
-    test_grouped_grouped_join(JoinType.InnerJoin)
-    test_grouped_grouped_join(JoinType.LeftOuterJoin)
-    test_grouped_grouped_join(JoinType.RightOuterJoin)
-    test_grouped_grouped_join(JoinType.OuterJoin)
+    #test_grouped_grouped_join(JoinType.InnerJoin)
+    #test_grouped_grouped_join(JoinType.LeftOuterJoin)
+    # test_grouped_grouped_join(JoinType.RightOuterJoin)
+    # test_grouped_grouped_join(JoinType.OuterJoin)
 
 

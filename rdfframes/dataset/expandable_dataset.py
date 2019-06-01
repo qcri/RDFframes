@@ -1,5 +1,6 @@
 """Represents a flat dataset
 """
+import copy
 
 from rdfframes.query_buffer.query_operators.expandable.seed_operator import SeedOperator
 from rdfframes.query_buffer.query_operators.shared.aggregation_operator import AggregationOperator
@@ -153,7 +154,10 @@ class ExpandableDataset(Dataset):
         # TODO: Don't allow any more operations on the dataset
         agg_node = AggregationOperator(self.name, agg_col, AggregationFunction.SUM, new_col_name, None)
         self.query_queue.append_node(agg_node)
-        self.add_column(new_col_name)
+        #self.add_column(new_col_name)
+        # change the dataset to contain only the new columns
+        self.old_columns = copy.copy(self.columns)
+        self.columns = new_col_name
         self.agg_columns.append(new_col_name)
         return self
 
@@ -170,7 +174,9 @@ class ExpandableDataset(Dataset):
         # TODO: Don't allow any more operations on the dataset
         agg_node = AggregationOperator(self.name, agg_col, AggregationFunction.AVG, new_col_name, None)
         self.query_queue.append_node(agg_node)
-        self.add_column(new_col_name)
+        #self.add_column(new_col_name)
+        self.old_columns = copy.copy(self.columns)
+        self.columns = new_col_name
         self.agg_columns.append(new_col_name)
         return self
 
@@ -187,7 +193,9 @@ class ExpandableDataset(Dataset):
         # TODO: Don't allow any more operations on the dataset
         agg_node = AggregationOperator(self.name, agg_col, AggregationFunction.MIN, new_col_name, None)
         self.query_queue.append_node(agg_node)
-        self.add_column(new_col_name)
+        #self.add_column(new_col_name)
+        self.old_columns = copy.copy(self.columns)
+        self.columns = new_col_name
         self.agg_columns.append(new_col_name)
         return self
 
@@ -204,7 +212,9 @@ class ExpandableDataset(Dataset):
         # TODO: Don't allow any more operations on the dataset
         agg_node = AggregationOperator(self.name, agg_col, AggregationFunction.MAX, new_col_name, None)
         self.query_queue.append_node(agg_node)
-        self.add_column(new_col_name)
+        #self.add_column(new_col_name)
+        self.old_columns = copy.copy(self.columns)
+        self.columns = new_col_name
         self.agg_columns.append(new_col_name)
         return self
 
@@ -227,13 +237,17 @@ class ExpandableDataset(Dataset):
             # TODO: Don't allow any more operations on the dataset
             agg_node = AggregationOperator(self.name, agg_col, AggregationFunction.COUNT, new_col_name, param)
             self.query_queue.append_node(agg_node)
-            self.add_column(new_col_name)
+            #self.add_column(new_col_name)
+            self.old_columns = copy.copy(self.columns)
+            self.columns = new_col_name
             self.agg_columns.append(new_col_name)
         else:
             # TODO: Don't allow any more operations on the dataser
             agg_node = IntegerCountOperator(self.name, new_col_name, param)
             self.query_queue.append_node(agg_node)
-            self.add_column(new_col_name)
+            self.old_columns = copy.copy(self.columns)
+            self.columns = new_col_name
+            #self.add_column(new_col_name)
             self.agg_columns.append(new_col_name)
         return self
 

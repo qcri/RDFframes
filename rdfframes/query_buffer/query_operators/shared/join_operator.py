@@ -86,7 +86,6 @@ class JoinOperator(QueryQueueOperator):
             else:  # ds2 is grouped
                 query_model = self.__join_expandable_grouped(query_model1, query_model2)#, self.join_type)
         else:  # ds1 is grouped
-
             if self.second_dataset.type() == "ExpandableDataset":  # ds2 is expandable
                 # move everything we joined so far to query_model2
                 query_model2.prefixes = query_model1.prefixes

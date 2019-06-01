@@ -78,13 +78,31 @@ class SPARQLBuilder(object):
                 select_string += "\n"
             else:
                 """
-                # if a flat query
+                aggregated_cols = set()
+                if len(self.query_model.aggregate_clause):
+                    for new_col in self.query_model.aggregate_clause:
+                        func_name, agg_param, src_col_name = self.query_model.aggregate_clause[new_col]
+                        if src_col_name == "*":
+                            pass
+                        else:
+                            aggregated_cols.append(src_col_name)
+                # if there is an aggregation then check if there is a groupby. if there is an aggregation on a groupby
+                # column then return only the aggregation otherwise return the groupby and aggregation columns
+                common_variables = self.query_model.groupBy_columns.union(set(self.query_model.aggregate_clause.keys()))
+                if len(common_variables) > 0:
+                    select_string = "SELECT "
+                    for col in common_variables:
+                        select_string += "?%s " % col
+                    select_string += "\n"
+                else:
+                    select_string = "SELECT * \n"
                 if self.query_model.parent_query_model is None and len(self.query_model.subqueries) <= 0 \
                         and len(self.query_model.groupBy_columns) <= 0:
                     common_variables = set(filter(lambda x: ':' not in x, self.query_model.variables))
+                # a flat query with aggregation
                 elif self.query_model.parent_query_model is None and len(self.query_model.subqueries) <= 0 \
                         and len(self.query_model.groupBy_columns) > 0:
-                    common_variables = set(self.query_model.groupBy_columns)
+                    common_variables = set(self.query_model.groupBy_columns).union(self.query_model.aggregate_clause.keys())
                 # if a parent query
                 elif self.query_model.parent_query_model is None and len(self.query_model.subqueries) > 0:
                     common_variables = set()
@@ -100,7 +118,6 @@ class SPARQLBuilder(object):
                 select_string += "\n"
                 """
                 select_string = "SELECT * \n"
-
             self.query_string += select_string
 
         def return_subquery(self, subquery):

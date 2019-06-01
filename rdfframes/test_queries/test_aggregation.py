@@ -26,7 +26,6 @@ def test_simple_query():
         RDFPredicate('sioc:content', 'text', False)
     ])
     dataset = dataset.group_by(['tweep']).count(src_col_name='tweep', new_col_name='tweep_count', unique=True)
-    dataset.select_cols(['tweep_count'])
     sparql_query = dataset.to_sparql()
     print("sparql_query 1 =\n{}\n".format(sparql_query))
 
@@ -41,7 +40,6 @@ def test_simple_query():
     ])
     dataset = dataset.group_by(['tweep'])\
         .count(unique=True)
-    #dataset.select_cols(['count'])
     sparql_query = dataset.to_sparql()
     print("sparql_query 2 =\n{}\n".format(sparql_query))
 
@@ -55,11 +53,32 @@ def test_simple_query():
         RDFPredicate('sioc:content', 'text', False)
     ])
     dataset = dataset.count(unique=True)
-    #dataset.select_cols(['count'])
     sparql_query = dataset.to_sparql()
     print("sparql_query 3 =\n{}\n".format(sparql_query))
 
+    # return all the instances of the tweet class
+    dataset = graph.entities(class_name='sioc:microblogPost',
+                             new_dataset_name='tweets',
+                             entities_col_name='tweet')
+    dataset = dataset.expand(src_col_name='tweet', predicate_list=[
+        RDFPredicate('sioc:has_creater', 'tweep', False),
+        RDFPredicate('sioc:content', 'text', False)
+    ])
+    dataset = dataset.group_by(['tweep']).count(src_col_name='tweet', new_col_name='tweet_count', unique=True)
+    sparql_query = dataset.to_sparql()
+    print("sparql_query 4 =\n{}\n".format(sparql_query))
 
+    # return all the instances of the tweet class
+    dataset = graph.entities(class_name='sioc:microblogPost',
+                             new_dataset_name='tweets',
+                             entities_col_name='tweet')
+    dataset = dataset.expand(src_col_name='tweet', predicate_list=[
+        RDFPredicate('sioc:has_creater', 'tweep', False)
+    ])
+    dataset = dataset.group_by(['tweep']).count(src_col_name='tweet', new_col_name='tweet_count', unique=True)
+    dataset = dataset.expand(src_col_name='tweep', predicate_list=[RDFPredicate('sioc:content', 'text', False)])
+    sparql_query = dataset.to_sparql()
+    print("sparql_query 5 =\n{}\n".format(sparql_query))
 
 if __name__ == '__main__':
     test_simple_query()
