@@ -65,6 +65,8 @@ class JoinOperator(QueryQueueOperator):
         if self.second_col_name != self.new_col_name:
             query_model2.rename_variable(self.second_col_name, self.new_col_name)
 
+        if query_model1.from_clause !=  query_model2.from_clause:
+            raise Exception("Join on two different graphs is not implemented")
         # union the prefixes
         prefixes2 = {}
         for prefix in query_model2.prefixes:
@@ -85,10 +87,10 @@ class JoinOperator(QueryQueueOperator):
         if self.dataset.type() == "ExpandableDataset":
             if self.second_dataset.type() == "ExpandableDataset":
                 query_model = self.__join_expandable_expandable(query_model1, query_model2)#, self.join_type)
-            else:  # ds2 is grouped
+            else:  # ds2 is grouped while ds1 is expandable
                 query_model = self.__join_expandable_grouped(query_model1, query_model2)#, self.join_type)
         else:  # ds1 is grouped
-            if self.second_dataset.type() == "ExpandableDataset":  # ds2 is expandable
+            if self.second_dataset.type() == "ExpandableDataset":  # ds2 is expandable while ds1 is grouped
                 # move everything we joined so far to query_model2
                 query_model2.prefixes = copy.copy(query_model1.prefixes)
                 query_model2.from_clause = copy.copy(query_model1.from_clause)
@@ -99,12 +101,13 @@ class JoinOperator(QueryQueueOperator):
                 query_model2.order_clause = copy.copy(query_model1.order_clause)
                 QueryModel.clean_inner_qm(query_model1)
                 #query_model2.filter_clause = query_model1.filter_clause
-                if self.join_type == JoinType.LeftOuterJoin:
-                    query_model = self.__join_expandable_grouped(query_model2, query_model1)#, JoinType.RightOuterJoin)
-                elif self.join_type == JoinType.RightOuterJoin:
-                    query_model = self.__join_expandable_grouped(query_model2, query_model1)#, JoinType.LeftOuterJoin)
-                else:
-                    query_model = self.__join_expandable_grouped(query_model2, query_model1)#, self.join_type)
+                #if self.join_type == JoinType.LeftOuterJoin:
+                #    query_model = self.__join_expandable_grouped(query_model2, query_model1)#, JoinType.RightOuterJoin)
+                #elif self.join_type == JoinType.RightOuterJoin:
+                #    query_model = self.__join_expandable_grouped(query_model2, query_model1)#, JoinType.LeftOuterJoin)
+                #else:
+                #    query_model = self.__join_expandable_grouped(query_model2, query_model1)#, self.join_type)
+                query_model = self.__join_expandable_grouped(query_model2, query_model1)#, self.join_type)
             else:  # ds2 is grouped
                 query_model = self.__join_grouped_grouped(query_model1, query_model2)
         return query_model
@@ -113,9 +116,6 @@ class JoinOperator(QueryQueueOperator):
         # TODO: Union the graphs in ds2 with ds1 and assign each graph pattern to a graph in
         #  case of joining two different graphs
 
-        # add the filter graph patterns of dataset2 to dataset1
-        for column, condition in query_model2.filter_clause:
-            query_model1.add_filter_condition(column, condition)
 
         if self.join_type == JoinType.InnerJoin:
             # add the basic graph patterns in dataset2 to dataset1
@@ -124,6 +124,11 @@ class JoinOperator(QueryQueueOperator):
             # append the optional patterns in dataset2 to optionals in dataset1
             for op_triple in query_model2.optionals:
                 query_model1.add_optional(*op_triple)
+            # add the filter graph patterns of dataset2 to dataset1
+            for column, conditions in query_model2.filter_clause.items():
+                for condition in conditions:
+                    query_model1.add_filter_condition(column, condition)
+
         elif self.join_type == JoinType.LeftOuterJoin:
             # add the basic and optionals graph patterns of dataset2 to dataset1 optionals
             for triple in query_model2.triples:
@@ -132,6 +137,11 @@ class JoinOperator(QueryQueueOperator):
             #  the optional block from the second query model
             for triple in query_model2.optionals:
                 query_model1.add_optional(*triple)
+            # TODO: change this to add it to the optional block in querymodel1: add the filter graph patterns of dataset2 to dataset1
+            for column, conditions in query_model2.filter_clause.items():
+                for condition in conditions:
+                    query_model1.add_filter_condition(column, condition)
+
         elif self.join_type == JoinType.RightOuterJoin:
             # move all triples of dataset1 to optional
             for triple in query_model1.triples:
@@ -143,53 +153,55 @@ class JoinOperator(QueryQueueOperator):
             # append the optional patterns in dataset2 to optionals in dataset1
             for op_triple in query_model2.optionals:
                 query_model1.add_optional(*op_triple)
+            # TODO: change this to add it to the optional block in querymodel2: add the filter graph patterns of dataset2 to dataset1
+            for column, conditions in query_model2.filter_clause.items():
+                for condition in conditions:
+                    query_model1.add_filter_condition(column, condition)
+
         else:  # outer join
             # The join will build three queries and two sub-queries
             # one contains the basic pattrens from the two dataset into one query
+            # TODO: in case of 2 graphs
             ds1_query_model = QueryModel()
             ds2_query_model = QueryModel()
-            inner_query_model = QueryModel()
+            outer_query_model = QueryModel()
 
             for triple in query_model1.triples:
                 ds1_query_model.add_triple(*triple)
-                inner_query_model.add_triple(*triple)
+                #inner_query_model.add_triple(*triple)
             for op_triple in query_model1.optionals:
                 ds1_query_model.add_optional(*op_triple)
-                inner_query_model.add_optional(*op_triple)
+                #inner_query_model.add_optional(*op_triple)
 
-            query_model1.rem_all_triples()
-            query_model1.rem_optional_triples()
+            for column, conditions in query_model1.filter_clause.items():
+                for condition in conditions:
+                    ds1_query_model.add_filter_condition(column, condition)
 
             for triple in query_model2.triples:
-                inner_query_model.add_triple(*triple)
+                ds2_query_model.add_triple(*triple)
+                #inner_query_model.add_triple(*triple)
 
             for op_triple in query_model2.optionals:
-                inner_query_model.add_optional(*op_triple)
+                ds2_query_model.add_optional(*op_triple)
+                #inner_query_model.add_optional(*op_triple)
 
-            ## one query with basic pattern from dataset1 and basic pattern from dataset2 as optional
-            ds1_triples = ds1_query_model.triples.copy()
-            ds1_optional = ds1_query_model.optionals.copy()
-            ds2_triples = query_model2.triples.copy()
-            ds2_optional = query_model2.optionals.copy()
-
-            for triple in ds2_triples:
-                ds1_query_model.add_optional(*triple)
-            for op_triple in ds2_optional:
-                ds1_query_model.add_optional(*op_triple)
-
-            ## one query with basic pattren from dataset 2 and basic pattren from dataset1 as optional
-            for triple in ds1_triples:
-                query_model2.add_optional(*triple)
-            for op_triple in ds1_optional:
-                query_model2.add_optional(*op_triple)
+            for column, conditions in query_model2.filter_clause.items():
+                for condition in conditions:
+                    ds2_query_model.add_filter_condition(column, condition)
 
             # add the two queries into the union of the main query
+            outer_query_model.prefixes = copy.copy(query_model1.prefixes)
+            outer_query_model.from_clause = copy.copy(query_model1.from_clause)
+            outer_query_model.select_columns = copy.copy(query_model1.select_columns)
+            outer_query_model.variables = copy.copy(query_model1.variables)
+            outer_query_model.offset = copy.copy(query_model1.offset)
+            outer_query_model.limit = copy.copy(query_model1.limit)
+            outer_query_model.order_clause = copy.copy(query_model1.order_clause)
             query_model1.select_columns = query_model1.select_columns.union(query_model2.select_columns)
 
-            query_model1.add_unions(ds1_query_model)
-            # ds2_query_model.rem_prefixes()
-            query_model1.add_unions(query_model2)
-            query_model1.add_unions(inner_query_model)
+            outer_query_model.add_unions(ds1_query_model)
+            outer_query_model.add_unions(ds2_query_model)
+            query_model1 = outer_query_model
 
         return query_model1
 

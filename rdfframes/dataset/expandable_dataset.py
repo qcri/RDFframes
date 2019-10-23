@@ -103,6 +103,8 @@ class ExpandableDataset(Dataset):
         self.query_queue.append_node(node)
         # TODO: if we allow the join between different graphs, Union the graphs
 
+        return self
+
     def filter(self, conditions_dict):
         """
         Apply the given filters on the corresponding columns in the dataset.
