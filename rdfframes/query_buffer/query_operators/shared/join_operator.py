@@ -230,8 +230,16 @@ class JoinOperator(QueryQueueOperator):
 
         joined_query_model = QueryModel()
 
-        joined_query_model.prefixes = query_model1.prefixes # all prefixes are already in query_model1
-        joined_query_model.variables = query_model1.variables  # all prefixes are already in query_model1
+        joined_query_model.prefixes = copy.copy(query_model1.prefixes)# all prefixes are already in query_model1
+        joined_query_model.add_prefixes(query_model2.prefixes)
+
+        joined_query_model.variables = copy.copy(query_model1.variables.union(query_model2.variables))  # all prefixes are already in query_model1
+        joined_query_model.from_clause = copy.copy(query_model1.from_clause)
+        joined_query_model.select_columns = copy.copy(query_model1.select_columns.union(query_model2.select_columns))
+        joined_query_model.offset = min(query_model1.offset, query_model2.offset)
+        joined_query_model.limit = max(query_model1.limit, query_model2.limit)
+        query_model1.order_clause.update(query_model2.order_clause)
+        joined_query_model.order_clause = copy.copy(query_model1.order_clause)
 
         # add subqueries
         if self.join_type == JoinType.InnerJoin:
@@ -241,21 +249,23 @@ class JoinOperator(QueryQueueOperator):
             joined_query_model.add_subquery(query_model1)
             joined_query_model.add_optional_subquery(query_model2)
         elif self.join_type == JoinType.RightOuterJoin:
-            joined_query_model.add_optional_subquery(query_model1)
             joined_query_model.add_subquery(query_model2)
+            joined_query_model.add_optional_subquery(query_model1)
         else:  # outer join
-            inner_join = joined_query_model.copy()
-            inner_join.add_subquery(query_model1)
-            inner_join.add_subquery(query_model2)
-            left_outer_join = joined_query_model.copy()
-            left_outer_join.add_subquery(query_model1)
-            left_outer_join.add_optional_subquery(query_model2)
-            right_outer_join = joined_query_model.copy()
-            right_outer_join.add_optional_subquery(query_model1)
-            right_outer_join.add_subquery(query_model2)
-            joined_query_model.add_unions(inner_join)
-            joined_query_model.add_unions(left_outer_join)
-            joined_query_model.add_unions(right_outer_join)
+            joined_query_model.add_unions(query_model1)
+            joined_query_model.add_unions(query_model2)
+            #inner_join = joined_query_model.copy()
+            #inner_join.add_subquery(query_model1)
+            #inner_join.add_subquery(query_model2)
+            #left_outer_join = joined_query_model.copy()
+            #left_outer_join.add_subquery(query_model1)
+            #left_outer_join.add_optional_subquery(query_model2)
+            #right_outer_join = joined_query_model.copy()
+            #right_outer_join.add_optional_subquery(query_model1)
+            #right_outer_join.add_subquery(query_model2)
+            #joined_query_model.add_unions(inner_join)
+            #joined_query_model.add_unions(left_outer_join)
+            #joined_query_model.add_unions(right_outer_join)
 
         return joined_query_model
 
