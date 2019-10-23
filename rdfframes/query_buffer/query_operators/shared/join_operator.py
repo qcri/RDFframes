@@ -1,3 +1,5 @@
+import copy
+
 from rdfframes.query_buffer.query_operators.query_queue_operator import QueryQueueOperator
 from rdfframes.query_builder.queue2querymodel import Queue2QueryModelConverter
 from rdfframes.utils.constants import JoinType
@@ -88,13 +90,15 @@ class JoinOperator(QueryQueueOperator):
         else:  # ds1 is grouped
             if self.second_dataset.type() == "ExpandableDataset":  # ds2 is expandable
                 # move everything we joined so far to query_model2
-                query_model2.prefixes = query_model1.prefixes
-                query_model2.select_columns = query_model1.select_columns
-                query_model2.variables = query_model1.variables
-                query_model2.offset = query_model1.offset
-                query_model2.limit = query_model1.limit
-                query_model2.order_clause = query_model1.order_clause
-                query_model2.filter_clause = query_model1.filter_clause
+                query_model2.prefixes = copy.copy(query_model1.prefixes)
+                query_model2.from_clause = copy.copy(query_model1.from_clause)
+                query_model2.select_columns = copy.copy(query_model1.select_columns)
+                query_model2.variables = copy.copy(query_model1.variables)
+                query_model2.offset = copy.copy(query_model1.offset)
+                query_model2.limit = copy.copy(query_model1.limit)
+                query_model2.order_clause = copy.copy(query_model1.order_clause)
+                QueryModel.clean_inner_qm(query_model1)
+                #query_model2.filter_clause = query_model1.filter_clause
                 if self.join_type == JoinType.LeftOuterJoin:
                     query_model = self.__join_expandable_grouped(query_model2, query_model1)#, JoinType.RightOuterJoin)
                 elif self.join_type == JoinType.RightOuterJoin:
@@ -103,7 +107,6 @@ class JoinOperator(QueryQueueOperator):
                     query_model = self.__join_expandable_grouped(query_model2, query_model1)#, self.join_type)
             else:  # ds2 is grouped
                 query_model = self.__join_grouped_grouped(query_model1, query_model2)
-
         return query_model
 
     def __join_expandable_expandable(self, query_model1, query_model2):

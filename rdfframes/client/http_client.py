@@ -133,18 +133,64 @@ class HttpClient(Client):
         :param export_file: if provided, the data will be saved to the pass file path
         :return: the result of the query in the requested format
         """
+        query11 = """
+PREFIX  dcterms: <http://purl.org/dc/terms/>
+PREFIX  rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX  dbpprop: <http://dbpedia.org/property/>
+
+SELECT DISTINCT ?actorName ?filmName ?subject ?director ?title ?country ?genre
+FROM <http://dbpedia.org>
+WHERE
+  { { SELECT  ?actor (COUNT(DISTINCT ?filmName) AS ?film_count)
+      WHERE
+        { ?film   dbpprop:starring  ?actor .
+          ?actor  rdfs:label        ?actorName .
+          ?film   rdfs:label        ?filmName
+          FILTER langMatches(lang(?actorName), "en")
+        }
+      GROUP BY ?actor
+      HAVING ( COUNT(DISTINCT ?filmName) >= 10 && COUNT(DISTINCT ?filmName) <= 20 )
+    }
+    ?film   dbpprop:starring  ?actor .
+    ?actor  rdfs:label        ?actorName .
+    ?film   rdfs:label        ?filmName
+    FILTER langMatches(lang(?actorName), "en")
+    OPTIONAL
+      { ?film  dcterms:subject  ?subject }
+    OPTIONAL
+      { ?film  dbpprop:writer  ?writer }
+    OPTIONAL
+      { ?film  dbpprop:director  ?director }
+    OPTIONAL
+      { ?film  dbpprop:title  ?title }
+    OPTIONAL
+      { ?film  dbpprop:country  ?country }
+    OPTIONAL
+      { ?film  dbpprop:genre  ?genre }
+  }
+        """
         self.return_format = return_format if return_format is not None else self.return_format
-        final_result = None
+        #final_result = None
+        final_result = []
         for res in self._execute_query(query, return_format=return_format, export_file=output_file):
             #print('data with type {} and length {} retrieved'.format(type(res).__name__, len(res)))
             if return_format == HttpClientDataFormat.PANDAS_DF:
-                if final_result is None:
-                    final_result = res
+                #if final_result is None:
+                if len(final_result) <= 0:
+                    final_result = [res]
                 else:
-                    final_result = pd.merge(final_result, res, how='outer')
+                    final_result.append(res)
+                    #final_result = pd.merge(final_result, res, how='outer')
             else:
                 raise Exception("return format {} is unimplemented".format(return_format))
-        return final_result
+        if return_format == HttpClientDataFormat.PANDAS_DF:
+            string = ''.join(final_result)
+            stringio = StringIO(string)
+            stringio.seek(0)
+            df = pd.read_csv(stringio, sep=',')
+            return df
+        else:
+            return final_result
 
     def _execute_query(self, query, return_format=None, export_file=None):
         self.return_format = return_format if return_format is not None else self.return_format
@@ -191,6 +237,7 @@ class HttpClient(Client):
         offset_index = 0
         current_offset = -1 * self.max_rows
 
+        first_query_flag = True
         while offsets is None or offset_index < len(offsets):
             modified_query = query
             current_offset = offsets[offset_index] if offsets is not None else current_offset + self.max_rows
@@ -208,7 +255,7 @@ class HttpClient(Client):
             response = requests.post(self.full_endpoint_url, data=params, timeout=self.timeout)
 
             if response.status_code == 200:
-                data = self.__handle_http_response(response, export_file)
+                data = self.__handle_http_response(response, export_file, first_query_flag=first_query_flag)
 
                 if data is not None:
                     yield data
@@ -217,8 +264,9 @@ class HttpClient(Client):
             else:
                 print("HTTP Response is:\n{}".format(response))
                 break
+            first_query_flag = False
 
-    def __handle_http_response(self, response, export_file):
+    def __handle_http_response(self, response, export_file, first_query_flag=False):
         """
         Given a valid http response, this methods wraps the response text up in the requested format
         and returns it to the caller
@@ -241,8 +289,12 @@ class HttpClient(Client):
                     exp_file.write(data)
                     return export_file
             elif self.return_format == HttpClientDataFormat.PANDAS_DF:
-                stringio = StringIO(response.text)
-                return pd.read_csv(stringio, sep=',')
+                #stringio = StringIO(response.text)
+                #return pd.read_csv(stringio, sep=',')
+                if first_query_flag:
+                    return data
+                else:
+                    return body
             else:
                 return response.text
 

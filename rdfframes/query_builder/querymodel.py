@@ -212,9 +212,11 @@ class QueryModel(object):
         :param col_name:
         :return:
         """
+        print("adding {} select column".format(col_name))
         self.select_columns.add(col_name)
 
     def auto_add_select_column(self, col_name):
+        #print("Auto adding {}".format(col_name))
         self.auto_generated_select_columns.add(col_name)
 
     def rem_select_column(self, col_name):
@@ -273,11 +275,11 @@ class QueryModel(object):
         to_add_to_select = []
         to_rem_from_select = []
         for var in self.select_columns:
-            # Tif select column in groupby or aggregation: add it to selected columns by the user in inner query
+            # if select column in groupby or aggregation: add it to selected columns by the user in inner query
             #  and the outer query.
             #  else: find the relevant graph patterns and move them to the outer query and
             #  remove the select column from select clause in inner query
-            if var in self.groupBy_columns or self.aggregate_clause:
+            if (var in self.groupBy_columns) or (var in self.aggregate_clause):
                 to_add_to_select.append(var)
             else:
                 # add basic graph patterns

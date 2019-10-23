@@ -120,6 +120,8 @@ class GroupedDataset(Dataset):
         self.query_queue.append_node(node)
         # TODO: if we allow the join between different graphs, Union the graphs
 
+        return self
+
     def filter(self, conditions_dict):
         """
         Apply the given filters on the corresponding columns in the dataset.
@@ -256,7 +258,7 @@ class GroupedDataset(Dataset):
             self.agg_columns.append(new_col_name)
         return self
 
-    def count(self, src_col_name=None, new_col_name='count', unique=True):
+    def count(self, src_col_name=None, new_col_name='count', unique=False):
         """
         :param src_col_name: the column to count its values
         :param new_col_name: the new column name of the count

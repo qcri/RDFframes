@@ -28,8 +28,9 @@ class SPARQLBuilder(object):
             self.query_model = query_model
             if query_model.parent_query_model is None:  # if not a subquery
                 self.add_prefixes()
-                self.add_from()
             self.add_select()
+            if query_model.parent_query_model is None:
+                self.add_from()
             self.add_where_clause()
             self.add_order_clause()
             self.add_groupby()
@@ -156,7 +157,8 @@ class SPARQLBuilder(object):
         def add_optional_clause(self):
             optional_string =""
             if len(self.query_model.optionals) > 0:
-                optional_string = "OPTIONAL {\n"
+                #optional_string = "OPTIONAL {\n"
+                optional_string = ""
                 for triple in self.query_model.optionals:
                     triple0 = triple[0]
                     triple1 = triple[1]
@@ -167,8 +169,9 @@ class SPARQLBuilder(object):
                         triple1 = "?" + triple[1]
                     if not is_uri(triple[2]) and triple[2].find(":") < 0:
                         triple2 = "?" + triple[2]
-                    optional_string += '\t{} {} {}'.format(triple0, triple1, triple2) + " .\n"
-                optional_string += "}"
+                    #optional_string += '\t{} {} {}'.format(triple0, triple1, triple2) + " .\n"
+                    optional_string += '\tOPTIONAL '+ "{ " + '{} {} {}'.format(triple0, triple1, triple2) + " }\n"
+                #optional_string += "}"
             return optional_string
 
         def add_where_clause(self):
@@ -311,7 +314,14 @@ class SPARQLBuilder(object):
                     col_i += 1
                     if len(filter_con) > 1:
                         for i in range(len(filter_con)):
-                            if "date" not in col_name:
+                            if filter_con[i].find("isIRI") >= 0:
+                                cond_string = " ( " + filter_con[i] + " )"
+                                if cond_list != "":
+                                    cond_list += " && "
+                                    cond_list += cond_string
+                                else:
+                                    cond_list += cond_string                                
+                            elif "date" not in col_name:
                                 cond_string = " ( "
                                 cond_string += "?%s %s" % (col_name, filter_con[i])
                                 cond_string += " )"
@@ -330,7 +340,10 @@ class SPARQLBuilder(object):
                                 else:
                                     cond_list += cond_string
                     else:
-                        if "date" not in col_name:
+                        if filter_con[0].find("isIRI") >= 0 or filter_con[0].find("langMatches") >= 0:
+                            cond_string =  filter_con[0]
+                            cond_list += cond_string 
+                        elif "date" not in col_name:
                             cond_string = " ("
                             cond_string += "?%s %s" % (col_name, filter_con[0])
                             cond_string += " )"

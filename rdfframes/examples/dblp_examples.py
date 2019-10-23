@@ -1,6 +1,7 @@
 from rdfframes.knowledge_graph import KnowledgeGraph
 from rdfframes.dataset.rdfpredicate import RDFPredicate
 from rdfframes.dataset.aggregation_fn_data import AggregationData
+from rdfframes.client.http_client import HttpClientDataFormat, HttpClient
 
 
 def important_vldb_authors():
@@ -59,9 +60,24 @@ def important_topics():
 
     print("SPARQL Query = \n{}".format(dataset.to_sparql()))
 
+    endpoint = 'http://10.161.202.101:8890/sparql/'
+    port = 8890
+    output_format = HttpClientDataFormat.PANDAS_DF
+    max_rows = 1000000
+    timeout = 12000
+    default_graph_url = 'http://twitter.com'
+    client = HttpClient(endpoint_url=endpoint,
+                        port=port,
+                        return_format=output_format,
+                        timeout=timeout,
+                        default_graph_uri=default_graph_url,
+                        max_rows=max_rows
+                        )
 
+    df = ds.execute(client, return_format=output_format)
+    print(df.head(10))
 
 
 if __name__ == '__main__':
-    # important_vldb_authors()
+    #important_vldb_authors()
     important_topics()
