@@ -215,15 +215,16 @@ class JoinOperator(QueryQueueOperator):
             query_model1.add_optional_subquery(query_model2)
         elif self.join_type == JoinType.RightOuterJoin:
             # move all triples of dataset1 to optional
-            for triple in query_model1.triples:
-                query_model1.add_optional(*triple)
-            query_model1.rem_all_triples()
+            #for triple in query_model1.triples:
+            #    query_model1.add_optional(*triple)
+            #query_model1.rem_all_triples()
             # add query model 2 as a subquery
-            query_model1.add_subquery(query_model2)
+            #query_model1.add_subquery(query_model2)
+            query_model2.add_subquery(query_model1)
+            return query_model2
         else:  # outer join
             # Union query model 1 with query model 2
-            query_model1 = query_model1.union(query_model2)
-
+            query_model1 = query_model1.add_unions(query_model2)
         return query_model1
 
     def __join_grouped_grouped(self, query_model1, query_model2):
@@ -254,19 +255,6 @@ class JoinOperator(QueryQueueOperator):
         else:  # outer join
             joined_query_model.add_unions(query_model1)
             joined_query_model.add_unions(query_model2)
-            #inner_join = joined_query_model.copy()
-            #inner_join.add_subquery(query_model1)
-            #inner_join.add_subquery(query_model2)
-            #left_outer_join = joined_query_model.copy()
-            #left_outer_join.add_subquery(query_model1)
-            #left_outer_join.add_optional_subquery(query_model2)
-            #right_outer_join = joined_query_model.copy()
-            #right_outer_join.add_optional_subquery(query_model1)
-            #right_outer_join.add_subquery(query_model2)
-            #joined_query_model.add_unions(inner_join)
-            #joined_query_model.add_unions(left_outer_join)
-            #joined_query_model.add_unions(right_outer_join)
-
         return joined_query_model
 
     def __repr__(self):
