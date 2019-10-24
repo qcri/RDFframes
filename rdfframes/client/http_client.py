@@ -47,7 +47,7 @@ class HttpClient(Client):
                  return_format=HttpClientDataFormat.DEFAULT,
                  timeout=120,
                  default_graph_uri='',
-                 max_rows=10000):
+                 max_rows=_MAX_ROWS):
         """
         Initializes a client object with the URI of the RDF engine SPARQL endpoint and the port number
         :param endpoint_url: the url of the RDF engine or SPARQL endpoint
@@ -132,42 +132,6 @@ class HttpClient(Client):
         :param return_format: the format of the retrieved data. Options from HttpClientDataFormat
         :param export_file: if provided, the data will be saved to the pass file path
         :return: the result of the query in the requested format
-        """
-        query11 = """
-PREFIX  dcterms: <http://purl.org/dc/terms/>
-PREFIX  rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX  dbpprop: <http://dbpedia.org/property/>
-
-SELECT DISTINCT ?actorName ?filmName ?subject ?director ?title ?country ?genre
-FROM <http://dbpedia.org>
-WHERE
-  { { SELECT  ?actor (COUNT(DISTINCT ?filmName) AS ?film_count)
-      WHERE
-        { ?film   dbpprop:starring  ?actor .
-          ?actor  rdfs:label        ?actorName .
-          ?film   rdfs:label        ?filmName
-          FILTER langMatches(lang(?actorName), "en")
-        }
-      GROUP BY ?actor
-      HAVING ( COUNT(DISTINCT ?filmName) >= 10 && COUNT(DISTINCT ?filmName) <= 20 )
-    }
-    ?film   dbpprop:starring  ?actor .
-    ?actor  rdfs:label        ?actorName .
-    ?film   rdfs:label        ?filmName
-    FILTER langMatches(lang(?actorName), "en")
-    OPTIONAL
-      { ?film  dcterms:subject  ?subject }
-    OPTIONAL
-      { ?film  dbpprop:writer  ?writer }
-    OPTIONAL
-      { ?film  dbpprop:director  ?director }
-    OPTIONAL
-      { ?film  dbpprop:title  ?title }
-    OPTIONAL
-      { ?film  dbpprop:country  ?country }
-    OPTIONAL
-      { ?film  dbpprop:genre  ?genre }
-  }
         """
         self.return_format = return_format if return_format is not None else self.return_format
         #final_result = None

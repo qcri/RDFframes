@@ -57,6 +57,7 @@ class Dataset:
         Join this dataset with datset 2.
         :param dataset2:
         :param join_col_name1:
+
         :param join_col_name2:
         :param new_column_name:
         :param join_type:
@@ -192,7 +193,8 @@ class Dataset:
         :return: the SPARQL query as a string
         """
         converter = Queue2QueryModelConverter(self)
-        query_string = converter.to_query_model().to_sparql()
+        query_string = converter.to_query_model()
+        query_string = query_string.to_sparql()
         return query_string
 
     def execute(self, client, return_format=None, output_file=None):

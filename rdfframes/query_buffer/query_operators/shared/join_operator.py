@@ -224,7 +224,7 @@ class JoinOperator(QueryQueueOperator):
             return query_model2
         else:  # outer join
             # Union query model 1 with query model 2
-            query_model1 = query_model1.add_unions(query_model2)
+            query_model1.add_unions(query_model2)
         return query_model1
 
     def __join_grouped_grouped(self, query_model1, query_model2):

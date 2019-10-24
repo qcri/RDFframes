@@ -59,7 +59,6 @@ class Queue2QueryModelConverter(object):
 
         for node in queue.queue:
             current_ds, current_qm, grouped_ds = node.visit_node(current_qm, ds, node)
-
         self.query_model = current_qm
 
     def __dag_bfs(self, query_model, ds):
