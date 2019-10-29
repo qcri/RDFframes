@@ -54,6 +54,10 @@ class ExpandableDataset(Dataset):
         if src_col_name not in self.columns:
             raise Exception("column {} not in the dataset".format(src_col_name))
 
+        if self.cached:
+            ds = self._cache_dataset()
+            return ds.expand(src_col_name, predicate_list)
+
         for predicate in predicate_list:
             node = ExpansionOperator(self.name, src_col_name, predicate.uri, predicate.new_col_name,
                                      predicate.direction, is_optional=predicate.optional)
@@ -75,6 +79,10 @@ class ExpandableDataset(Dataset):
         :param join_type:
         :return:
         """
+        if self.cached:
+            ds = self._cache_dataset()
+            return ds.join(dataset2, join_col_name1, join_col_name2, new_column_name, join_type)
+
         if join_col_name1 not in self.columns:
             raise Exception("column {} not in the dataset".format(join_col_name1))
         # specify the join key in dataset2
@@ -116,6 +124,10 @@ class ExpandableDataset(Dataset):
         if len(invalid_cols) > 0:
             raise Exception('Columns {} are not defined in the dataset'.format(invalid_cols))
 
+        if self.cached:
+            ds = self._cache_dataset()
+            return ds.filter(conditions_dict)
+
         for col, conditions in conditions_dict.items():
             for cond in conditions:
                 filter_node = FilterOperator(self.name, col, cond)
@@ -131,6 +143,10 @@ class ExpandableDataset(Dataset):
         invalid_cols = [col for col in groupby_cols_list if col not in self.columns]
         if len(invalid_cols) > 0:
             raise Exception('Columns {} are not defined in the dataset'.format(invalid_cols))
+
+        if self.cached:
+            ds = self._cache_dataset()
+            return ds.group_by(groupby_cols_list)            
 
         groupby_ds_name = GroupedDataset.generated_grouped_ds_name(self.name, groupby_cols_list)
         groupby_node = GroupByOperator(self.name, groupby_cols_list, groupby_ds_name)
@@ -152,6 +168,11 @@ class ExpandableDataset(Dataset):
         """
         if src_col_name not in self.columns:
             raise Exception("Aggregation column {} doesn't exist in this dataset".format(src_col_name))
+
+        if self.cached:
+            ds = self._cache_dataset()
+            return ds.sum(src_col_name, new_col_name)
+
         agg_col = src_col_name
         # TODO: Don't allow any more operations on the dataset
         agg_node = AggregationOperator(self.name, agg_col, AggregationFunction.SUM, new_col_name, None)
@@ -172,6 +193,11 @@ class ExpandableDataset(Dataset):
         """
         if src_col_name not in self.columns:
             raise Exception("Aggregation column {} doesn't exist in this dataset".format(src_col_name))
+
+        if self.cached:
+            ds = self._cache_dataset()
+            return ds.avg(src_col_name, new_col_name)
+
         agg_col = src_col_name
         # TODO: Don't allow any more operations on the dataset
         agg_node = AggregationOperator(self.name, agg_col, AggregationFunction.AVG, new_col_name, None)
@@ -191,6 +217,10 @@ class ExpandableDataset(Dataset):
         """
         if src_col_name not in self.columns:
             raise Exception("Aggregation column {} doesn't exist in this dataset".format(src_col_name))
+        if self.cached:
+            ds = self._cache_dataset()
+            return ds.min(src_col_name, new_col_name)
+
         agg_col = src_col_name
         # TODO: Don't allow any more operations on the dataset
         agg_node = AggregationOperator(self.name, agg_col, AggregationFunction.MIN, new_col_name, None)
@@ -210,6 +240,10 @@ class ExpandableDataset(Dataset):
         """
         if src_col_name not in self.columns:
             raise Exception("Aggregation column {} doesn't exist in this dataset".format(src_col_name))
+        if self.cached:
+            ds = self._cache_dataset()
+            return ds.max(src_col_name, new_col_name)
+
         agg_col = src_col_name
         # TODO: Don't allow any more operations on the dataset
         agg_node = AggregationOperator(self.name, agg_col, AggregationFunction.MAX, new_col_name, None)
@@ -228,6 +262,10 @@ class ExpandableDataset(Dataset):
         :return: if src_col_name is not None and is a groupby column, return a dataset with a new column name. else
             return an integer
         """
+        if self.cached:
+            ds = self._cache_dataset()
+            return ds.count(src_col_name, new_col_name, unique)
+
         if unique:
             param = "DISTINCT"
         else:

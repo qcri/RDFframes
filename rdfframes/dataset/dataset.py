@@ -240,7 +240,8 @@ class Dataset:
 
     def cache(self):
         self.cached = True
-        return self._cache_dataset()
+        #return self._cache_dataset()
+        return self
 
     def _cache_dataset(self):
         ds = copy.deepcopy(self)

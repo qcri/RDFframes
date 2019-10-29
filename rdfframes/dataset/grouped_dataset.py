@@ -66,6 +66,10 @@ class GroupedDataset(Dataset):
         if src_col_name not in self.columns:
             raise Exception("{} doesn't exist in the dataset".format(src_col_name))
 
+        if self.cached:
+            ds = self._cache_dataset()
+            return ds.expand(src_col_name, predicate_list)
+
         for predicate in predicate_list:
             operator = ExpansionOperator(self.name, src_col_name, predicate.uri, predicate.new_col_name,
                                          predicate.direction, is_optional=predicate.optional)
@@ -84,6 +88,10 @@ class GroupedDataset(Dataset):
         :param join_type:
         :return:
         """
+        if self.cached:
+            ds = self._cache_dataset()
+            return ds.join(dataset2, join_col_name1, join_col_name2, new_column_name, join_type)
+
         if join_col_name1 not in self.columns:
             raise Exception("Join key {} doesn't exist in this dataset".format(join_col_name1))
         # specify the join key in dataset2
@@ -133,6 +141,10 @@ class GroupedDataset(Dataset):
         if len(invalid_cols) > 0:
             raise Exception('Columns {} are not defined in the dataset'.format(invalid_cols))
 
+        if self.cached:
+            ds = self._cache_dataset()
+            return ds.filter(conditions_dict)
+
         for src_col_name in conditions_dict:
             if src_col_name in self.agg_columns:
                 operator = HavingOperator(self.name, src_col_name, conditions_dict[src_col_name])
@@ -154,6 +166,10 @@ class GroupedDataset(Dataset):
         if len(invalid_cols) > 0:
             raise Exception('Columns {} are not defined in the dataset'.format(invalid_cols))
 
+        if self.cached:
+            ds = self._cache_dataset()
+            return ds.group_by(groupby_cols_list)
+
         groupby_ds_name = GroupedDataset.generated_grouped_ds_name(self.name, groupby_cols_list)
         groupby_node = GroupByOperator(self.name, groupby_cols_list, groupby_ds_name)
         self.query_queue.append_node(groupby_node)
@@ -169,6 +185,10 @@ class GroupedDataset(Dataset):
         :return: if src_col_name is not None and is a groupby column, return a dataset with a new column name. else
             return an integer
         """
+        if self.cached:
+            ds = self._cache_dataset()
+            return ds.sum(src_col_name, new_col_name)
+
         param = None
         if src_col_name not in self.columns:
             raise Exception("Aggregation column {} doesn't exist in this dataset".format(src_col_name))
@@ -193,6 +213,10 @@ class GroupedDataset(Dataset):
         :return: if src_col_name is not None and is a groupby column, return a dataset with a new column name. else
             return an integer
         """
+        if self.cached:
+            ds = self._cache_dataset()
+            return ds.avg(src_col_name, new_col_name)
+
         param = None
         if src_col_name not in self.columns:
             raise Exception("Aggregation column {} doesn't exist in this dataset".format(src_col_name))
@@ -217,6 +241,10 @@ class GroupedDataset(Dataset):
         :return: if src_col_name is not None and is a groupby column, return a dataset with a new column name. else
             return an integer
         """
+        if self.cached:
+            ds = self._cache_dataset()
+            return ds.min(src_col_name, new_col_name)
+
         param = None
         if src_col_name not in self.columns:
             raise Exception("Aggregation column {} doesn't exist in this dataset".format(src_col_name))
@@ -241,6 +269,10 @@ class GroupedDataset(Dataset):
         :return: if src_col_name is not None and is a groupby column, return a dataset with a new column name. else
             return an integer
         """
+        if self.cached:
+            ds = self._cache_dataset()
+            return ds.max(src_col_name, new_col_name)
+
         param = None
         if src_col_name not in self.columns:
             raise Exception("Aggregation column {} doesn't exist in this dataset".format(src_col_name))
@@ -266,6 +298,10 @@ class GroupedDataset(Dataset):
         :return: if src_col_name is not None and is a groupby column, return a dataset with a new column name. else
             return an integer
         """
+        if self.cached:
+            ds = self._cache_dataset()
+            return ds.count(src_col_name, new_col_name, unique)
+
         if unique:
             param = "DISTINCT"
         else:
