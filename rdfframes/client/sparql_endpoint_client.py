@@ -4,13 +4,12 @@ import io
 from SPARQLWrapper import SPARQLWrapper, CSV, JSON, TSV
 import pandas as pd
 
-from rdfframes.utils.constants import _TIMEOUT, ReturnFormat
+from rdfframes.utils.constants import _TIMEOUT, ReturnFormat, _MAX_ROWS
 from rdfframes.client.client import Client
 
 __author__ = "Aisha Mohamed <ahmohamed@qf.org.qa>"
 
 
-_MAX_ROWS = 1000000
 
 class SPARQLEndpointClient(Client):
     """
@@ -39,7 +38,7 @@ class SPARQLEndpointClient(Client):
         """
         self.endpoint = endpoint
 
-    def execute_query(self, query, timeout=_TIMEOUT, limit=_MAX_ROWS, return_format=ReturnFormat.CSV, output_file=None):
+    def execute_query(self, query, timeout=_TIMEOUT, limit=_MAX_ROWS, return_format=None, output_file=None):
         """
         Connects to a sparql endpoint
         :param query:
@@ -69,7 +68,6 @@ class SPARQLEndpointClient(Client):
                 if result[1].count('\n') < _MAX_ROWS:
                     continue_streaming = False
                 offset = offset + limit
-                print("done with {}".format(offset))
             except Exception as e:
                 print(e)
                 sys.exit()
@@ -79,7 +77,4 @@ class SPARQLEndpointClient(Client):
         f = io.StringIO(results_string)
         f.seek(0)
         df = pd.read_csv(f, sep=',') # to get the values and the header
-
-        if output_file is not None and return_format==ReturnFormat.DataFrame:
-            df.to_csv(output_file, index=False)
         return df

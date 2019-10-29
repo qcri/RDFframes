@@ -1,6 +1,7 @@
 """Main class represents a SPARQL query that generates a table-like dataset
 """
 import copy
+import time
 
 from rdfframes.query_buffer.query_operators.shared.limit_operator import LimitOperator
 from rdfframes.query_buffer.query_operators.shared.offset_operator import OffsetOperator
@@ -37,6 +38,7 @@ class Dataset:
         self.query_queue = QueryQueue(self)
         self.columns = []
         self.old_columns = []
+        self.cached = False
 
     def expand(self, src_col_name, predicate_list):
         """
@@ -206,7 +208,9 @@ class Dataset:
         :param output_file: file to save the results in
         :return:
         """
+        start_time = time.time()
         query_string = self.to_sparql()
+        print ("time of the query preparation", time.time()-start_time)
         res = client.execute_query(query_string, return_format=return_format, output_file=output_file)
         return res
 
@@ -233,6 +237,16 @@ class Dataset:
     def rem_column(self, column):
         if column in self.columns:
             self.columns.remove(column)
+
+    def cache(self):
+        self.cached = True
+        return self._cache_dataset()
+
+    def _cache_dataset(self):
+        ds = copy.deepcopy(self)
+        ds.cached = False
+        return ds
+
 
 
 

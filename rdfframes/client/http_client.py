@@ -220,7 +220,6 @@ class HttpClient(Client):
 
             if response.status_code == 200:
                 data = self.__handle_http_response(response, export_file, first_query_flag=first_query_flag)
-
                 if data is not None:
                     yield data
                 else:
@@ -239,16 +238,15 @@ class HttpClient(Client):
         :return: file name if export to file or the data in the requested format
         """
         data = response.text
-        first_nl = data.find('\n')
+        #first_nl = data.find('\n')
         # header = data[:first_nl]
-        body = data[first_nl + 1:]
+        body = data.split("\n", 1)[1]
 
         if len(body) > 0:
             if export_file is not None:
                 # In order to skip the header line before appending to file
                 if os.path.exists(export_file):
                     data = body
-
                 with open(export_file, 'a+') as exp_file:
                     exp_file.write(data)
                     return export_file

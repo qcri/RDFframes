@@ -195,15 +195,15 @@ class SPARQLBuilder(object):
                     if not is_uri(triple[2]) and triple[2].find(":") < 0:
                         triple2 = "?" + triple[2]
                     where_string += '\t{} {} {}'.format(triple0, triple1, triple2) + " .\n"
-                if len(self.query_model.optionals) > 0:
-                    optional_string = self.add_optional_clause()
-                    where_string += '\t'.join(('\n' + optional_string.lstrip()).splitlines(True))
                 if len(self.query_model.filter_clause) > 0:
                     filter_string = self.add_filter_clause()
                     where_string += "\n"+'\t'.join(('\n' + filter_string.lstrip()).splitlines(True))
                 if len(self.query_model.subqueries) > 0:
                     subqueries_string = self.add_subqueries()
                     where_string += '\n'+'\t\t'.join(('\n' + subqueries_string.lstrip()).splitlines(True))
+                if len(self.query_model.optionals) > 0:
+                    optional_string = self.add_optional_clause()
+                    where_string += '\t'.join(('\n' + optional_string.lstrip()).splitlines(True))
                 if len(self.query_model.unions) > 0:
                     union_string = self.add_union_query()
                     where_string += '\n'+'\t\t'.join(('\n' + union_string.lstrip()).splitlines(True))
@@ -357,7 +357,7 @@ class SPARQLBuilder(object):
                         cond_list += " && "
 
                 if filter_clause != "":
-                    filter_clause += cond_list + " ) .\n"
+                    filter_clause += cond_list + " ) \n"
             return filter_clause
 
         def add_having_clause(self):

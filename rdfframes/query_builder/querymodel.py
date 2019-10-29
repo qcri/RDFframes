@@ -212,7 +212,6 @@ class QueryModel(object):
         :param col_name:
         :return:
         """
-        print("adding {} select column".format(col_name))
         self.select_columns.add(col_name)
 
     def auto_add_select_column(self, col_name):

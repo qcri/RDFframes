@@ -207,6 +207,7 @@ class JoinOperator(QueryQueueOperator):
 
     # first query_model1 comes always from an expandable dataset and query_model2 from a grouped dataset
     def __join_expandable_grouped(self, query_model1, query_model2):
+        print("In the right join with join type {}".format(self.join_type))
         if self.join_type == JoinType.InnerJoin:
             # add query model 2 as a subquery
             query_model1.add_subquery(query_model2)
@@ -224,7 +225,28 @@ class JoinOperator(QueryQueueOperator):
             return query_model2
         else:  # outer join
             # Union query model 1 with query model 2
-            query_model1.add_unions(query_model2)
+            #query_model1.add_unions(query_model2)
+            # The join will build three queries and two sub-queries
+            # TODO: in case of 2 graphs
+            #ds1_query_model = QueryModel()
+            #ds2_query_model = QueryModel()
+            outer_query_model = QueryModel()
+            # add the two queries into the union of the main query
+            outer_query_model.prefixes = copy.copy(query_model1.prefixes)
+            outer_query_model.from_clause = copy.copy(query_model1.from_clause)
+            outer_query_model.select_columns = copy.copy(query_model1.select_columns)
+            outer_query_model.variables = copy.copy(query_model1.variables)
+            outer_query_model.offset = copy.copy(query_model1.offset)
+            outer_query_model.limit = copy.copy(query_model1.limit)
+            outer_query_model.order_clause = copy.copy(query_model1.order_clause)
+            outer_query_model.select_columns = query_model1.select_columns.union(query_model2.select_columns).union(set([self.new_col_name]))
+            query_model1.select_columns = query_model1.select_columns.union(set([self.new_col_name]))
+            query_model2.select_columns = query_model2.select_columns.union(set([self.new_col_name]))
+            outer_query_model.add_unions(query_model1)
+            outer_query_model.add_unions(query_model2)
+
+            return outer_query_model
+
         return query_model1
 
     def __join_grouped_grouped(self, query_model1, query_model2):
