@@ -1,6 +1,5 @@
 from rdfframes.knowledge_graph import KnowledgeGraph
-from rdfframes.dataset.rdfpredicate import RDFPredicate
-from rdfframes.dataset.aggregation_fn_data import AggregationData
+from rdfframes.dataset.rdfpredicate import RDFPredicate, PredicateDirection
 from rdfframes.client.http_client import HttpClientDataFormat, HttpClient
 
 
@@ -23,11 +22,12 @@ def important_vldb_authors():
         RDFPredicate('swrc:series', 'conference')])\
         .filter(conditions_dict={'conference': ['= <https://dblp.l3s.de/d2r/resource/conferences/vldb>']})
     grouped_dataset = dataset.group_by(['author'])\
-        .count(aggregation_fn_data=[AggregationData('paper', 'papers_count')])\
+        .count('paper', 'papers_count')\
         .filter(conditions_dict={'papers_count': ['>= {}'.format(20)]})
 
     grouped_dataset = grouped_dataset.select_cols(['author', 'papers_count'])
     print("SPARQL Query = \n{}".format(grouped_dataset.to_sparql()))
+
 
 def important_topics():
     """
@@ -52,9 +52,10 @@ def important_topics():
         .filter({'date':['> 2000'], 'conference': ['IN (<https://dblp.l3s.de/d2r/resource/conferences/vldb>, '
                                                    '<https://dblp.l3s.de/d2r/resource/conferences/sigmod>)']})\
         .group_by(['author'])\
-        .count([AggregationData('paper', 'papers_count')])\
+        .count('paper', 'papers_count')\
         .filter({'papers_count':['>= 20']})\
-        .expand(src_col_name='paper', predicate_list=[RDFPredicate('dc:title', 'title')])\
+        .expand('author', [RDFPredicate('dc:creator', 'paper', directionality=PredicateDirection.INCOMING)])\
+        .expand('paper', predicate_list=[RDFPredicate('dc:title', 'title'), RDFPredicate('dcterm:issued', 'date')])\
         .filter({'date': ['>= 2005']})\
         .select_cols(['title'])
 
@@ -74,7 +75,7 @@ def important_topics():
                         max_rows=max_rows
                         )
 
-    df = ds.execute(client, return_format=output_format)
+    df = dataset.execute(client, return_format=output_format)
     print(df.head(10))
 
 

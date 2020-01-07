@@ -1,6 +1,5 @@
 from rdfframes.knowledge_graph import KnowledgeGraph
 from rdfframes.dataset.rdfpredicate import RDFPredicate
-from rdfframes.dataset.aggregation_fn_data import AggregationData
 import time
 
 
@@ -23,11 +22,10 @@ def test_users_tweets_count():
                            })
     dataset = graph.entities(class_name='sioct:microblogPost',
                              new_dataset_name='tweets',
-                             class_col_name='tweet_class',
                              entities_col_name='tweet')
 
     ds = dataset.expand(src_col_name='tweet', predicate_list=[
-        RDFPredicate('sioc:has_creater', 'tweep', True),
+        RDFPredicate('sioc:has_creater', 'tweep'),
         RDFPredicate('sioc:content', 'text'),
         RDFPredicate('dcterms:created', 'date'),
         RDFPredicate('to:hasmedia', 'multimedia'),
@@ -35,35 +33,22 @@ def test_users_tweets_count():
         RDFPredicate('sioc:mentions', 'users_mentioned')
     ])
 
-
-
     ds = ds.expand(src_col_name='tweep', predicate_list=[
         RDFPredicate('sioc:name', 'tweep_name')
     ])
 
     gds = ds.group_by(groupby_cols_list=['tweep'])
-    gds = gds.count(aggregation_fn_data=[AggregationData('tweet', 'tweets_count')])
+    gds = gds.count('tweet', 'tweets_count')
     gds = gds.filter(conditions_dict={'tweets_count': ['> {}'.format(250), '< {}'.format(300)]})
-    gds = gds.select_cols(['tweep', 'tweets_count', 'tweep_name', 'text', 'date', 'hashtag'])
 
     ds = ds.sort({'tweep': 'ASC'}).limit(10).offset(5)
 
-    ds = ds.select_cols(['tweet', 'tweep', 'text', 'date', 'multimedia', 'hashtag', 'users_mentioned'])
-
-
-    # ds.print_query_structure()
-    # gds.print_query_structure()
+    ds = ds.select_cols(['tweet', 'tweep', 'tweep_name', 'text', 'date', 'multimedia', 'hashtag', 'users_mentioned'])
 
     sparql = ds.to_sparql()
-    ##ds.get_columns()
     end_transformation = time.time()
     print('Transformed in {} sec'.format(end_transformation-start))
     print(sparql)
-
-    # client = Client("http://192.168.10.2:8890/sparql")
-    # df = gds.execute(client, return_format='df')
-    # print('Executed in {} sec'.format(time.time() - end_transformation))
-    # df.describe()
 
 
 if __name__ == '__main__':

@@ -2,7 +2,6 @@ import time
 
 from rdfframes.knowledge_graph import KnowledgeGraph
 from rdfframes.dataset.rdfpredicate import RDFPredicate
-from rdfframes.dataset.aggregation_fn_data import AggregationData
 from rdfframes.utils.constants import JoinType
 from rdfframes.client.http_client import HttpClient, HttpClientDataFormat
 
@@ -25,7 +24,7 @@ def test_simple_query():
                              new_dataset_name='tweets',
                              entities_col_name='tweet')
     sparql_query = dataset.to_sparql()
-    print("sparql_query 1 =\n{}\n".format(sparql_query))
+    print("sparql_query to return tweets =\n{}\n".format(sparql_query))
 
     endpoint = 'http://10.161.202.101:8890/sparql/'
     port = 8890
@@ -41,8 +40,10 @@ def test_simple_query():
                         max_rows=max_rows
                         )
 
-    df = dataset.execute(client, return_format=output_format)
-    print(df.head(10))
+    #df = dataset.execute(client, return_format=output_format)
+    duration = start - time.time()
+    print("Done in {} secs".format(duration))
+    #print(df.head(10))
 
 
 def test_expand_query():
@@ -61,7 +62,6 @@ def test_expand_query():
     # return all the instances of the tweet class
     dataset = graph.entities(class_name='sioct:microblogPost',
                              new_dataset_name='tweets',
-                             #class_col_name='tweet_class',
                              entities_col_name='tweet')
     dataset = dataset.expand(src_col_name='tweet', predicate_list=[
         RDFPredicate('sioc:has_creater','tweep',False),
@@ -87,27 +87,24 @@ def test_join_query():
     # return all the instances of the tweet class
     dataset = graph.entities(class_name='sioct:microblogPost',
                              new_dataset_name='dataset1',
-                             #class_col_name='tweet_class',
                              entities_col_name='tweet')
     dataset = dataset.expand(src_col_name='tweet', predicate_list=[
         RDFPredicate('sioc:has_creater', 'tweep', False),
         RDFPredicate('sioc:content', 'text', False)
     ])
 
-    dataset2 = graph.entities(class_name='sioct:tweep',
+    dataset2 = graph.entities(class_name='sioc:UserAccount',
                              new_dataset_name='dataset2',
-                             # class_col_name='tweet_class',
                              entities_col_name='tweep')
     dataset2 = dataset2.expand(src_col_name='tweep', predicate_list=[
         RDFPredicate('sioc:has_name', 'name', False)
-        #RDFPredicate('sioc:content', 'text', True)
     ])
 
+    # TODO: put the whole first dataset in one optional block. now, its in multiple optional blocks
     dataset.join(dataset2,'tweep','tweep','tweep', JoinType.RightOuterJoin)
 
     sparql_query = dataset.to_sparql()
     print("sparql_query 1 =\n{}\n".format(sparql_query))
-
 
 
 def test_select_query():
@@ -126,7 +123,6 @@ def test_select_query():
     # return all the instances of the tweet class
     dataset = graph.entities(class_name='sioct:microblogPost',
                              new_dataset_name='tweets',
-                             #class_col_name='tweet_class',
                              entities_col_name='tweet')
     dataset = dataset.expand(src_col_name='tweet', predicate_list=[
         RDFPredicate('sioc:has_creater', 'tweep',False),
@@ -153,13 +149,14 @@ def test_filter_query():
     # return all the instances of the tweet class
     dataset = graph.entities(class_name='sioct:microblogPost',
                              new_dataset_name='tweets',
-                             #class_col_name='tweet_class',
                              entities_col_name='tweet')
     dataset = dataset.expand(src_col_name='tweet', predicate_list=[
-        RDFPredicate('sioc:has_creater', 'tweep',False),
-        RDFPredicate('sioc:content', 'text',True)])\
+        RDFPredicate('sioc:has_creater', 'tweep', False),
+        RDFPredicate('sioc:content', 'text', True)])\
         .filter({'text': [' >= \"aa\"']})\
         .select_cols(['tweet', 'text'])
+    # TODO: make sure the order of filter when called before a join or optional is done before the join or the optional
+    #  and when called after the join or optional are done after it
     sparql_query = dataset.to_sparql()
     print("sparql_query 1 =\n{}\n".format(sparql_query))
 
@@ -180,13 +177,13 @@ def test_sort_limit_offset_query():
     # return all the instances of the tweet class
     dataset = graph.entities(class_name='sioct:microblogPost',
                              new_dataset_name='tweets',
-                             #class_col_name='tweet_class',
                              entities_col_name='tweet')
     dataset = dataset.expand(src_col_name='tweet', predicate_list=[
         RDFPredicate('sioc:has_creater', 'tweep',True),
-        RDFPredicate('sioc:content', 'text',False)
+        RDFPredicate('sioc:content', 'text', False)
     ])
     dataset.sort({'tweep': 'ASC'}).limit(10).offset(5)
+    # TODO: do we care about limit after or before an offset? Do we allow one limit in each query?
     sparql_query = dataset.to_sparql()
     print("sparql_query 1 =\n{}\n".format(sparql_query))
 
@@ -234,26 +231,28 @@ def test_groupby_aggregation_query():
     # return all the instances of the tweet class
     dataset = graph.entities(class_name='sioc:microblogPost',
                              new_dataset_name='tweets',
-                             #class_col_name='tweet_class',
                              entities_col_name='tweet')
     dataset = dataset.expand(src_col_name='tweet', predicate_list=[
         RDFPredicate('sioc:has_creater', 'tweep', False),
         RDFPredicate('sioc:content', 'text', False)
     ])
     grouped_dataset = dataset.group_by(['tweep'])\
-        .count([AggregationData('tweet', 'tweets_count')])
+        .count('tweet', 'tweets_count')\
+        .select_cols(['tweep'])
+    # TODO: when select after groupby and aggregation, remove the non-selected columns from the select clause
+    #  including aggregation columns
     sparql_query = grouped_dataset.to_sparql()
     print("sparql_query 1 =\n{}\n".format(sparql_query))
 
 if __name__ == '__main__':
     #test_simple_query()
-    test_expand_query()
-    test_expand_query()
-    test_select_query()
+    #test_expand_query()
+    #test_expand_query()
+    #test_select_query()
     test_filter_query()
-    test_join_query()
-    test_sort_limit_offset_query()
-    test_groupby_query()
-    test_groupby_aggregation_query()
+    #test_join_query()
+    #test_sort_limit_offset_query()
+    #test_groupby_query()
+    #test_groupby_aggregation_query()
 
 

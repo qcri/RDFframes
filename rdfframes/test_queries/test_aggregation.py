@@ -1,8 +1,5 @@
 from rdfframes.knowledge_graph import KnowledgeGraph
 from rdfframes.dataset.rdfpredicate import RDFPredicate
-from rdfframes.dataset.aggregation_fn_data import AggregationData
-from rdfframes.utils.constants import JoinType
-from rdfframes.client.http_client import HttpClient, HttpClientDataFormat
 
 
 def test_simple_query():
@@ -25,10 +22,9 @@ def test_simple_query():
         RDFPredicate('sioc:has_creater', 'tweep', False),
         RDFPredicate('sioc:content', 'text', False)
     ])
-    dataset = dataset.group_by(['tweep']).count(src_col_name='tweep', new_col_name='tweep_count', unique=True)
+    dataset = dataset.group_by(['tweep']).count(src_col_name='tweet', new_col_name='tweet_count', unique=True)
     sparql_query = dataset.to_sparql()
-    print("sparql_query 1 =\n{}\n".format(sparql_query))
-
+    print("sparql_query that returns each user and his unique tweet count =\n{}\n".format(sparql_query))
 
     # return all the instances of the tweet class
     dataset = graph.entities(class_name='sioc:microblogPost',
@@ -38,13 +34,10 @@ def test_simple_query():
         RDFPredicate('sioc:has_creater', 'tweep', False),
         RDFPredicate('sioc:content', 'text', False)
     ])
-    dataset = dataset.group_by(['tweep'])\
-        .count(unique=True)
+    dataset = dataset.group_by(['tweep']).count('tweet')
     sparql_query = dataset.to_sparql()
-    print("sparql_query 2 =\n{}\n".format(sparql_query))
+    print("sparql_query that returns the number of tweets per user without unique =\n{}\n".format(sparql_query))
 
-
-    # return all the instances of the tweet class
     dataset = graph.entities(class_name='sioc:microblogPost',
                              new_dataset_name='tweets',
                              entities_col_name='tweet')
@@ -54,19 +47,7 @@ def test_simple_query():
     ])
     dataset = dataset.count(unique=True)
     sparql_query = dataset.to_sparql()
-    print("sparql_query 3 =\n{}\n".format(sparql_query))
-
-    # return all the instances of the tweet class
-    dataset = graph.entities(class_name='sioc:microblogPost',
-                             new_dataset_name='tweets',
-                             entities_col_name='tweet')
-    dataset = dataset.expand(src_col_name='tweet', predicate_list=[
-        RDFPredicate('sioc:has_creater', 'tweep', False),
-        RDFPredicate('sioc:content', 'text', False)
-    ])
-    dataset = dataset.group_by(['tweep']).count(src_col_name='tweet', new_col_name='tweet_count', unique=True)
-    sparql_query = dataset.to_sparql()
-    print("sparql_query 4 =\n{}\n".format(sparql_query))
+    print("sparql_query that returns the number of tweets =\n{}\n".format(sparql_query))
 
     # return all the instances of the tweet class
     dataset = graph.entities(class_name='sioc:microblogPost',
@@ -78,7 +59,9 @@ def test_simple_query():
     dataset = dataset.group_by(['tweep']).count(src_col_name='tweet', new_col_name='tweet_count', unique=True)
     dataset = dataset.expand(src_col_name='tweep', predicate_list=[RDFPredicate('sioc:content', 'text', False)])
     sparql_query = dataset.to_sparql()
-    print("sparql_query 5 =\n{}\n".format(sparql_query))
+    print("sparql_query that returns the tweep, tweet_count, text of each tweet =\n{}\n".format(sparql_query))
+    # TODO: make sure this actually returns the expected result
+
 
 if __name__ == '__main__':
     test_simple_query()

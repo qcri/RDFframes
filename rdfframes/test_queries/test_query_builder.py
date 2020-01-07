@@ -11,12 +11,11 @@ if __name__ == '__main__':
     #subquery.add_variable("tweeter")
     subquery.add_group_columns(OrderedSet(["tweep"]))
     subquery.add_aggregate_pair("tweet", "COUNT", "tweet_count", "distinct")
-    subquery.add_having_condition("tweet", "COUNT", "< 300")
-    subquery.add_having_condition("tweet", "COUNT", "> 250")
+    subquery.add_having_condition("tweet_count", "< 300")
+    subquery.add_having_condition("tweet_count", "> 250")
     subquery.add_select_column("tweep")
 
     twitterquery = QueryModel()
-    # TODO: Add the rest of the prefixes
     prefixes = {
         "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
         "sioc": "http://rdfs.org/sioc/ns#",
@@ -32,11 +31,11 @@ if __name__ == '__main__':
     twitterquery.add_subquery(subquery)
     twitterquery.add_triple("tweet", "sioc:has_creater", "tweep")
     twitterquery.add_triple("tweet", " sioc:content", "text")
-    twitterquery.add_triple("tweet", "sioc:mentions", "mentions", True)
-    twitterquery.add_triple("tweet", "to:hashashtag", "hashtag", True)
-    twitterquery.add_triple("tweet", 'dcterms:created', 'date', True)
-    twitterquery.add_triple("tweet", 'to:hasmedia', 'multimedia', True)
-    twitterquery.add_order_column([("tweep", "ASC")])
+    twitterquery.add_optional("tweet", "sioc:mentions", "mentions")
+    twitterquery.add_triple("tweet", "to:hashashtag", "hashtag")
+    twitterquery.add_triple("tweet", 'dcterms:created', 'date')
+    twitterquery.add_triple("tweet", 'to:hasmedia', 'multimedia')
+    twitterquery.add_order_columns([("tweep", "ASC")])
     twitterquery.add_select_column("tweet")
     twitterquery.add_select_column("tweep")
     twitterquery.add_select_column("text")

@@ -1,10 +1,10 @@
 from rdfframes.client.http_client import HttpClientDataFormat, HttpClient
 from rdfframes.knowledge_graph import KnowledgeGraph
-from rdfframes. dataset.rdfpredicate import RDFPredicate
-from rdfframes.dataset.aggregation_fn_data import AggregationData
+from rdfframes. dataset.rdfpredicate import RDFPredicate, PredicateDirection
 
 
-def test_flat_query():
+def test_twitter_query():
+    # TODO: remove endpoint URI
     endpoint = 'http://10.161.202.101:8890/sparql/'
     port = 8890
     output_format = HttpClientDataFormat.PANDAS_DF
@@ -32,15 +32,14 @@ def test_flat_query():
                            })
 
     dataset = graph.entities(class_name='sioct:microblogPost',
-                             new_dataset_name='tweets',
                              entities_col_name='tweet')
-    ds = dataset.expand(src_col_name='tweet', predicate_list=[
-        RDFPredicate('sioc:has_creater', 'tweep')
-    ]).group_by(['tweep']).count(
-        aggregation_fn_data=[AggregationData('tweet', 'tweets_count')]).filter(
-        conditions_dict={'tweets_count': ['>= {}'.format(200), '<= {}'.format(300)]}).select_cols(['tweets_count'])
+    ds = dataset.expand(src_col_name='tweet', predicate_list=[RDFPredicate('sioc:has_creater', 'tweep')])\
+        .group_by(['tweep'])\
+        .count('tweet', 'tweets_count')\
+        .filter({'tweets_count': ['>= {}'.format(200), '<= {}'.format(300)]})
 
-    ds = ds.expand(src_col_name='tweet', predicate_list=[
+    ds = ds.expand('tweep', [RDFPredicate('sioc:has_creater', 'tweet', directionality=PredicateDirection.INCOMING)]).\
+        expand('tweet', [
         RDFPredicate('sioc:content', 'text', optional=False),
         RDFPredicate('dcterms:created', 'date', optional=True),
         RDFPredicate('to:hasmedia', 'multimedia', optional=True),
@@ -52,10 +51,10 @@ def test_flat_query():
 
     print("Sparql Query = \n{}".format(ds.to_sparql()))
 
-    df = ds.execute(client, return_format=output_format)
-    print(df.head(10))
-    return df
+    #df = ds.execute(client, return_format=output_format)
+    #print(df.head(10))
+    #return df
 
 
 if __name__ == '__main__':
-    test_flat_query()
+    test_twitter_query()

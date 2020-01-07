@@ -1,11 +1,8 @@
-import time
+import unittest
 
 from rdfframes.knowledge_graph import KnowledgeGraph
 from rdfframes.dataset.rdfpredicate import RDFPredicate
-from rdfframes.dataset.aggregation_fn_data import AggregationData
 from rdfframes.utils.constants import JoinType
-
-import unittest
 
 
 class TestJoins(unittest.TestCase):

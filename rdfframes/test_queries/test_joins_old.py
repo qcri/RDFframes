@@ -2,9 +2,7 @@ import time
 
 from rdfframes.knowledge_graph import KnowledgeGraph
 from rdfframes.dataset.rdfpredicate import RDFPredicate
-from rdfframes.dataset.aggregation_fn_data import AggregationData
 from rdfframes.utils.constants import JoinType
-from rdfframes.client.http_client import HttpClient, HttpClientDataFormat
 
 
 def test_expandable_expandable_join(join_type, optional1=False, optional2=False):
@@ -29,7 +27,7 @@ def test_expandable_expandable_join(join_type, optional1=False, optional2=False)
         RDFPredicate('sioc:content', 'text', optional1)
     ]).select_cols(['tweep'])
 
-    dataset2 = graph.entities(class_name='sioct:tweeter',
+    dataset2 = graph.entities(class_name='sioc:UserAccount',
                              new_dataset_name='dataset2',
                              entities_col_name='tweeter')
     dataset2 = dataset2.expand(src_col_name='tweeter', predicate_list=[
@@ -94,7 +92,7 @@ def test_expandable_expandable_3_joins(join_type):
         RDFPredicate('sioc:content', 'text', False)
     ])
 
-    dataset2 = graph.entities(class_name='sioct:tweep',
+    dataset2 = graph.entities(class_name='sioc:UserAccount',
                               new_dataset_name='dataset2',
                               entities_col_name='tweep')
     dataset2 = dataset2.expand(src_col_name='tweep', predicate_list=[
@@ -104,9 +102,10 @@ def test_expandable_expandable_3_joins(join_type):
 
     dataset2.join(dataset, 'tweep', 'tweep', 'tweep', join_type)
 
-    dataset3 = graph.entities(class_name='sioct:tweep',
+    dataset3 = graph.entities(class_name='sioc:UserAccount',
                               new_dataset_name='dataset3',
                               entities_col_name='tweeter')
+
     dataset3 = dataset3.expand(src_col_name='tweeter', predicate_list=[
         RDFPredicate('sioc:has_id', 'id', False)
     ])
@@ -241,6 +240,44 @@ def test_grouped_expandable_join(join_type):
     print("SPARQL query with {} =\n{}\n".format(join_type, sparql_query))
 
 
+def test_grouped_grouped_join_diff_graphs(join_type):
+    # create a knowledge graph to store the graph uri and prefixes
+    graph = KnowledgeGraph('twitter', 'https://twitter.com/',
+                           prefixes={
+                               "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                               "sioc": "http://rdfs.org/sioc/ns#",
+                               "sioct": "http://rdfs.org/sioc/types#",
+                           })
+    # return all the instances of the tweet class
+    dataset = graph.entities(class_name='sioct:microblogPost',
+                             new_dataset_name='dataset1',
+                             entities_col_name='tweet')
+    dataset = dataset.expand(src_col_name='tweet', predicate_list=[
+        RDFPredicate('sioc:has_creater', 'tweep', False),
+        RDFPredicate('sioc:content', 'text', False)])\
+        .group_by(['tweep']).count('tweet', 'tweets_count')\
+        .filter({'tweets_count': ['>= {}'.format(1000)]})
+
+    graph2 = KnowledgeGraph('twitter2', 'https://twitter2.com/',
+                           prefixes={
+                               "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                               "sioc2": "http://rdfs.org/sioc2/ns#",
+                               "sioct2": "http://rdfs.org/sioc2/types#",
+                           })
+    dataset2 = graph2.entities(class_name='sioct2:twitterPost',
+                             new_dataset_name='tweets',
+                             entities_col_name='tweet')
+    dataset2 = dataset2.expand(src_col_name='tweet', predicate_list=[
+        RDFPredicate('sioc2:has_creater', 'tweeter')
+    ]).group_by(['tweeter']).count('tweet', 'tweets_count2', unique=False)\
+        .filter(conditions_dict={'tweets_count2': ['>= {}'.format(200), '<= {}'.format(300)]})
+    dataset.join(dataset2, 'tweep', 'tweeter', 'user', join_type)
+    dataset.select_cols(['user'])
+
+    sparql_query = dataset.to_sparql()
+    print("SPARQL query with {} =\n{}\n".format(join_type, sparql_query))
+
+
 def test_grouped_grouped_join(join_type):
     # create a knowledge graph to store the graph uri and prefixes
     graph = KnowledgeGraph('twitter', 'https://twitter.com/',
@@ -255,12 +292,11 @@ def test_grouped_grouped_join(join_type):
                              entities_col_name='tweet')
     dataset = dataset.expand(src_col_name='tweet', predicate_list=[
         RDFPredicate('sioc:has_creater', 'tweep', False),
-        RDFPredicate('sioc:content', 'text', False)
-    ]).group_by(['tweep']).count(
-        aggregation_fn_data=[AggregationData('tweet', 'tweets_count')]).filter(
-        conditions_dict={'tweets_count': ['>= {}'.format(1000)]})
+        RDFPredicate('sioc:content', 'text', False)])\
+        .group_by(['tweep']).count('tweet', 'tweets_count')\
+        .filter({'tweets_count': ['>= {}'.format(1000)]})
 
-    graph2 = KnowledgeGraph('twitter2', 'https://twitter2.com/',
+    graph2 = KnowledgeGraph('twitter', 'https://twitter.com/',
                            prefixes={
                                "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
                                "sioc2": "http://rdfs.org/sioc2/ns#",
@@ -271,37 +307,56 @@ def test_grouped_grouped_join(join_type):
                              entities_col_name='tweet')
     dataset2 = dataset2.expand(src_col_name='tweet', predicate_list=[
         RDFPredicate('sioc2:has_creater', 'tweeter')
-    ]).group_by(['tweeter']).count(
-        aggregation_fn_data=[AggregationData('tweet', 'tweets_count2')]).filter(
-        conditions_dict={'tweets_count2': ['>= {}'.format(200), '<= {}'.format(300)]})
+    ]).group_by(['tweeter']).count('tweet', 'tweets_count2', unique=False)\
+        .filter(conditions_dict={'tweets_count2': ['>= {}'.format(200), '<= {}'.format(300)]})
     dataset.join(dataset2, 'tweep', 'tweeter', 'user', join_type)
-    # dataset.select_cols(['user'])
+    dataset.select_cols(['user'])
 
     sparql_query = dataset.to_sparql()
     print("SPARQL query with {} =\n{}\n".format(join_type, sparql_query))
 
+
 if __name__ == '__main__':
-    test_expandable_expandable_join(JoinType.InnerJoin)
-    # test_expandable_expandable_join(JoinType.OuterJoin)
-    test_expandable_expandable_join(JoinType.LeftOuterJoin)
-    # test_expandable_expandable_join(JoinType.RightOuterJoin)
-    # test_expandable_expandable_join(JoinType.InnerJoin, True, True)
-    # test_expandable_expandable_join(JoinType.LeftOuterJoin, True, True)
-    # test_expandable_expandable_join(JoinType.RightOuterJoin, True, True)
-    # test_join_instead_of_expand(JoinType.InnerJoin)
-    # test_expandable_expandable_3_joins(JoinType.InnerJoin)
-    # test_expandable_expandable_join_w_selectcols()
-    # test_expandable_grouped_join(JoinType.InnerJoin)
-    # test_expandable_grouped_join(JoinType.LeftOuterJoin)
-    # test_expandable_grouped_join(JoinType.RightOuterJoin)
-    # test_expandable_grouped_join(JoinType.OuterJoin)
-    # test_grouped_expandable_join(JoinType.InnerJoin)
-    # test_grouped_expandable_join(JoinType.LeftOuterJoin)
+    # TODO: remove the last dot from the triple patterns in one block
+    # TODO: Bug: here after the join, the query selects the column in the second dataset only when it should select all cols.
+    #  This is true for all join types
+    #test_expandable_expandable_join(JoinType.InnerJoin)
+    # TODO: Bug: left and right outer joins should add all the patterns in the second dataset in one optional block rather than a block
+    #  for each pattern
+    #test_expandable_expandable_join(JoinType.LeftOuterJoin)
+    #test_expandable_expandable_join(JoinType.RightOuterJoin)
+    #test_expandable_expandable_join(JoinType.OuterJoin)
+    # TODO: make sure when two datasets with optionals are joined, optionals stay in different blocks. It's like that
+    #  now
+    #test_expandable_expandable_join(JoinType.InnerJoin, True, True)
+    # TODO: Bug: in a left or right outer join with optional in the second dataset, create nested optionals
+    #test_expandable_expandable_join(JoinType.LeftOuterJoin, True, True)
+    #test_expandable_expandable_join(JoinType.RightOuterJoin, True, True)
+    #test_expandable_expandable_join(JoinType.InnerJoin, False, True)
+    #test_expandable_expandable_join(JoinType.InnerJoin, True, False)
+    #test_expandable_expandable_join(JoinType.OuterJoin, False, True)
+    #test_join_instead_of_expand(JoinType.InnerJoin)
+    #test_join_instead_of_expand(JoinType.LeftOuterJoin)
+    #test_join_instead_of_expand(JoinType.RightOuterJoin)
+    #test_join_instead_of_expand(JoinType.OuterJoin)
+    #test_expandable_expandable_3_joins(JoinType.InnerJoin)
+    # TODO: make sure select after inner join only selects the same columns selected. Now its like that.
+    #test_expandable_expandable_join_w_selectcols()
+    #test_expandable_grouped_join(JoinType.InnerJoin)
+    #test_expandable_grouped_join(JoinType.LeftOuterJoin)
+    # TODO: Bug: when right outer join with the second dataset being grouped, create an outer query that contains the
+    #  full inner query for the second dataset and the first dataset in an optional. select should be for everything
+    #  that I didn't select yet
+    #test_expandable_grouped_join(JoinType.RightOuterJoin)
+    #test_expandable_grouped_join(JoinType.OuterJoin)
+    # TODO: for optimization: add the outer triple patterns in a grouped dataset to the outer query in an inner join
+    #test_grouped_expandable_join(JoinType.InnerJoin)
+    #test_grouped_expandable_join(JoinType.LeftOuterJoin)
     ### test the join on non-groupby columns
     # test_grouped_expandable_join(JoinType.RightOuterJoin)
     #test_grouped_grouped_join(JoinType.InnerJoin)
     #test_grouped_grouped_join(JoinType.LeftOuterJoin)
-    # test_grouped_grouped_join(JoinType.RightOuterJoin)
-    # test_grouped_grouped_join(JoinType.OuterJoin)
+    #test_grouped_grouped_join(JoinType.RightOuterJoin)
+    test_grouped_grouped_join(JoinType.OuterJoin)
 
 
