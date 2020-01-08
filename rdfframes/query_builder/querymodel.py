@@ -13,7 +13,6 @@ Aisha Mohamed <ahmohamed@qf.org.qa>
 Zoi Kaoudi <zkaoudi@hbku.edu.qa>
 """
 
-
 class QueryModel(object):
     """
        The QueryModel class represents the intermediate object between the DAG graph and the ultimate SPARQL query.
@@ -39,7 +38,7 @@ class QueryModel(object):
         self.offset = 0             # represents the offset in terms of the number of rows
 
         self.triples = []           # list of basic graph patterns in the form (subject, predicate, object) tuples
-        self.optionals = []         # list of lists. Each list contains (subject, predicate, object) optional patterns
+        self.optionals = []         # list of optional query models.
         self.subqueries = []        # list of subqueries. each subquery is a query model
         self.optional_subqueries = []  # list of optional subqueries. each subquery is a query model
         self.unions = []            # list of subqueries to union with the current query model
@@ -50,6 +49,7 @@ class QueryModel(object):
 
         self.querybuilder = None # a SPARQLbuilder that converts the query model to a string
         self.parent_query_model = None # a pointer to the parent query if this is a subquery
+        self.is_optional = False
 
     def add_prefixes(self, prefixes):
         """
@@ -67,18 +67,28 @@ class QueryModel(object):
         if not self.is_subquery():
             self.from_clause = self.from_clause.union(graphs) #extend
 
-    def add_optional(self, subject, predicate, object):
+    def add_optional_triples(self, triples):
         """
          add a triple to the list of the optional triples in the query model.
          :param subject: subject of the triple
          :param object: object of the triple
          :param predicate: predicate of the triple
          """
-        if (subject, predicate, object) not in self.optionals:
-            self.optionals.append((subject, predicate, object))
-            self.add_variable(subject)
-            self.add_variable(object)
-            self.add_variable(predicate)
+        if len(triples) > 0:
+            optional_query_model = OptionalQueryModel()
+            for (subject, predicate, object) in triples:
+                optional_query_model.add_triple(subject, predicate, object)
+            self.optionals.append(optional_query_model)
+            return optional_query_model
+
+    def add_optional_block(self, optional_query_model):
+        """
+         add a triple to the list of the optional triples in the query model.
+         :param subject: subject of the triple
+         :param object: object of the triple
+         :param predicate: predicate of the triple
+         """
+        self.optionals.append(optional_query_model)
 
     def add_triple(self, subject, predicate, object):
         """
@@ -233,6 +243,18 @@ class QueryModel(object):
     def rem_optional_triples(self):
         self.optionals = []
 
+    def rem_filters(self):
+        self.filter_clause = {}
+
+    def rem_subqueries(self):
+        self.subqueries = []
+
+    def rem_optional_subqueries(self):
+        self.optional_subqueries  = []
+
+    def rem_unions(self):
+        self.unions = []
+
     def transfer_grouping_to_subquery(self, subquery):
         grouping_cols = self.groupBy_columns
 
@@ -342,7 +364,7 @@ class QueryModel(object):
         return len(self.order_clause) > 0
 
     def to_sparql(self):
-        self.validate()
+        #self.validate()
         self.querybuilder = SPARQLBuilder()
         return self.querybuilder.to_sparql(self)
 
@@ -366,8 +388,8 @@ class QueryModel(object):
 
     def rename_variable(self, old_name, new_name):
         self.triples = [[new_name if element == old_name else element for element in triple] for triple in self.triples]
-        self.optionals = [[new_name if element == old_name else element for element in triple]
-                          for triple in self.optionals]
+        for query in self.optionals:
+            query.rename_variable(old_name, new_name)
         self.select_columns = OrderedSet([new_name if var == old_name else var for var in self.select_columns])
         self.auto_generated_select_columns = OrderedSet([new_name if var == old_name else var for var in self.auto_generated_select_columns])
         self.groupBy_columns = OrderedSet([new_name if var == old_name else var for var in self.groupBy_columns])
@@ -399,7 +421,7 @@ class QueryModel(object):
             return True
         else:
             return False
-
+    """
     def get_triples(self):
         triple_string = ""
         for triple in self.triples:
@@ -431,6 +453,7 @@ class QueryModel(object):
             optional_string += "}"
 
         return optional_string
+        """
 
     def union(self, qm2):
         """
@@ -539,3 +562,11 @@ class QueryModel(object):
         return self.to_sparql()
 
 
+class OptionalQueryModel(QueryModel):
+    """
+    The optional block class. It contains mutliple SPARQL patterns that are all included in one optional block
+    Allows for multiple patterns inside one optional block and for nested optionals.
+    """
+    def __init__(self):
+        super(OptionalQueryModel, self).__init__()
+        self.is_optional = True

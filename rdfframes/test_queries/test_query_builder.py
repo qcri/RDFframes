@@ -31,7 +31,7 @@ if __name__ == '__main__':
     twitterquery.add_subquery(subquery)
     twitterquery.add_triple("tweet", "sioc:has_creater", "tweep")
     twitterquery.add_triple("tweet", " sioc:content", "text")
-    twitterquery.add_optional("tweet", "sioc:mentions", "mentions")
+    twitterquery.add_optional_triples("tweet", "sioc:mentions", "mentions")
     twitterquery.add_triple("tweet", "to:hashashtag", "hashtag")
     twitterquery.add_triple("tweet", 'dcterms:created', 'date')
     twitterquery.add_triple("tweet", 'to:hasmedia', 'multimedia')

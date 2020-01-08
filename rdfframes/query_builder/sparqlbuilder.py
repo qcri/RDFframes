@@ -1,6 +1,5 @@
 from rdfframes.utils.helper_functions import is_uri
 
-
 __author__ = """
 Ghadeer Abuoda <gabuoda@hbku.edu.qa>
 Aisha Mohamed <ahmohamed@qf.org.qa>
@@ -26,6 +25,10 @@ class SPARQLBuilder(object):
             :return: sub_query_string or query_string depending on the type of the query model
             """
             self.query_model = query_model
+            if self.query_model.is_optional:
+                self.query_string = self.__add_patterns()
+                return self.query_string
+
             if query_model.parent_query_model is None:  # if not a subquery
                 self.add_prefixes()
             self.add_select()
@@ -39,7 +42,7 @@ class SPARQLBuilder(object):
             self.add_offset()
 
             self.query_string = self.query_string.rstrip("\n")
-            self.query_string + "\n"
+            self.query_string += "\n"
 
             return self.query_string
 
@@ -155,24 +158,45 @@ class SPARQLBuilder(object):
             return subquery_string
 
         def add_optional_clause(self):
-            optional_string =""
             if len(self.query_model.optionals) > 0:
-                #optional_string = "OPTIONAL {\n"
                 optional_string = ""
-                for triple in self.query_model.optionals:
-                    triple0 = triple[0]
-                    triple1 = triple[1]
-                    triple2 = triple[2]
-                    if not is_uri(triple[0]) and triple[2].find(":") < 0:
-                        triple0 = "?" + triple[0]
-                    if not is_uri(triple[1]) and triple[1].find(":") < 0:
-                        triple1 = "?" + triple[1]
-                    if not is_uri(triple[2]) and triple[2].find(":") < 0:
-                        triple2 = "?" + triple[2]
-                    #optional_string += '\t{} {} {}'.format(triple0, triple1, triple2) + " .\n"
-                    optional_string += '\tOPTIONAL '+ "{ " + '{} {} {}'.format(triple0, triple1, triple2) + " }\n"
-                #optional_string += "}"
-            return optional_string
+                for optional_block in self.query_model.optionals:
+                    query_string = optional_block.to_sparql()
+                    optional_string += "\tOPTIONAL {" + "{}".format(query_string) + "}\n"
+                return optional_string
+            else:
+                return ""
+
+        def __add_patterns(self):
+            where_string = ""
+            for triple in self.query_model.triples:
+                triple0 = triple[0]
+                triple1 = triple[1]
+                triple2 = triple[2]
+                if not is_uri(triple[0]) and triple[0].find(":") < 0:
+                    triple0 = "?" + triple[0]
+                if not is_uri(triple[1]) and triple[1].find(":") < 0:
+                    triple1 = "?" + triple[1]
+                if not is_uri(triple[2]) and triple[2].find(":") < 0:
+                    triple2 = "?" + triple[2]
+                where_string += '\t{} {} {}'.format(triple0, triple1, triple2) + " .\n"
+            if len(self.query_model.filter_clause) > 0:
+                filter_string = self.add_filter_clause()
+                where_string += "\n" + '\t'.join(('\n' + filter_string.lstrip()).splitlines(True))
+            if len(self.query_model.subqueries) > 0:
+                subqueries_string = self.add_subqueries()
+                where_string += '\n' + '\t\t'.join(('\n' + subqueries_string.lstrip()).splitlines(True))
+            if len(self.query_model.optionals) > 0:
+                optional_string = self.add_optional_clause()
+                where_string += '\t'.join(('\n' + optional_string.lstrip()).splitlines(True))
+            if len(self.query_model.unions) > 0:
+                union_string = self.add_union_query()
+                where_string += '\n' + '\t\t'.join(('\n' + union_string.lstrip()).splitlines(True))
+            if len(self.query_model.optional_subqueries) > 0:
+                where_string += '\n' + "\t\t" + self.add_optional_subqueries()
+            if where_string != "":
+                where_string = where_string.rstrip('\n')
+            return where_string
 
         def add_where_clause(self):
             """
@@ -182,37 +206,11 @@ class SPARQLBuilder(object):
             - adds the filter conditions if needed
             - adds the subqueries if any exist
             """
-            if len(self.query_model.triples) > 0 or len(self.query_model.subqueries) > 0 or len(self.query_model.unions) >0:
-                where_string = "WHERE {\n"
-                for triple in self.query_model.triples:
-                    triple0 = triple[0]
-                    triple1 = triple[1]
-                    triple2 = triple[2]
-                    if not is_uri(triple[0]) and triple[0].find(":") < 0:
-                        triple0 = "?" + triple[0]
-                    if not is_uri(triple[1]) and triple[1].find(":") < 0:
-                        triple1 = "?" + triple[1]
-                    if not is_uri(triple[2]) and triple[2].find(":") < 0:
-                        triple2 = "?" + triple[2]
-                    where_string += '\t{} {} {}'.format(triple0, triple1, triple2) + " .\n"
-                if len(self.query_model.filter_clause) > 0:
-                    filter_string = self.add_filter_clause()
-                    where_string += "\n"+'\t'.join(('\n' + filter_string.lstrip()).splitlines(True))
-                if len(self.query_model.subqueries) > 0:
-                    subqueries_string = self.add_subqueries()
-                    where_string += '\n'+'\t\t'.join(('\n' + subqueries_string.lstrip()).splitlines(True))
-                if len(self.query_model.optionals) > 0:
-                    optional_string = self.add_optional_clause()
-                    where_string += '\t'.join(('\n' + optional_string.lstrip()).splitlines(True))
-                if len(self.query_model.unions) > 0:
-                    union_string = self.add_union_query()
-                    where_string += '\n'+'\t\t'.join(('\n' + union_string.lstrip()).splitlines(True))
-                if len(self.query_model.optional_subqueries) > 0:
-                    where_string += '\n'+"\t\t" + self.add_optional_subqueries()
-                if where_string != "":
-                    where_string = where_string.rstrip('\n')
-                    where_string += "\n}"
-                self.query_string += where_string
+            if len(self.query_model.triples) > 0 or len(self.query_model.subqueries) > 0 or \
+                    len(self.query_model.unions) >0 or len(self.query_model.optionals) > 0 or \
+                    len(self.query_model.filter_clause) > 0 or len(self.query_model.optional_subqueries) > 0:
+                where_string = self.__add_patterns()
+                self.query_string += "WHERE {\n" + where_string + "\n}"
             else:
                 self.query_string += "WHERE {}"
 

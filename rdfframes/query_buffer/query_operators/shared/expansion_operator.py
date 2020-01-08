@@ -69,7 +69,7 @@ class ExpansionOperator(QueryQueueOperator):
         if triple is not None:
             #print("self.is_optional", self.is_optional)
             if self.is_optional:
-                query_model.add_optional(triple[0],triple[1],triple[2])
+                query_model.add_optional_triples([(triple[0],triple[1],triple[2])])
             else:
                 query_model.add_triple(triple[0],triple[1],triple[2])
             #vars = [variable for variable in [triple[0], triple[1], triple[2]] if ":" not in variable]
