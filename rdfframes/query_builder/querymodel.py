@@ -13,6 +13,7 @@ Aisha Mohamed <ahmohamed@qf.org.qa>
 Zoi Kaoudi <zkaoudi@hbku.edu.qa>
 """
 
+
 class QueryModel(object):
     """
        The QueryModel class represents the intermediate object between the DAG graph and the ultimate SPARQL query.
@@ -42,6 +43,7 @@ class QueryModel(object):
         self.subqueries = []        # list of subqueries. each subquery is a query model
         self.optional_subqueries = []  # list of optional subqueries. each subquery is a query model
         self.unions = []            # list of subqueries to union with the current query model
+        self.graph_triples = {}     # dict of graph: list of triples. When there is more than one triple in the graph
 
         self.select_columns = OrderedSet()    # list of columns to be selected ,  set()
         self.auto_generated_select_columns = OrderedSet()
@@ -67,7 +69,7 @@ class QueryModel(object):
         if not self.is_subquery():
             self.from_clause = self.from_clause.union(graphs) #extend
 
-    def add_optional_triples(self, triples):
+    def add_optional_triples(self, triples, graph=None):
         """
          add a triple to the list of the optional triples in the query model.
          :param subject: subject of the triple
@@ -102,6 +104,8 @@ class QueryModel(object):
             self.add_variable(subject)
             self.add_variable(object)
             self.add_variable(predicate)
+    def add_graph_triple(self, graph, triples):
+        self.graph_triples[graph] = triples
 
     def add_unions(self, unionquery):  # subquery type is query_builder
         """
@@ -233,6 +237,9 @@ class QueryModel(object):
 
     def rem_all_triples(self):
         self.triples = []
+
+    def rem_graph_triples(self):
+        self.graph_triples = {}
 
     def rem_from_clause(self):
         self.from_clause = set()

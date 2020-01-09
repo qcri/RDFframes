@@ -66,7 +66,26 @@ class JoinOperator(QueryQueueOperator):
             query_model2.rename_variable(self.second_col_name, self.new_col_name)
 
         if query_model1.from_clause != query_model2.from_clause:
-            raise Exception("Join on two different graphs is not implemented")
+            # TODO: implement this union between graphs
+            if len(query_model2.from_clause) > 1:
+                raise Exception("Can't use the GRAGH keyword with more than one graph")
+            # move the triples inside GRAPH keyword for the second dataset
+            for graph in query_model2.from_clause:
+                query_model2.graph_triples[graph] = copy.copy(query_model2.triples)
+                query_model2.rem_all_triples()
+                for optional_block in query_model2.optionals:
+                    optional_block.graph_triples[graph] = copy.copy(optional_block.triples)
+                    optional_block.rem_all_triples()
+                    for query in query_model2.subqueries:
+                        query.graph_triples[graph] = copy.copy(query.triples)
+                        query.rem_all_triples()
+                    for query in query_model2.optional_subqueries:
+                        query.graph_triples[graph] = copy.copy(query.triples)
+                        query.rem_all_triples()
+                    for query in query_model2.unions:
+                        query.graph_triples[graph] = copy.copy(query.triples)
+                        query.rem_all_triples()
+
         # union the prefixes
         query_model1.add_prefixes(query_model2.prefixes)
 
@@ -105,6 +124,8 @@ class JoinOperator(QueryQueueOperator):
             # add the basic graph patterns in dataset2 to dataset1
             for triple in query_model2.triples:
                 query_model1.add_triple(*triple)
+            for graph, triples in query_model2.graph_triples.items():
+                query_model1.add_graph_triple(graph, triples)
             # append the optional patterns in dataset2 to optionals in dataset1
             for optional_block in query_model2.optionals:
                 query_model1.add_optional_block(optional_block)
@@ -123,8 +144,13 @@ class JoinOperator(QueryQueueOperator):
         elif self.join_type == JoinType.LeftOuterJoin:
             # add the basic and optionals graph patterns of dataset2 to dataset1 in one optional block
             optional_query_model = query_model1.add_optional_triples(query_model2.triples)
-            for optioanl_block in query_model2.optionals:
-                optional_query_model.add_optional_block(optioanl_block)
+            for graph, triples in query_model2.graph_triples.items():
+                if optional_query_model is None:
+                    optional_query_model = query_model1.add_optional_triples(triples, graph=graph)
+                else:
+                    optional_query_model.add_graph_triple(graph, triples)
+            for optional_block in query_model2.optionals:
+                optional_query_model.add_optional_block(optional_block)
             for column, conditions in query_model2.filter_clause.items():
                 for condition in conditions:
                     optional_query_model.add_filter_condition(column, condition)
@@ -140,11 +166,13 @@ class JoinOperator(QueryQueueOperator):
             # move all triples, filters and optionals of dataset1 to one optional block in dataset 1.
             query_model1_optionals = copy.copy(query_model1.optionals)
             optional_query_model = query_model1.add_optional_triples(query_model1.triples)
+            for graph, triples in query_model1.graph_triples.items():
+                optional_query_model.add_graph_triple(graph, triples)
             for column, conditions in query_model1.filter_clause.items():
                 for condition in conditions:
                     optional_query_model.add_filter_condition(column, condition)
-            for optioanl_block in query_model1_optionals:
-                optional_query_model.add_optional_block(optioanl_block)
+            for optional_block in query_model1_optionals:
+                optional_query_model.add_optional_block(optional_block)
             for query in query_model1.subqueries:
                 optional_query_model.add_subquery(query)
             for query in query_model1.optional_subqueries:
@@ -153,6 +181,7 @@ class JoinOperator(QueryQueueOperator):
                 optional_query_model.add_unions(query)
             # remove the patterns that moved to the optional block from the original query model
             query_model1.rem_all_triples()
+            query_model1.rem_graph_triples()
             query_model1.rem_optional_triples()
             query_model1.rem_filters()
             query_model1.rem_subqueries()
@@ -163,8 +192,10 @@ class JoinOperator(QueryQueueOperator):
             # add the triples in dataset2 to triples in the original query model of dataset 1
             for triple in query_model2.triples:
                 query_model1.add_triple(*triple)
-            for optioanl_block in query_model2.optionals:
-                query_model1.add_optional_block(optioanl_block)
+            for graph, triples in query_model2.graph_triples.items():
+                query_model1.add_graph_triple(graph, triples)
+            for optional_block in query_model2.optionals:
+                query_model1.add_optional_block(optional_block)
             for column, conditions in query_model2.filter_clause.items():
                 for condition in conditions:
                     query_model1.add_filter_condition(column, condition)

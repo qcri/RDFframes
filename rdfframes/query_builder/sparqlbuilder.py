@@ -7,7 +7,6 @@ Aisha Mohamed <ahmohamed@qf.org.qa>
 
 
 class SPARQLBuilder(object):
-
         """
         This class will parse the self.self.query_modelto generate the SPARQL query.
         """
@@ -180,6 +179,23 @@ class SPARQLBuilder(object):
                 if not is_uri(triple[2]) and triple[2].find(":") < 0:
                     triple2 = "?" + triple[2]
                 where_string += '\t{} {} {}'.format(triple0, triple1, triple2) + " .\n"
+            if len(self.query_model.graph_triples) > 0:
+                for graph, triples in self.query_model.graph_triples.items():
+                    if len(triples) > 0:
+                        graph_triples_string = "GRAPH <{}> ".format(graph) + "{\n"
+                        for triple in triples:
+                            triple0 = triple[0]
+                            triple1 = triple[1]
+                            triple2 = triple[2]
+                            if not is_uri(triple[0]) and triple[0].find(":") < 0:
+                                triple0 = "?" + triple[0]
+                            if not is_uri(triple[1]) and triple[1].find(":") < 0:
+                                triple1 = "?" + triple[1]
+                            if not is_uri(triple[2]) and triple[2].find(":") < 0:
+                                triple2 = "?" + triple[2]
+                            graph_triples_string += '\t{} {} {}'.format(triple0, triple1, triple2) + " .\n"
+                        graph_triples_string += " }\n"
+                        where_string += "\n" + '\t'.join(('\n' + graph_triples_string.lstrip()).splitlines(True))
             if len(self.query_model.filter_clause) > 0:
                 filter_string = self.add_filter_clause()
                 where_string += "\n" + '\t'.join(('\n' + filter_string.lstrip()).splitlines(True))
@@ -208,7 +224,8 @@ class SPARQLBuilder(object):
             """
             if len(self.query_model.triples) > 0 or len(self.query_model.subqueries) > 0 or \
                     len(self.query_model.unions) >0 or len(self.query_model.optionals) > 0 or \
-                    len(self.query_model.filter_clause) > 0 or len(self.query_model.optional_subqueries) > 0:
+                    len(self.query_model.filter_clause) > 0 or len(self.query_model.optional_subqueries) > 0 or \
+                    len(self.query_model.graph_triples) > 0:
                 where_string = self.__add_patterns()
                 self.query_string += "WHERE {\n" + where_string + "\n}"
             else:

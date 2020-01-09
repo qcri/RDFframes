@@ -25,7 +25,7 @@ def test_expandable_expandable_join(join_type, optional1=False, optional2=False)
         RDFPredicate('sioc:content', 'text', optional1)
     ]).select_cols(['tweep', 'tweet'])
 
-    graph = KnowledgeGraph('twitter', 'https://twitter.com',
+    graph = KnowledgeGraph('twitter2', 'https://twitter2.com',
                            prefixes={
                                "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
                                "sioc": "http://rdfs.org/sioc/ns#",
@@ -327,35 +327,35 @@ def test_grouped_grouped_join(join_type):
 if __name__ == '__main__':
     # TODO: remove the last dot from the triple patterns in one block
     test_expandable_expandable_join(JoinType.InnerJoin)
-    #test_expandable_expandable_join(JoinType.LeftOuterJoin)
-    #test_expandable_expandable_join(JoinType.RightOuterJoin)
-    #test_expandable_expandable_join(JoinType.OuterJoin)
-    #test_expandable_expandable_join(JoinType.InnerJoin, True, True)
-    #test_expandable_expandable_join(JoinType.LeftOuterJoin, True, True)
-    #test_expandable_expandable_join(JoinType.RightOuterJoin, True, True)
-    #test_expandable_expandable_join(JoinType.InnerJoin, False, True)
-    #test_expandable_expandable_join(JoinType.InnerJoin, True, False)
-    #test_expandable_expandable_join(JoinType.OuterJoin, False, True)
-    #test_join_instead_of_expand(JoinType.InnerJoin)
-    #test_join_instead_of_expand(JoinType.LeftOuterJoin)
-    #test_join_instead_of_expand(JoinType.RightOuterJoin)
-    #test_join_instead_of_expand(JoinType.OuterJoin)
-    #test_expandable_expandable_3_joins(JoinType.InnerJoin)
+    test_expandable_expandable_join(JoinType.LeftOuterJoin)
+    test_expandable_expandable_join(JoinType.RightOuterJoin)
+    test_expandable_expandable_join(JoinType.OuterJoin)
+    test_expandable_expandable_join(JoinType.InnerJoin, True, True)
+    test_expandable_expandable_join(JoinType.LeftOuterJoin, True, True)
+    test_expandable_expandable_join(JoinType.RightOuterJoin, True, True)
+    test_expandable_expandable_join(JoinType.InnerJoin, False, True)
+    test_expandable_expandable_join(JoinType.InnerJoin, True, False)
+    test_expandable_expandable_join(JoinType.OuterJoin, False, True)
+    test_join_instead_of_expand(JoinType.InnerJoin)
+    test_join_instead_of_expand(JoinType.LeftOuterJoin)
+    test_join_instead_of_expand(JoinType.RightOuterJoin)
+    test_join_instead_of_expand(JoinType.OuterJoin)
+    test_expandable_expandable_3_joins(JoinType.InnerJoin)
     test_expandable_expandable_join_w_selectcols()
 
-    #test_expandable_grouped_join(JoinType.InnerJoin)
-    #test_expandable_grouped_join(JoinType.LeftOuterJoin)
+    test_expandable_grouped_join(JoinType.InnerJoin)
+    test_expandable_grouped_join(JoinType.LeftOuterJoin)
     # TODO: Opt: put the patterns from the optional dataset (first) outside a nested query when possible
-    #test_expandable_grouped_join(JoinType.RightOuterJoin)
-    #test_expandable_grouped_join(JoinType.OuterJoin)
+    test_expandable_grouped_join(JoinType.RightOuterJoin)
+    test_expandable_grouped_join(JoinType.OuterJoin)
     # TODO: Opt: add the outer triple patterns in a grouped dataset to the outer query in an inner join
-    #test_grouped_expandable_join(JoinType.InnerJoin)
-    #test_grouped_expandable_join(JoinType.LeftOuterJoin)
+    test_grouped_expandable_join(JoinType.InnerJoin)
+    test_grouped_expandable_join(JoinType.LeftOuterJoin)
     ### test the join on non-groupby columns
-    # test_grouped_expandable_join(JoinType.RightOuterJoin)
-    #test_grouped_grouped_join(JoinType.InnerJoin)
-    #test_grouped_grouped_join(JoinType.LeftOuterJoin)
-    #test_grouped_grouped_join(JoinType.RightOuterJoin)
-    #test_grouped_grouped_join(JoinType.OuterJoin)
+    test_grouped_expandable_join(JoinType.RightOuterJoin)
+    test_grouped_grouped_join(JoinType.InnerJoin)
+    test_grouped_grouped_join(JoinType.LeftOuterJoin)
+    test_grouped_grouped_join(JoinType.RightOuterJoin)
+    test_grouped_grouped_join(JoinType.OuterJoin)
 
 
