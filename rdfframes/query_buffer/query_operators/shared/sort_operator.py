@@ -36,7 +36,6 @@ class SortOperator(QueryQueueOperator):
         return 'Sort'
 
     def visit_node(self, query_model, ds, parent):
-        print("Inside sort node", query_model.select_columns)
         target_qm = query_model
 
         while target_qm.parent_query_model is not None:

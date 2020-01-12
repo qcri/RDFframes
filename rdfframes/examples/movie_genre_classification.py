@@ -34,6 +34,7 @@ def movies_with_american_actors():
 
     client = HttpClient(endpoint_url=endpoint, return_format=output_format)
     df = dataset.execute(client, return_format=output_format)
+    print(df)
 
 
 def movies_with_american_actors_optional():
@@ -69,5 +70,5 @@ def movies_with_american_actors_optional():
     #df = dataset.execute(client, return_format=output_format)
 
 
-movies_with_american_actors_optional()
-#movies_with_american_actors()
+#movies_with_american_actors_optional()
+movies_with_american_actors()

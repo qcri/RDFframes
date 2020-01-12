@@ -52,6 +52,13 @@ class KnowledgeGraph:
                 self.__add_graph_prefixes(graph_name, prefixes)
             else:
                 self.__load_default_prefixes(graph_name)
+        elif graph_uri is not None:
+            graph_name = "graph{}".format(len(self.graphs))
+            self.graphs[graph_name] = graph_uri
+            if prefixes is not None:
+                self.__add_graph_prefixes(graph_name, prefixes)
+            else:
+                self.__load_default_prefixes(graph_name)
         else:
             graph_name = ""
             if prefixes is not None:

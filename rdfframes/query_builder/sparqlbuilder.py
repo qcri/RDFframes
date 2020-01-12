@@ -34,9 +34,9 @@ class SPARQLBuilder(object):
             if query_model.parent_query_model is None:
                 self.add_from()
             self.add_where_clause()
-            self.add_order_clause()
             self.add_groupby()
             self.add_having_clause()
+            self.add_order_clause()
             self.add_limit()
             self.add_offset()
 
@@ -253,10 +253,10 @@ class SPARQLBuilder(object):
             :return:
             """
             if len(self.query_model.order_clause) > 0:
-                orderby = "\tORDER BY "
+                orderby = " ORDER BY "
                 for order_col, sort_order in self.query_model.order_clause.items():
                     orderby += '%s(?%s)' % (sort_order, order_col,) + " "
-                orderby += "\t"
+                orderby += " "
                 self.query_string += orderby
 
         def add_limit(self):
@@ -281,10 +281,9 @@ class SPARQLBuilder(object):
             :return:
             """
             if self.query_model.groupBy_columns is not None and len(self.query_model.groupBy_columns) > 0:
-                groupby_clause = "\tGROUP BY "
+                groupby_clause = " GROUP BY "
                 for col_name in self.query_model.groupBy_columns:
                     groupby_clause += "?" + col_name + " "
-                groupby_clause += "\t"
                 self.query_string += groupby_clause
 
         def add_from(self):
