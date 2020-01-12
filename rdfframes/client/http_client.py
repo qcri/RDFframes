@@ -158,7 +158,7 @@ class HttpClient(Client):
 
     def _execute_query(self, query, return_format=None, export_file=None):
         self.return_format = return_format if return_format is not None else self.return_format
-        if HttpClient.__find_clause(query, 'ORDER BY') is not None:
+        if HttpClient.__find_clause(query, 'ORDER BY')[0] >= 0:
             self.set_max_rows(1000)
 
 
@@ -212,7 +212,7 @@ class HttpClient(Client):
             modified_query = HttpClient.__remove_clause(modified_query, 'LIMIT')
             modified_query = HttpClient.__remove_clause(modified_query, 'OFFSET')
             modified_query = HttpClient.__append_clause(modified_query, 'OFFSET', current_offset)
-            modified_query = HttpClient.__append_clause(modified_query, 'LIMIT', 1000)
+            modified_query = HttpClient.__append_clause(modified_query, 'LIMIT', _MAX_ROWS)
             params = {
                 'query': modified_query,
                 'format': HttpClientDataFormat.return_format(self.return_format),
@@ -220,7 +220,6 @@ class HttpClient(Client):
                 'maxrows': self.max_rows
             }
             response = requests.post(self.full_endpoint_url, data=params, timeout=self.timeout)
-
             if response.status_code == 200:
                 data = self.__handle_http_response(response, export_file, first_query_flag=first_query_flag)
                 if data is not None:
