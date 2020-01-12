@@ -327,7 +327,7 @@ class SPARQLBuilder(object):
                     col_i += 1
                     if len(filter_con) > 1:
                         for i in range(len(filter_con)):
-                            if filter_con[i].find("isIRI") >= 0 or filter_con[0].find("langMatches") >= 0:
+                            if filter_con[i].find("isIRI") >= 0 or filter_con[0].find("langMatches") >= 0 or filter_con[0].find("regex")  >= 0:
                                 cond_string = " ( " + filter_con[i] + " )"
                                 if cond_list != "":
                                     cond_list += and_clause
@@ -353,7 +353,7 @@ class SPARQLBuilder(object):
                                 else:
                                     cond_list += cond_string
                     else:
-                        if filter_con[0].find("isIRI") >= 0 or filter_con[0].find("langMatches") >= 0:
+                        if filter_con[0].find("isIRI") >= 0 or filter_con[0].find("langMatches") >= 0 or filter_con[0].find("regex")  >= 0:
                             cond_string = filter_con[0]
                             cond_list += cond_string 
                         elif "date" not in col_name:
