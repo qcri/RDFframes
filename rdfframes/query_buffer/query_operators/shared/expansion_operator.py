@@ -63,7 +63,7 @@ class ExpansionOperator(QueryQueueOperator):
             triple = (self.src_col_name, self.predicate, self.new_col_name, self.is_optional)
 
         # any expand operations on a grouped dataset result in a subquery
-        if self.already_in_outer_query(ds, query_model):
+        if self.not_already_in_outer_query(ds, query_model):
             query_model = query_model.wrap_in_a_parent_query()
             print("After wrapping becaue of the expansion, I should have nothing in the select node of the parent query")
         if triple is not None:
@@ -80,7 +80,7 @@ class ExpansionOperator(QueryQueueOperator):
 
         return ds, query_model, None
 
-    def already_in_outer_query(self, ds, query_model):
+    def not_already_in_outer_query(self, ds, query_model):
         return ds.type() == "GroupedDataset" and len(query_model.groupBy_columns) > 0
 
     def __repr__(self):

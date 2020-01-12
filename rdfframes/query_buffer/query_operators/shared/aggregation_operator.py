@@ -39,9 +39,15 @@ class AggregationOperator(QueryQueueOperator):
         return self.function
 
     def visit_node(self, query_model, ds, parent):
+        if self.src_col_name in ds.agg_columns:
+            if self.not_already_in_outer_query(ds, query_model):
+                query_model = query_model.wrap_in_a_parent_query()
         query_model.add_aggregate_pair(self.src_col_name, self.function, self.agg_tag, self.agg_parameter)
         query_model.auto_add_select_column(self.agg_tag)
         return ds, query_model, None
+
+    def not_already_in_outer_query(self, ds, query_model):
+        return ds.type() == "GroupedDataset" and len(query_model.groupBy_columns) > 0
 
     def __repr__(self):
         return '''Aggregation Node:

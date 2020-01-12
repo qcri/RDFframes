@@ -109,15 +109,6 @@ class GroupedDataset(Dataset):
         else: # new_column_name is not None
             self.rem_column(join_col_name1)
             self.add_column(new_column_name)
-        ## validate that the join key should be from the grouped cloums
-        #if join_col_name1 not in self.grouping_cols:
-        #    raise Exception(
-        #        "Join key specified for dataset1 is not one of groupby columns in dataset1")
-        #if dataset2.type() == "GroupedDataset":
-        #    if join_col_name1 not in dataset2.grouping_cols:
-        #        raise Exception(
-        #            "Join key specified for dataset2 is not one of groupby columns in dataset2")
-
 
         node = JoinOperator(self, dataset2, join_col_name1, join_col_name2, join_type, new_column_name)
         # ds1.columns = union(ds1.columns, ds2.columns)
@@ -282,6 +273,9 @@ class GroupedDataset(Dataset):
             self.query_queue.append_node(agg_node)
             self.add_column(new_col_name)
             self.agg_columns.append(new_col_name)
+        #elif agg_col in self.agg_columns:
+        #    # TODO: Generate a subquery when running an aggregation over aggregated column after groupby
+        #    pass
         else:
             # TODO: Don't allow any more operations on the dataset
             agg_node = AggregationOperator(self.name, agg_col, AggregationFunction.MAX, new_col_name, param)

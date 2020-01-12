@@ -35,6 +35,8 @@ class GroupedAggregationOperator(QueryQueueOperator):
         # if I have no select columns, add aggreagtion colum to the select columns.
         #if len(query_model.select_columns) == 0:
         #    query_model.add_select_column(self.new_col_name)
+
+
         query_model.add_aggregate_pair(self.src_col_name, self.agg_function, self.new_col_name, self.agg_parameter)
         query_model.auto_add_select_column(self.new_col_name)
         return ds, query_model, None

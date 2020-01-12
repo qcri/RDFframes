@@ -6,7 +6,7 @@ from rdfframes.client.http_client import HttpClientDataFormat, HttpClient
 
 
 def movies_with_american_actors():
-    graph = KnowledgeGraph(graph_name='dbpedia',graph_uri='http://dbpedia.org',
+    graph = KnowledgeGraph(graph_uri='http://dbpedia.org',
                            prefixes={'dcterms': 'http://purl.org/dc/terms/',
                                      'rdfs': 'http://www.w3.org/2000/01/rdf-schema#',
                                      'dbpprop': 'http://dbpedia.org/property/'})
@@ -17,7 +17,7 @@ def movies_with_american_actors():
                          RDFPredicate('dbpprop:country', 'film_country')])\
         .cache()
 
-    american_actors = dataset.filter({'actor_country': ['= USA']})
+    american_actors = dataset.filter({'actor_country': ['= "USA"']})
 
     prolific_actors = dataset.group_by(['actor'])\
         .count('film', 'film_count', unique=True).filter({'film_count': ['>= 10', '<=30']})
@@ -36,4 +36,38 @@ def movies_with_american_actors():
     df = dataset.execute(client, return_format=output_format)
 
 
-movies_with_american_actors()
+def movies_with_american_actors_optional():
+    graph = KnowledgeGraph(graph_uri='http://dbpedia.org',
+                           prefixes={'dcterms': 'http://purl.org/dc/terms/',
+                                     'rdfs': 'http://www.w3.org/2000/01/rdf-schema#',
+                                     'dbpprop': 'http://dbpedia.org/property/'})
+
+    dataset = graph.feature_domain_range('dbpprop:starring', domain_col_name='film', range_col_name='actor')\
+        .expand('actor', [RDFPredicate('dbpprop:birthPlace', 'actor_country', optional=True),
+                          RDFPredicate('rdfs:label', 'actor_name', optional=True)])\
+        .expand('film', [RDFPredicate('rdfs:label', 'film_name', optional=True),
+                         RDFPredicate('dcterms:subject', 'subject', optional=True),
+                         RDFPredicate('dbpprop:country', 'film_country', optional=True)])\
+        .cache()
+
+    american_actors = dataset.filter({'actor_country': ['= "USA"']})
+
+    prolific_actors = dataset.group_by(['actor'])\
+        .count('film', 'film_count', unique=True).filter({'film_count': ['>= 10', '<=30']})
+
+    films = american_actors.join(prolific_actors, join_col_name1='actor', join_type=JoinType.OuterJoin)\
+        .join(dataset, join_col_name1='actor')
+
+    sparql_query = films.to_sparql()
+
+    print(sparql_query)
+
+    endpoint = 'http://10.161.202.101:8890/sparql/'
+    output_format = HttpClientDataFormat.PANDAS_DF
+
+    client = HttpClient(endpoint_url=endpoint, return_format=output_format)
+    #df = dataset.execute(client, return_format=output_format)
+
+
+movies_with_american_actors_optional()
+#movies_with_american_actors()

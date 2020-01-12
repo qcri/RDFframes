@@ -1,6 +1,5 @@
 from rdfframes.dataset.expandable_dataset import ExpandableDataset
 from rdfframes.dataset.rdfpredicate import RDFPredicate, PredicateDirection
-from rdfframes.dataset.aggregation_fn_data import AggregationData
 
 
 __author__ = """
@@ -198,7 +197,7 @@ class KnowledgeGraph:
         return ExpandableDataset(self, new_dataset_name, "instance", "instance")\
             .expand("instance", [RDFPredicate('rdf:type', classes_col_name, False, PredicateDirection.OUTGOING)])\
             .group_by([classes_col_name])\
-            .count(aggregation_fn_data=[AggregationData('instance', frequency_col_name)])
+            .count('instance', frequency_col_name)
 
     def features_and_freq(self, class_name, new_dataset_name='dataset', features_col_name="feature",
                           frequency_col_name='frequency'):
@@ -227,7 +226,7 @@ class KnowledgeGraph:
             .expand(class_name, [RDFPredicate('rdf:type', 'instance', False, PredicateDirection.INCOMING)])\
             .expand('instance', [RDFPredicate(features_col_name, 'feature_value', False, PredicateDirection.OUTGOING)])\
             .group_by([features_col_name]).\
-            count(aggregation_fn_data=[AggregationData('feature_value', frequency_col_name, 'DISTINCT')])
+            count('feature_value', frequency_col_name, unique=True)
 
     def num_entities(self, class_name, new_dataset_name='dataset', num_entities_col_name='num_entities'):
         """
@@ -251,7 +250,7 @@ class KnowledgeGraph:
         """
         return ExpandableDataset(self, new_dataset_name, class_name, class_name)\
             .expand(class_name, [RDFPredicate('rdf:type', 'instance', False, PredicateDirection.INCOMING)])\
-            .count(aggregation_fn_data=[AggregationData('instance', num_entities_col_name, 'DISTINCT')])
+            .count('instance', num_entities_col_name, unique=True)
 
     def feature_domain_range(self, feature, new_dataset_name='dataset', domain_col_name="domain", range_col_name="range"):
         """
