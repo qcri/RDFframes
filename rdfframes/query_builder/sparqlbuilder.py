@@ -138,10 +138,8 @@ class SPARQLBuilder(object):
             """
             subquery_string = ""
             for query in self.query_model.subqueries:
-                #subquery_string += "\n"
                 query_str = query.to_sparql()
                 subquery_string += "\n{\n" + query_str + "\n}\n"
-                #subquery_string += "\t"+"{" + '\t\t'.join(('\n'+query_str.lstrip()).splitlines(True)) + "\n\t" + "}"
             return subquery_string
 
         def add_optional_subqueries(self):
@@ -320,19 +318,20 @@ class SPARQLBuilder(object):
             """
             :return:
             """
+            and_clause = " && "
             filter_clause = ""
             cond_list = ""
-            if bool(self.query_model.filter_clause):
+            if len(self.query_model.filter_clause) > 0:
                 filter_clause = "FILTER ("
                 col_i = 0
                 for col_name, filter_con in self.query_model.filter_clause.items():
                     col_i += 1
                     if len(filter_con) > 1:
                         for i in range(len(filter_con)):
-                            if filter_con[i].find("isIRI") >= 0:
+                            if filter_con[i].find("isIRI") >= 0 or filter_con[0].find("langMatches") >= 0:
                                 cond_string = " ( " + filter_con[i] + " )"
                                 if cond_list != "":
-                                    cond_list += " && "
+                                    cond_list += and_clause
                                     cond_list += cond_string
                                 else:
                                     cond_list += cond_string                                
@@ -341,7 +340,7 @@ class SPARQLBuilder(object):
                                 cond_string += "?%s %s" % (col_name, filter_con[i])
                                 cond_string += " )"
                                 if cond_list != "":
-                                    cond_list += " && "
+                                    cond_list += and_clause
                                     cond_list += cond_string
                                 else:
                                     cond_list += cond_string
@@ -350,13 +349,13 @@ class SPARQLBuilder(object):
                                 cond_string += "year(xsd: dateTime(?%s)) %s" % (col_name, filter_con[i])
                                 cond_string += " )"
                                 if cond_list != "":
-                                    cond_list += " && "
+                                    cond_list += and_clause
                                     cond_list += cond_string
                                 else:
                                     cond_list += cond_string
                     else:
                         if filter_con[0].find("isIRI") >= 0 or filter_con[0].find("langMatches") >= 0:
-                            cond_string =  filter_con[0]
+                            cond_string = filter_con[0]
                             cond_list += cond_string 
                         elif "date" not in col_name:
                             cond_string = " ("
@@ -369,7 +368,7 @@ class SPARQLBuilder(object):
                             cond_string += " )"
                             cond_list += cond_string
                     if col_i < len(self.query_model.filter_clause):
-                        cond_list += " && "
+                        cond_list += and_clause
 
                 if filter_clause != "":
                     filter_clause += cond_list + " ) \n"
@@ -399,6 +398,5 @@ class SPARQLBuilder(object):
                         else:
                             cond_list += cond_string
                 if having_clause != "":
-                    # having_clause+=" && "
                     having_clause += cond_list + ")\n"
                 self.query_string += having_clause
