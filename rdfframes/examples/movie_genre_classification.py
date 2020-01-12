@@ -36,7 +36,8 @@ def movies_with_american_actors():
     output_format = HttpClientDataFormat.PANDAS_DF
 
     client = HttpClient(endpoint_url=endpoint, return_format=output_format)
-    df = dataset.execute(client, return_format=output_format)
+    # [663769 rows x 8 columns]
+    df = films.execute(client, return_format=output_format)
     print(df)
 
 
