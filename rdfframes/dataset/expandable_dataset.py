@@ -12,6 +12,7 @@ from rdfframes.query_buffer.query_operators.shared.integer_count_node import Int
 from rdfframes.dataset.dataset import Dataset
 from rdfframes.dataset.grouped_dataset import GroupedDataset
 from rdfframes.utils.constants import JoinType, AggregationFunction
+from rdfframes.dataset.rdfpredicate import RDFPredicate, PredicateDirection
 
 __author__ = """
 Abdurrahman Ghanem <abghanem@hbku.edu.qa>
@@ -59,11 +60,21 @@ class ExpandableDataset(Dataset):
             return ds.expand(src_col_name, predicate_list)
 
         for predicate in predicate_list:
-            node = ExpansionOperator(self.name, src_col_name, predicate.uri, predicate.new_col_name,
-                                     predicate.direction, is_optional=predicate.optional)
-            self.query_queue.append_node(node)
-            self.add_column(predicate.new_col_name)
-            self.add_column(predicate.uri)
+            if isinstance(predicate, RDFPredicate):
+                node = ExpansionOperator(self.name, src_col_name, predicate.uri, predicate.new_col_name,
+                                             predicate.direction, is_optional=predicate.optional)
+                self.query_queue.append_node(node)
+                self.add_column(predicate.new_col_name)
+                self.add_column(predicate.uri)
+            else:
+                node = ExpansionOperator(self.name, src_col_name, predicate[0], predicate[1],
+                                             PredicateDirection.OUTGOING, is_optional=len(predicate)> 2)  
+                self.query_queue.append_node(node)
+                self.add_column(predicate[1])
+                self.add_column(predicate[0])
+            #node = ExpansionOperator(self.name, src_col_name, predicate.uri, predicate.new_col_name,
+            #                         predicate.direction, is_optional=predicate.optional)
+
 
         return self
 
