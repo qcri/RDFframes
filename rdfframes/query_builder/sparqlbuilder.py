@@ -65,7 +65,7 @@ class SPARQLBuilder(object):
                 return
             elif len(self.query_model.select_columns) > 0 or len(self.query_model.auto_generated_select_columns) > 0:
             #elif len(self.query_model.select_columns) > 0:
-                select_string = "SELECT "
+                select_string = "SELECT DISTINCT "
                 for col in self.query_model.select_columns.union(self.query_model.auto_generated_select_columns):
                 #for col in self.query_model.select_columns:
                     if col in self.query_model.aggregate_clause:
