@@ -1,6 +1,5 @@
 import time
 from rdfframes.knowledge_graph import KnowledgeGraph
-from rdfframes.dataset.rdfpredicate import RDFPredicate
 from rdfframes.utils.constants import JoinType
 
 from rdfframes.client.http_client import HttpClientDataFormat, HttpClient
@@ -11,14 +10,15 @@ def movies_with_american_actors():
     graph = KnowledgeGraph(graph_uri='http://dbpedia.org',
                            prefixes={'dcterms': 'http://purl.org/dc/terms/',
                                      'rdfs': 'http://www.w3.org/2000/01/rdf-schema#',
-                                     'dbpprop': 'http://dbpedia.org/property/',
+                                     'dbpp': 'http://dbpedia.org/property/',
                                      'dbpr': 'http://dbpedia.org/resource/',
                                      'dbpo': 'http://dbpedia.org/ontology/'})
+    graph = KnowledgeGraph(graph_name='dbpedia')
 
-    dataset = graph.feature_domain_range('dbpprop:starring', domain_col_name='film', range_col_name='actor')\
-        .expand('actor', [RDFPredicate('dbpprop:birthPlace', 'actor_country'), RDFPredicate('rdfs:label', 'actor_name')])\
-        .expand('film', [RDFPredicate('rdfs:label', 'film_name'), RDFPredicate('dcterms:subject', 'subject'),
-                         RDFPredicate('dbpprop:country', 'film_country'), RDFPredicate('dbpo:genre', 'genre', optional=True)])\
+    dataset = graph.feature_domain_range('dbpp:starring', 'film', 'actor')\
+        .expand('actor', [('dbpp:birthPlace', 'actor_country'), ('rdfs:label', 'actor_name')])\
+        .expand('film', [('rdfs:label', 'film_name'), ('dcterms:subject', 'subject'),
+                         ('dbpp:country', 'film_country'), ('dbpo:genre', 'genre', optional=True)])\
         .cache()
     # 26928 Rows. -- 4273 msec.
     american_actors = dataset.filter({'actor_country': ['regex(str(?actor_country), "USA")']})

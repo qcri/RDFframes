@@ -15,6 +15,23 @@ class KnowledgeGraph:
     contains a group of convenience functions to initialize datasets before 
     applying any operations on them
     """
+    default_graphs = {'dbpedia': 'http://dbpedia.org',
+             'dblp': 'http://dblp.l3s.de'}
+    default_graph_prefixes = {
+        'dbpedia': {
+            'dcterms': 'http://purl.org/dc/terms/',
+            'rdfs': 'http://www.w3.org/2000/01/rdf-schema#',
+            'dbpp': 'http://dbpedia.org/property/',
+            'dbpr': 'http://dbpedia.org/resource/',
+            'dbpo': 'http://dbpedia.org/ontology/'},
+        'dblp': {
+            "xsd": "http://www.w3.org/2001/XMLSchema#",
+            "swrc": "http://swrc.ontoware.org/ontology#",
+            "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+            "dc": "http://purl.org/dc/elements/1.1/",
+            "dcterm": "http://purl.org/dc/terms/",
+            "dblprc": "http://dblp.l3s.de/d2r/resource/conferences/"}
+        }
 
     def __init__(self, graph_name=None, graph_uri=None, prefixes=None):
         """
@@ -32,7 +49,7 @@ class KnowledgeGraph:
         self.graph_prefixes = {}
         self.add_graph(graph_name, graph_uri, prefixes)
 
-    def add_graph(self, graph_name, graph_uri, prefixes=None):
+    def add_graph(self, graph_name=None, graph_uri=None, prefixes=None):
         """
         add more knowledge graph URIs to this KnowledgeGraph instance
         :param graph_name: graph user defined name
@@ -47,11 +64,21 @@ class KnowledgeGraph:
         if graph_name is not None:
             if len(graph_name) <= 0:
                 raise Exception("Graph name cannot be an empty string.")
-            self.graphs[graph_name] = graph_uri
-            if prefixes is not None:
-                self.__add_graph_prefixes(graph_name, prefixes)
+            if graph_uri is not None:
+                self.graphs[graph_name] = graph_uri
+                if prefixes is not None:
+                    self.__add_graph_prefixes(graph_name, prefixes)
+                else:
+                    self.__load_default_prefixes(graph_name)
+            elif graph_name in KnowledgeGraph.default_graphs:
+                self.graphs[graph_name] = KnowledgeGraph.default_graphs[graph_name]
+                if graph_name in KnowledgeGraph.default_graph_prefixes:
+                    self.__add_graph_prefixes(graph_name, KnowledgeGraph.default_graph_prefixes[graph_name])
+                else:
+                    self.__load_default_prefixes(graph_name)
             else:
-                self.__load_default_prefixes(graph_name)
+                raise Exception("Graph is not one of the default graphs.")
+
         elif graph_uri is not None:
             graph_name = "graph{}".format(len(self.graphs))
             self.graphs[graph_name] = graph_uri
@@ -259,7 +286,7 @@ class KnowledgeGraph:
             .expand(class_name, [RDFPredicate('rdf:type', 'instance', False, PredicateDirection.INCOMING)])\
             .count('instance', num_entities_col_name, unique=True)
 
-    def feature_domain_range(self, feature, new_dataset_name='dataset', domain_col_name="domain", range_col_name="range"):
+    def feature_domain_range(self, feature, domain_col_name="domain", range_col_name="range", new_dataset_name='dataset'):
         """
         retrieves all the subjects and objects of a given predicate. When graphs
         is passed, restrict to the specified graphs

@@ -2,6 +2,7 @@
 """
 import copy
 import time
+import pandas as pd
 
 from rdfframes.query_buffer.query_operators.shared.limit_operator import LimitOperator
 from rdfframes.query_buffer.query_operators.shared.offset_operator import OffsetOperator
@@ -210,7 +211,6 @@ class Dataset:
         """
         start_time = time.time()
         query_string = self.to_sparql()
-        print ("time of the query preparation", time.time()-start_time)
         res = client.execute_query(query_string, return_format=return_format, output_file=output_file)
         return res
 
