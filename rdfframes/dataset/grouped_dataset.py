@@ -10,7 +10,7 @@ from rdfframes.query_buffer.query_operators.shared.join_operator import JoinOper
 from rdfframes.dataset.dataset import Dataset
 from rdfframes.utils.constants import AggregationFunction
 from rdfframes.utils.constants import JoinType
-from rdfframes.dataset.rdfpredicate import RDFPredicate, PredicateDirection
+from rdfframes.dataset.rdfpredicate import PredicateDirection
 
 __author__ = """
 Abdurrahman Ghanem <abghanem@hbku.edu.qa>
@@ -72,15 +72,25 @@ class GroupedDataset(Dataset):
             return ds.expand(src_col_name, predicate_list)
 
         for predicate in predicate_list:
-            if isinstance(predicate, RDFPredicate):
-                operator = ExpansionOperator(self.name, src_col_name, predicate.uri, predicate.new_col_name,
-                                             predicate.direction, is_optional=predicate.optional)
-                self.query_queue.append_node(operator)
-                self.add_column(predicate.new_col_name)
-                self.add_column(predicate.uri)
-            else:
+            #if isinstance(predicate, RDFPredicate):
+            #    operator = ExpansionOperator(self.name, src_col_name, predicate.uri, predicate.new_col_name,
+            #                                 predicate.direction, is_optional=predicate.optional)
+            #    self.query_queue.append_node(operator)
+            #    self.add_column(predicate.new_col_name)
+            #    self.add_column(predicate.uri)
+            #else:
+            if True:
+                if len(predicate) > 3:
+                    direction = predicate[3]
+                    is_optional = predicate[2]
+                else:
+                    direction = PredicateDirection.OUTGOING
+                    if len(predicate) > 2:
+                        is_optional = predicate[2]
+                    else:
+                        is_optional = False
                 operator = ExpansionOperator(self.name, src_col_name, predicate[0], predicate[1],
-                                             PredicateDirection.OUTGOING, is_optional=len(predicate)> 2)          
+                                         direction, is_optional=is_optional)
                 self.query_queue.append_node(operator)
                 self.add_column(predicate[1])
                 self.add_column(predicate[0])

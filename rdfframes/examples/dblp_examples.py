@@ -1,5 +1,4 @@
 from rdfframes.knowledge_graph import KnowledgeGraph
-from rdfframes.dataset.rdfpredicate import RDFPredicate
 from rdfframes.client.http_client import HttpClientDataFormat, HttpClient
 
 
@@ -65,9 +64,9 @@ def important_vldb_authors():
                              new_dataset_name='papers',
                              entities_col_name='paper')
     dataset = dataset.expand(src_col_name='paper', predicate_list=[
-        RDFPredicate('dc:title', 'title'),
-        RDFPredicate('dc:creator', 'author'),
-        RDFPredicate('swrc:series', 'conference')])\
+        ('dc:title', 'title'),
+        ('dc:creator', 'author'),
+        ('swrc:series', 'conference')])\
         .filter(conditions_dict={'conference': ['= <https://dblp.l3s.de/d2r/resource/conferences/vldb>']})
     grouped_dataset = dataset.group_by(['author'])\
         .count('paper', 'papers_count')\
@@ -108,17 +107,14 @@ def important_topics():
                         )
 
     dataset = graph.entities('swrc:InProceedings', entities_col_name='paper')\
-        .expand(src_col_name='paper', predicate_list=[
-            RDFPredicate('dc:creator', 'author'), RDFPredicate('dcterm:issued', 'date'),
-            RDFPredicate('swrc:series', 'conference'),
-            RDFPredicate('dc:title', 'title')])
+        .expand(src_col_name='paper', predicate_list=[('dc:creator', 'author'), ('dcterm:issued', 'date'),
+            ('swrc:series', 'conference'), ('dc:title', 'title')])
     dataset = dataset.cache()
     
     authors = dataset.filter({'date':['>= 2000'], 'conference': ['IN (dblprc:vldb, dblprc:sigmod)']})\
         .group_by(['author'])\
         .count('paper', 'papers_count')\
         .filter({'papers_count':['>= 20']})
-
 
     titles = dataset.join(authors, 'author').filter({'date': ['>= 2005']}).select_cols(['title'])
 

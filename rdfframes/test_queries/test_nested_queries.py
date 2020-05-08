@@ -1,8 +1,7 @@
 import time
 
 from rdfframes.knowledge_graph import KnowledgeGraph
-from rdfframes.dataset.rdfpredicate import RDFPredicate, PredicateDirection
-
+from rdfframes.dataset.rdfpredicate import PredicateDirection
 
 def test_expand_after_group_by():
     start = time.time()
@@ -26,8 +25,8 @@ def test_expand_after_group_by():
 
     # expand each tweet by the following features: text and tweep
     ds = dataset.expand(src_col_name='tweet', predicate_list=[
-        RDFPredicate('sioc:has_creater', 'tweep'),
-        RDFPredicate('sioc:content', 'text')
+        ('sioc:has_creater', 'tweep'),
+        ('sioc:content', 'text')
     ])
     sparql_query = ds.to_sparql()
     print("sparql_query 2 =\n{}\n".format(sparql_query))
@@ -41,16 +40,16 @@ def test_expand_after_group_by():
 
     # expand these tweets by the following features: date, media, hashtags, users mentioned
     gds = gds.expand(src_col_name='tweep', predicate_list=[
-        RDFPredicate('sioc:has_creater', 'tweet', directionality=PredicateDirection.INCOMING)])
+        ('sioc:has_creater', 'tweet', False, PredicateDirection.INCOMING)])
     sparql_query = gds.to_sparql()
     print("sparql_query 3.1 =\n{}\n".format(sparql_query))
 
     gds = gds.expand(src_col_name='tweet', predicate_list=[
-        RDFPredicate('dcterms:created', 'date'),
-        RDFPredicate('sioc:content', 'text'),
-        RDFPredicate('to:hasmedia', 'multimedia'),
-        RDFPredicate('to:hashashtag', 'hashtag'),
-        RDFPredicate('sioc:mentions', 'users_mentioned')
+        ('dcterms:created', 'date'),
+        ('sioc:content', 'text'),
+        ('to:hasmedia', 'multimedia'),
+        ('to:hashashtag', 'hashtag'),
+        ('sioc:mentions', 'users_mentioned')
     ])
     sparql_query = gds.to_sparql()
     print("sparql_query 4 =\n{}\n\n\n\n".format(sparql_query))
@@ -84,8 +83,8 @@ def test_filter_after_group_by():
                              entities_col_name='tweet')
     # expand each tweet by the following features: text and tweep
     ds = dataset.expand(src_col_name='tweet', predicate_list=[
-        RDFPredicate('sioc:has_creater', 'tweep'),
-        RDFPredicate('sioc:content', 'text')
+        ('sioc:has_creater', 'tweep'),
+        ('sioc:content', 'text')
     ])
     # return all the tweets of users whose tweep tweeted 250-300 twweets
     gds = ds.group_by(groupby_cols_list=['tweep'])\

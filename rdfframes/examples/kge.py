@@ -1,6 +1,4 @@
 from rdfframes.knowledge_graph import KnowledgeGraph
-from rdfframes.dataset.rdfpredicate import RDFPredicate
-from rdfframes.client.http_client import HttpClientDataFormat, HttpClient
 
 
 def kge():

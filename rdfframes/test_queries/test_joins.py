@@ -1,7 +1,6 @@
 import unittest
 
 from rdfframes.knowledge_graph import KnowledgeGraph
-from rdfframes.dataset.rdfpredicate import RDFPredicate
 from rdfframes.utils.constants import JoinType
 
 
@@ -88,15 +87,15 @@ class TestJoins(unittest.TestCase):
                                  new_dataset_name='dataset1',
                                  entities_col_name='tweet')
         dataset = dataset.expand(src_col_name='tweet', predicate_list=[
-            RDFPredicate('sioc:has_creater', 'tweep', False),
-            RDFPredicate('sioc:content', 'text', optional1)
+            ('sioc:has_creater', 'tweep', False),
+            ('sioc:content', 'text', optional1)
         ]).select_cols(['tweep'])
 
         dataset2 = graph.entities(class_name='sioct:tweeter',
                                  new_dataset_name='dataset2',
                                  entities_col_name='tweeter')
         dataset2 = dataset2.expand(src_col_name='tweeter', predicate_list=[
-            RDFPredicate('sioc:has_name', 'name', optional2)
+            ('sioc:has_name', 'name', optional2)
         ])
 
         dataset.join(dataset2,'tweep','tweeter','tweep', join_type)

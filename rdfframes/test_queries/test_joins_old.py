@@ -1,7 +1,6 @@
 import time
 
 from rdfframes.knowledge_graph import KnowledgeGraph
-from rdfframes.dataset.rdfpredicate import RDFPredicate
 from rdfframes.utils.constants import JoinType
 
 
@@ -21,8 +20,8 @@ def test_expandable_expandable_join(join_type, optional1=False, optional2=False)
                              new_dataset_name='dataset1',
                              entities_col_name='tweet')
     dataset = dataset.expand(src_col_name='tweet', predicate_list=[
-        RDFPredicate('sioc:has_creater', 'tweep', False),
-        RDFPredicate('sioc:content', 'text', optional1)
+        ('sioc:has_creater', 'tweep', False),
+        ('sioc:content', 'text', optional1)
     ]).select_cols(['tweep', 'tweet'])
 
     graph = KnowledgeGraph('twitter2', 'https://twitter2.com',
@@ -37,7 +36,7 @@ def test_expandable_expandable_join(join_type, optional1=False, optional2=False)
                              new_dataset_name='dataset2',
                              entities_col_name='tweeter')
     dataset2 = dataset2.expand(src_col_name='tweeter', predicate_list=[
-        RDFPredicate('sioc:has_name', 'name', optional2)
+        ('sioc:has_name', 'name', optional2)
     ]).select_cols(['tweeter'])
 
     dataset.join(dataset2,'tweep','tweeter','tweep', join_type)
@@ -63,12 +62,12 @@ def test_join_instead_of_expand(join_type):
     dataset1 = graph.entities(class_name='sioct:microblogPost',
                              new_dataset_name='dataset',
                              entities_col_name='tweet')\
-        .expand(src_col_name='tweet', predicate_list=[RDFPredicate('sioc:has_creater', 'tweep', False)])
+        .expand(src_col_name='tweet', predicate_list=[('sioc:has_creater', 'tweep', False)])
 
     dataset2 = graph.entities(class_name='sioct:microblogPost',
                              new_dataset_name='dataset',
                              entities_col_name='tweet')\
-        .expand(src_col_name='tweet', predicate_list=[RDFPredicate('sioc:content', 'text', False)])
+        .expand(src_col_name='tweet', predicate_list=[('sioc:content', 'text', False)])
 
     dataset2.join(dataset1, 'tweet', 'tweet', 'tweet', join_type)
 
@@ -94,16 +93,16 @@ def test_expandable_expandable_3_joins(join_type):
                              new_dataset_name='dataset1',
                              entities_col_name='tweet')
     dataset = dataset.expand(src_col_name='tweet', predicate_list=[
-        RDFPredicate('sioc:has_creater', 'tweep', False),
-        RDFPredicate('sioc:content', 'text', False)
+        ('sioc:has_creater', 'tweep', False),
+        ('sioc:content', 'text', False)
     ])
 
     dataset2 = graph.entities(class_name='sioc:UserAccount',
                               new_dataset_name='dataset2',
                               entities_col_name='tweep')
     dataset2 = dataset2.expand(src_col_name='tweep', predicate_list=[
-        RDFPredicate('sioc:has_name', 'name', False),
-        RDFPredicate('sioc:has_follower', 'follower', False)
+        ('sioc:has_name', 'name', False),
+        ('sioc:has_follower', 'follower', False)
     ])
 
     dataset2.join(dataset, 'tweep', 'tweep', 'tweep', join_type)
@@ -113,7 +112,7 @@ def test_expandable_expandable_3_joins(join_type):
                               entities_col_name='tweeter')
 
     dataset3 = dataset3.expand(src_col_name='tweeter', predicate_list=[
-        RDFPredicate('sioc:has_id', 'id', False)
+        ('sioc:has_id', 'id', False)
     ])
 
     dataset3.join(dataset2, 'tweeter', 'follower', 'follower', join_type)
@@ -140,15 +139,15 @@ def test_expandable_expandable_join_w_selectcols():
                                  new_dataset_name='dataset1',
                                  entities_col_name='tweet')
         dataset = dataset.expand(src_col_name='tweet', predicate_list=[
-            RDFPredicate('sioc:has_creater', 'tweep', False),
-            RDFPredicate('sioc:content', 'text', False)
+            ('sioc:has_creater', 'tweep', False),
+            ('sioc:content', 'text', False)
         ]).select_cols(['tweep', 'text'])
 
         dataset2 = graph.entities(class_name='sioct:tweeter',
                                   new_dataset_name='dataset2',
                                   entities_col_name='tweep')
         dataset2 = dataset2.expand(src_col_name='tweep', predicate_list=[
-            RDFPredicate('sioc:has_name', 'name', False)
+            ('sioc:has_name', 'name', False)
         ]).select_cols(['tweep', 'name'])
 
         dataset.join(dataset2, 'tweep', 'tweep', 'tweep', JoinType.InnerJoin)
@@ -174,15 +173,15 @@ def test_expandable_grouped_join(join_type):
                              new_dataset_name='dataset1',
                              entities_col_name='tweet')
     dataset = dataset.expand(src_col_name='tweet', predicate_list=[
-        RDFPredicate('sioc:has_creater', 'tweep', False),
-        RDFPredicate('sioc:content', 'text', False)
+        ('sioc:has_creater', 'tweep', False),
+        ('sioc:content', 'text', False)
     ])
 
     dataset2 = graph.entities(class_name='sioct:microblogPost',
                              new_dataset_name='tweets',
                              entities_col_name='tweet')
     dataset2 = dataset2.expand(src_col_name='tweet', predicate_list=[
-        RDFPredicate('sioc:has_creater', 'tweeter')
+        ('sioc:has_creater', 'tweeter')
     ]).group_by(['tweeter']).count('tweet', 'tweets_count').filter(
         conditions_dict={'tweets_count': ['>= {}'.format(200), '<= {}'.format(300)]})
     dataset.join(dataset2, 'tweep', 'tweeter', 'user', join_type)
@@ -226,18 +225,18 @@ def test_grouped_expandable_join(join_type):
                              new_dataset_name='dataset1',
                              entities_col_name='tweet')
     dataset = dataset.expand(src_col_name='tweet', predicate_list=[
-        RDFPredicate('sioc:has_creater', 'tweep', False),
-        RDFPredicate('sioc:content', 'text', False)
+        ('sioc:has_creater', 'tweep', False),
+        ('sioc:content', 'text', False)
     ])
 
     dataset2 = graph.entities(class_name='sioct:microblogPost',
                              new_dataset_name='tweets',
                              entities_col_name='tweet')
     dataset2 = dataset2.expand(src_col_name='tweet', predicate_list=[
-        RDFPredicate('sioc:has_creater', 'tweeter')
+        ('sioc:has_creater', 'tweeter')
     ]).group_by(['tweeter']).count('tweet', 'tweets_count').filter(
         conditions_dict={'tweets_count': ['>= {}'.format(200), '<= {}'.format(300)]})
-    dataset2= dataset2.expand(src_col_name='tweeter', predicate_list=[ RDFPredicate('rdf:type', 'sioc:UserAccount')])
+    dataset2= dataset2.expand(src_col_name='tweeter', predicate_list=[ ('rdf:type', 'sioc:UserAccount')])
     dataset2.join(dataset, 'tweeter', 'tweep', 'user', join_type)
     dataset2.select_cols(['user'])
 
@@ -261,8 +260,8 @@ def test_grouped_grouped_join_diff_graphs(join_type):
                              new_dataset_name='dataset1',
                              entities_col_name='tweet')
     dataset = dataset.expand(src_col_name='tweet', predicate_list=[
-        RDFPredicate('sioc:has_creater', 'tweep', False),
-        RDFPredicate('sioc:content', 'text', False)])\
+        ('sioc:has_creater', 'tweep', False),
+        ('sioc:content', 'text', False)])\
         .group_by(['tweep']).count('tweet', 'tweets_count')\
         .filter({'tweets_count': ['>= {}'.format(1000)]})
 
@@ -276,7 +275,7 @@ def test_grouped_grouped_join_diff_graphs(join_type):
                              new_dataset_name='tweets',
                              entities_col_name='tweet')
     dataset2 = dataset2.expand(src_col_name='tweet', predicate_list=[
-        RDFPredicate('sioc2:has_creater', 'tweeter')
+        ('sioc2:has_creater', 'tweeter')
     ]).group_by(['tweeter']).count('tweet', 'tweets_count2', unique=False)\
         .filter(conditions_dict={'tweets_count2': ['>= {}'.format(200), '<= {}'.format(300)]})
     dataset.join(dataset2, 'tweep', 'tweeter', 'user', join_type)
@@ -299,8 +298,8 @@ def test_grouped_grouped_join(join_type):
                              new_dataset_name='dataset1',
                              entities_col_name='tweet')
     dataset = dataset.expand(src_col_name='tweet', predicate_list=[
-        RDFPredicate('sioc:has_creater', 'tweep', False),
-        RDFPredicate('sioc:content', 'text', False)])\
+        ('sioc:has_creater', 'tweep', False),
+        ('sioc:content', 'text', False)])\
         .group_by(['tweep']).count('tweet', 'tweets_count')\
         .filter({'tweets_count': ['>= {}'.format(1000)]})
 
@@ -314,7 +313,7 @@ def test_grouped_grouped_join(join_type):
                              new_dataset_name='tweets',
                              entities_col_name='tweet')
     dataset2 = dataset2.expand(src_col_name='tweet', predicate_list=[
-        RDFPredicate('sioc2:has_creater', 'tweeter')
+        ('sioc2:has_creater', 'tweeter')
     ]).group_by(['tweeter']).count('tweet', 'tweets_count2', unique=False)\
         .filter(conditions_dict={'tweets_count2': ['>= {}'.format(200), '<= {}'.format(300)]})
     dataset.join(dataset2, 'tweep', 'tweeter', 'user', join_type)

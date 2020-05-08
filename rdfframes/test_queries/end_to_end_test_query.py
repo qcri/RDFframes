@@ -1,6 +1,6 @@
 from rdfframes.client.http_client import HttpClientDataFormat, HttpClient
 from rdfframes.knowledge_graph import KnowledgeGraph
-from rdfframes. dataset.rdfpredicate import RDFPredicate, PredicateDirection
+from rdfframes. dataset.rdfpredicate import  PredicateDirection
 
 
 def test_twitter_query():
@@ -33,18 +33,18 @@ def test_twitter_query():
 
     dataset = graph.entities(class_name='sioct:microblogPost',
                              entities_col_name='tweet')
-    ds = dataset.expand(src_col_name='tweet', predicate_list=[RDFPredicate('sioc:has_creater', 'tweep')])\
+    ds = dataset.expand(src_col_name='tweet', predicate_list=[('sioc:has_creater', 'tweep')])\
         .group_by(['tweep'])\
         .count('tweet', 'tweets_count')\
         .filter({'tweets_count': ['>= {}'.format(200), '<= {}'.format(300)]})
 
-    ds = ds.expand('tweep', [RDFPredicate('sioc:has_creater', 'tweet', directionality=PredicateDirection.INCOMING)]).\
+    ds = ds.expand('tweep', [('sioc:has_creater', 'tweet', False, PredicateDirection.INCOMING)]).\
         expand('tweet', [
-        RDFPredicate('sioc:content', 'text', optional=False),
-        RDFPredicate('dcterms:created', 'date', optional=True),
-        RDFPredicate('to:hasmedia', 'multimedia', optional=True),
-        RDFPredicate('to:hashashtag', 'hashtag', optional=True),
-        RDFPredicate('sioc:mentions', 'users_mentioned', optional=True)
+        ('sioc:content', 'text', False),
+        ('dcterms:created', 'date', True),
+        ('to:hasmedia', 'multimedia', True),
+        ('to:hashashtag', 'hashtag', True),
+        ('sioc:mentions', 'users_mentioned', True)
     ])
 
     ds = ds.select_cols(['tweet', 'tweep', 'text', 'date', 'multimedia', 'hashtag', 'users_mentioned', 'tweets_count'])

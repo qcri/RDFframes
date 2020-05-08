@@ -1,5 +1,4 @@
 from rdfframes.knowledge_graph import KnowledgeGraph
-from rdfframes.dataset.rdfpredicate import RDFPredicate
 
 
 def test_simple_query():
@@ -19,8 +18,8 @@ def test_simple_query():
                              new_dataset_name='tweets',
                              entities_col_name='tweet')
     dataset = dataset.expand(src_col_name='tweet', predicate_list=[
-        RDFPredicate('sioc:has_creater', 'tweep', False),
-        RDFPredicate('sioc:content', 'text', False)
+        ('sioc:has_creater', 'tweep', False),
+        ('sioc:content', 'text', False)
     ])
     dataset = dataset.group_by(['tweep']).count(src_col_name='tweet', new_col_name='tweet_count', unique=True)
     sparql_query = dataset.to_sparql()
@@ -31,8 +30,8 @@ def test_simple_query():
                              new_dataset_name='tweets',
                              entities_col_name='tweet')
     dataset = dataset.expand(src_col_name='tweet', predicate_list=[
-        RDFPredicate('sioc:has_creater', 'tweep', False),
-        RDFPredicate('sioc:content', 'text', False)
+        ('sioc:has_creater', 'tweep', False),
+        ('sioc:content', 'text', False)
     ])
     dataset = dataset.group_by(['tweep']).count('tweet')
     sparql_query = dataset.to_sparql()
@@ -42,8 +41,8 @@ def test_simple_query():
                              new_dataset_name='tweets',
                              entities_col_name='tweet')
     dataset = dataset.expand(src_col_name='tweet', predicate_list=[
-        RDFPredicate('sioc:has_creater', 'tweep', False),
-        RDFPredicate('sioc:content', 'text', False)
+        ('sioc:has_creater', 'tweep', False),
+        ('sioc:content', 'text', False)
     ])
     dataset = dataset.count(unique=True)
     sparql_query = dataset.to_sparql()
@@ -54,10 +53,10 @@ def test_simple_query():
                              new_dataset_name='tweets',
                              entities_col_name='tweet')
     dataset = dataset.expand(src_col_name='tweet', predicate_list=[
-        RDFPredicate('sioc:has_creater', 'tweep', False)
+        ('sioc:has_creater', 'tweep', False)
     ])
     dataset = dataset.group_by(['tweep']).count(src_col_name='tweet', new_col_name='tweet_count', unique=True)
-    dataset = dataset.expand(src_col_name='tweep', predicate_list=[RDFPredicate('sioc:content', 'text', False)])
+    dataset = dataset.expand(src_col_name='tweep', predicate_list=[('sioc:content', 'text', False)])
     sparql_query = dataset.to_sparql()
     print("sparql_query that returns the tweep, tweet_count, text of each tweet =\n{}\n".format(sparql_query))
     # TODO: make sure this actually returns the expected result

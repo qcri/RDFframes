@@ -1,3 +1,3 @@
 from rdfframes.dataset.expandable_dataset import ExpandableDataset
-from rdfframes.dataset.rdfpredicate import RDFPredicate, PredicateDirection
+from rdfframes.dataset.rdfpredicate import PredicateDirection
 from rdfframes.dataset.grouped_dataset import GroupedDataset

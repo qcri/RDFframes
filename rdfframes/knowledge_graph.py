@@ -1,5 +1,5 @@
 from rdfframes.dataset.expandable_dataset import ExpandableDataset
-from rdfframes.dataset.rdfpredicate import RDFPredicate, PredicateDirection
+from rdfframes.dataset.rdfpredicate import PredicateDirection
 
 
 __author__ = """
@@ -147,11 +147,11 @@ class KnowledgeGraph:
         :rtype: Dataset
         """
         #return ExpandableDataset(self, new_dataset_name, class_name, "class") \
-        #           .expand('class', [RDFPredicate('rdf:type', entities_col_name, PredicateDirection.INCOMING)])
+        #           .expand('class', [('rdf:type', entities_col_name, PredicateDirection.INCOMING)])
         #            .filter(conditions_dict={'class': ['= {}'.format(class_name)]})
         return ExpandableDataset(self, new_dataset_name, class_name, class_name) \
                     .expand(class_name, [
-            RDFPredicate('rdf:type', entities_col_name, False, PredicateDirection.INCOMING)])
+            ('rdf:type', entities_col_name, False, PredicateDirection.INCOMING)])
 
     def features(self, class_name, new_dataset_name='dataset', features_col_name='feature_uri'):
         """
@@ -173,8 +173,8 @@ class KnowledgeGraph:
         :rtype: Dataset
         """
         return ExpandableDataset(self, new_dataset_name, class_name, class_name)\
-            .expand(class_name, [RDFPredicate('rdf:type', "entity", False, PredicateDirection.INCOMING)])\
-            .expand("entity", [RDFPredicate(features_col_name, "feature_value", False, PredicateDirection.OUTGOING)])
+            .expand(class_name, [('rdf:type', "entity", False, PredicateDirection.INCOMING)])\
+            .expand("entity", [(features_col_name, "feature_value", False, PredicateDirection.OUTGOING)])
 
     def entities_and_features(self, class_name, features, new_dataset_name='dataset', entities_col_name='entity'):
         """
@@ -202,10 +202,10 @@ class KnowledgeGraph:
         :rtype: Dataset
         """
         ds = ExpandableDataset(self, new_dataset_name, class_name, class_name)\
-            .expand(class_name, [RDFPredicate('rdf:type', entities_col_name, False, PredicateDirection.INCOMING)])
+            .expand(class_name, [('rdf:type', entities_col_name, False, PredicateDirection.INCOMING)])
         predicate_list = []
         for (pred_uri, col_name) in features:
-            predicate_list.append(RDFPredicate(pred_uri, col_name, False, PredicateDirection.OUTGOING))
+            predicate_list.append((pred_uri, col_name, False, PredicateDirection.OUTGOING))
         ds.expand(entities_col_name, predicate_list)
         return ds
 
@@ -229,7 +229,7 @@ class KnowledgeGraph:
         :rtype: Dataset 
         """
         return ExpandableDataset(self, new_dataset_name, "instance", "instance")\
-            .expand("instance", [RDFPredicate('rdf:type', classes_col_name, False, PredicateDirection.OUTGOING)])\
+            .expand("instance", [('rdf:type', classes_col_name, False, PredicateDirection.OUTGOING)])\
             .group_by([classes_col_name])\
             .count('instance', frequency_col_name)
 
@@ -257,8 +257,8 @@ class KnowledgeGraph:
         :rtype: Dataset
         """
         return ExpandableDataset(self, new_dataset_name, class_name, class_name)\
-            .expand(class_name, [RDFPredicate('rdf:type', 'instance', False, PredicateDirection.INCOMING)])\
-            .expand('instance', [RDFPredicate(features_col_name, 'feature_value', False, PredicateDirection.OUTGOING)])\
+            .expand(class_name, [('rdf:type', 'instance', False, PredicateDirection.INCOMING)])\
+            .expand('instance', [(features_col_name, 'feature_value', False, PredicateDirection.OUTGOING)])\
             .group_by([features_col_name]).\
             count('feature_value', frequency_col_name, unique=True)
 
@@ -283,7 +283,7 @@ class KnowledgeGraph:
         :rtype: Dataset
         """
         return ExpandableDataset(self, new_dataset_name, class_name, class_name)\
-            .expand(class_name, [RDFPredicate('rdf:type', 'instance', False, PredicateDirection.INCOMING)])\
+            .expand(class_name, [('rdf:type', 'instance', False, PredicateDirection.INCOMING)])\
             .count('instance', num_entities_col_name, unique=True)
 
     def feature_domain_range(self, feature, domain_col_name="domain", range_col_name="range", new_dataset_name='dataset'):
@@ -308,7 +308,7 @@ class KnowledgeGraph:
         :rtype: Dataset
         """
         return ExpandableDataset(self, new_dataset_name, domain_col_name, domain_col_name) \
-            .expand(domain_col_name, [RDFPredicate(feature, range_col_name, False, PredicateDirection.OUTGOING)])
+            .expand(domain_col_name, [(feature, range_col_name, False, PredicateDirection.OUTGOING)])
 
     def dataset_with_entities(self, entities, new_dataset_name='dataset', entities_col_name='entities'):
         """
@@ -343,6 +343,6 @@ class KnowledgeGraph:
         :rtype: tuple of (string, list of strings)
         """
         return ExpandableDataset(self, new_dataset_name, entity, 'instance')\
-            .expand('instance', [RDFPredicate('rdf:type', class_col_name, False, PredicateDirection.OUTGOING)])\
-            .expand('instance', [RDFPredicate(feature_col_name, "feature_value", False, PredicateDirection.OUTGOING)])
+            .expand('instance', [('rdf:type', class_col_name, False, PredicateDirection.OUTGOING)])\
+            .expand('instance', [(feature_col_name, "feature_value", False, PredicateDirection.OUTGOING)])
 

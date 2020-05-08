@@ -1,7 +1,6 @@
 import time
 
 from rdfframes.knowledge_graph import KnowledgeGraph
-from rdfframes.dataset.rdfpredicate import RDFPredicate
 from rdfframes.utils.constants import JoinType
 from rdfframes.client.http_client import HttpClient, HttpClientDataFormat
 
@@ -64,8 +63,8 @@ def test_expand_query():
                              new_dataset_name='tweets',
                              entities_col_name='tweet')
     dataset = dataset.expand(src_col_name='tweet', predicate_list=[
-        RDFPredicate('sioc:has_creater','tweep',False),
-        RDFPredicate('sioc:content','text',True)
+        ('sioc:has_creater','tweep',False),
+        ('sioc:content','text',True)
     ])
     sparql_query = dataset.to_sparql()
     print("sparql_query 1 =\n{}\n".format(sparql_query))
@@ -89,15 +88,15 @@ def test_join_query():
                              new_dataset_name='dataset1',
                              entities_col_name='tweet')
     dataset = dataset.expand(src_col_name='tweet', predicate_list=[
-        RDFPredicate('sioc:has_creater', 'tweep', False),
-        RDFPredicate('sioc:content', 'text', False)
+        ('sioc:has_creater', 'tweep', False),
+        ('sioc:content', 'text', False)
     ])
 
     dataset2 = graph.entities(class_name='sioc:UserAccount',
                              new_dataset_name='dataset2',
                              entities_col_name='tweep')
     dataset2 = dataset2.expand(src_col_name='tweep', predicate_list=[
-        RDFPredicate('sioc:has_name', 'name', False)
+        ('sioc:has_name', 'name', False)
     ])
 
     # TODO: put the whole first dataset in one optional block. now, its in multiple optional blocks
@@ -125,8 +124,8 @@ def test_select_query():
                              new_dataset_name='tweets',
                              entities_col_name='tweet')
     dataset = dataset.expand(src_col_name='tweet', predicate_list=[
-        RDFPredicate('sioc:has_creater', 'tweep',False),
-        RDFPredicate('sioc:content', 'text',True)
+        ('sioc:has_creater', 'tweep',False),
+        ('sioc:content', 'text',True)
     ])
     dataset.select_cols(['text', 'tweet'])
     sparql_query = dataset.to_sparql()
@@ -151,8 +150,8 @@ def test_filter_query():
                              new_dataset_name='tweets',
                              entities_col_name='tweet')
     dataset = dataset.expand(src_col_name='tweet', predicate_list=[
-        RDFPredicate('sioc:has_creater', 'tweep', False),
-        RDFPredicate('sioc:content', 'text', True)])\
+        ('sioc:has_creater', 'tweep', False),
+        ('sioc:content', 'text', True)])\
         .filter({'text': [' >= \"aa\"']})\
         .select_cols(['tweet', 'text'])
     # TODO: make sure the order of filter when called before a join or optional is done before the join or the optional
@@ -179,8 +178,8 @@ def test_sort_limit_offset_query():
                              new_dataset_name='tweets',
                              entities_col_name='tweet')
     dataset = dataset.expand(src_col_name='tweet', predicate_list=[
-        RDFPredicate('sioc:has_creater', 'tweep',True),
-        RDFPredicate('sioc:content', 'text', False)
+        ('sioc:has_creater', 'tweep',True),
+        ('sioc:content', 'text', False)
     ])
     dataset.sort({'tweep': 'ASC'}).limit(10).offset(5)
     # TODO: do we care about limit after or before an offset? Do we allow one limit in each query?
@@ -207,8 +206,8 @@ def test_groupby_query():
                             # class_col_name='tweet_class',
                              entities_col_name='tweet')
     dataset = dataset.expand(src_col_name='tweet', predicate_list=[
-        RDFPredicate('sioc:has_creater', 'tweep',True),
-        RDFPredicate('sioc:content', 'text',False)
+        ('sioc:has_creater', 'tweep',True),
+        ('sioc:content', 'text',False)
     ])
     dataset = dataset.group_by(['tweep'])
     sparql_query = dataset.to_sparql()
@@ -233,8 +232,8 @@ def test_groupby_aggregation_query():
                              new_dataset_name='tweets',
                              entities_col_name='tweet')
     dataset = dataset.expand(src_col_name='tweet', predicate_list=[
-        RDFPredicate('sioc:has_creater', 'tweep', False),
-        RDFPredicate('sioc:content', 'text', False)
+        ('sioc:has_creater', 'tweep', False),
+        ('sioc:content', 'text', False)
     ])
     grouped_dataset = dataset.group_by(['tweep'])\
         .count('tweet', 'tweets_count')\

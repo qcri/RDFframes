@@ -1,5 +1,4 @@
 from rdfframes.knowledge_graph import KnowledgeGraph
-from rdfframes.dataset.rdfpredicate import RDFPredicate
 import time
 
 
@@ -25,16 +24,16 @@ def test_users_tweets_count():
                              entities_col_name='tweet')
 
     ds = dataset.expand(src_col_name='tweet', predicate_list=[
-        RDFPredicate('sioc:has_creater', 'tweep'),
-        RDFPredicate('sioc:content', 'text'),
-        RDFPredicate('dcterms:created', 'date'),
-        RDFPredicate('to:hasmedia', 'multimedia'),
-        RDFPredicate('to:hashashtag', 'hashtag'),
-        RDFPredicate('sioc:mentions', 'users_mentioned')
+        ('sioc:has_creater', 'tweep'),
+        ('sioc:content', 'text'),
+        ('dcterms:created', 'date'),
+        ('to:hasmedia', 'multimedia'),
+        ('to:hashashtag', 'hashtag'),
+        ('sioc:mentions', 'users_mentioned')
     ])
 
     ds = ds.expand(src_col_name='tweep', predicate_list=[
-        RDFPredicate('sioc:name', 'tweep_name')
+        ('sioc:name', 'tweep_name')
     ])
 
     gds = ds.group_by(groupby_cols_list=['tweep'])
