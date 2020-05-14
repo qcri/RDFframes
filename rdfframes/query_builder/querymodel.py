@@ -29,6 +29,8 @@ class QueryModel(object):
 
         self.variables = set()      # a set of all variables in the query.
         self.from_clause = set()       # a list of graph URIs
+        self.graph_clause = {}     # a dict of graph: subquery
+        self.optional_graph_clause = {}
         self.filter_clause = {}     # a dictionary of column name as key and associated conditions as a value
         self.groupBy_columns = OrderedSet() # a set of columns for the groupby modifier, it's a subset of self.variables
         self.aggregate_clause = {}  # a dictionary of new_aggregation_col_name: (aggregate function, src_column_name)
@@ -68,6 +70,16 @@ class QueryModel(object):
         """
         if not self.is_subquery():
             self.from_clause = self.from_clause.union(graphs) #extend
+
+    def add_graph_clause(self, query_model):
+        graph = next(iter(query_model.from_clause))
+        QueryModel.clean_inner_qm(query_model)
+        self.graph_clause[graph] = query_model
+
+    def add_optional_graph_clause(self, query_model):
+        graph = next(iter(query_model.from_clause))
+        QueryModel.clean_inner_qm(query_model)
+        self.optional_graph_clause[graph] = query_model
 
     def add_optional_triples(self, triples, graph=None):
         """

@@ -124,6 +124,31 @@ class SPARQLBuilder(object):
             else:
                 return ""
 
+        def add_graph_clause(self):
+            if len(self.query_model.graph_clause) > 0:
+                graph_string = ""
+                query_builder = SPARQLBuilder()
+                for graph_uri, graph_query in self.query_model.graph_clause.items():
+                    query_builder.query_model = graph_query
+                    query_string = query_builder.__add_patterns()
+                    graph_string +=  "\tGRAPH <{}>".format(graph_uri) + ' { '+ '\t'.join(('\n'+query_string.lstrip()).splitlines(True)) + "\n\t" + "\t}"
+                return graph_string
+            else:
+                return ""
+
+        def add_optional_graph_clause(self):
+            if len(self.query_model.optional_graph_clause) > 0:
+                graph_string = ""
+                query_builder = SPARQLBuilder()
+                for graph_uri, graph_query in self.query_model.optional_graph_clause.items():
+                    query_builder.query_model = graph_query
+                    query_string = query_builder.__add_patterns()
+                    graph_string +=  "\tOPTIONAL { " + "GRAPH <{}>".format(graph_uri) + ' { '+ '\t'.join(('\n'+query_string.lstrip()).splitlines(True)) + "\n\t" + "\t}}"
+                return graph_string
+            else:
+                return ""
+
+
         def __add_patterns(self):
             where_string = ""
             for triple in self.query_model.triples:
@@ -154,6 +179,12 @@ class SPARQLBuilder(object):
                             graph_triples_string += '\t{} {} {}'.format(triple0, triple1, triple2) + " .\n"
                         graph_triples_string += " }\n"
                         where_string += "\n" + '\t'.join(('\n' + graph_triples_string.lstrip()).splitlines(True))
+            if len(self.query_model.graph_clause) > 0:
+                graph_string = self.add_graph_clause()
+                where_string += '\t'.join(('\n' + graph_string.lstrip()).splitlines(True))
+            if len(self.query_model.optional_graph_clause) > 0:
+                graph_string = self.add_optional_graph_clause()
+                where_string += '\t'.join(('\n' + graph_string.lstrip()).splitlines(True))
             if len(self.query_model.filter_clause) > 0:
                 filter_string = self.add_filter_clause()
                 where_string += '\t'.join(('\n' + filter_string.lstrip()).splitlines(True))
@@ -183,7 +214,8 @@ class SPARQLBuilder(object):
             if len(self.query_model.triples) > 0 or len(self.query_model.subqueries) > 0 or \
                     len(self.query_model.unions) >0 or len(self.query_model.optionals) > 0 or \
                     len(self.query_model.filter_clause) > 0 or len(self.query_model.optional_subqueries) > 0 or \
-                    len(self.query_model.graph_triples) > 0:
+                    len(self.query_model.graph_triples) > 0 or len(self.query_model.graph_clause) > 0 or \
+                    len(self.query_model.optional_graph_clause) > 0:
                 where_string = self.__add_patterns()
                 self.query_string += "WHERE {" + where_string + "\n\t}"
             else:

@@ -1,6 +1,7 @@
 """Represents a flat dataset
 """
 import copy
+import warnings
 
 from rdfframes.query_buffer.query_operators.expandable.seed_operator import SeedOperator
 from rdfframes.query_buffer.query_operators.shared.aggregation_operator import AggregationOperator
@@ -110,6 +111,13 @@ class ExpandableDataset(Dataset):
                 join_col_name2 = join_col_name1
         elif join_col_name2 not in dataset2.columns:
             raise Exception("Join key {} doesn't exist in dataset 2".format(join_col_name2))
+
+        warn_cols = []
+        for col in dataset2.columns:
+            if col != join_col_name2 and col in self.columns:
+                warn_cols.append(col)
+        if len(warn_cols) > 0:
+            warnings.warn("columns {} are common between dataset 1 and 2. All these columns will be used as join columns".format(warn_cols))
 
         # find the new column name
         if new_column_name is None:
