@@ -18,7 +18,7 @@ def movies_with_american_actors():
     dataset = graph.feature_domain_range('dbpp:starring', 'film', 'actor')\
         .expand('actor', [('dbpp:birthPlace', 'actor_country'), ('rdfs:label', 'actor_name')])\
         .expand('film', [('rdfs:label', 'film_name'), ('dcterms:subject', 'subject'),
-                         ('dbpp:country', 'film_country'), ('dbpo:genre', 'genre', optional=True)])\
+                         ('dbpp:country', 'film_country'), ('dbpo:genre', 'genre', True)])\
         .cache()
     # 26928 Rows. -- 4273 msec.
     american_actors = dataset.filter({'actor_country': ['regex(str(?actor_country), "USA")']})

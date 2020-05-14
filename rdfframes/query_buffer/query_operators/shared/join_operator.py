@@ -102,73 +102,6 @@ class JoinOperator(QueryQueueOperator):
                 else:  # ds2 is grouped
                     query_model = self.__join_grouped_grouped(query_model1, query_model2)
             return query_model
-            # move the triples inside GRAPH keyword for the second dataset
-            """
-            for graph in query_model2.from_clause:
-                query_model2.graph_triples[graph] = copy.copy(query_model2.triples)
-                query_model2.rem_all_triples()
-                for optional_block in query_model2.optionals:
-                    optional_block.graph_triples[graph] = copy.copy(optional_block.triples)
-                    optional_block.rem_all_triples()
-                for query in query_model2.subqueries:
-                    query.graph_triples[graph] = copy.copy(query.triples)
-                    query.rem_all_triples()
-                for query in query_model2.optional_subqueries:
-                    query.graph_triples[graph] = copy.copy(query.triples)
-                    query.rem_all_triples()
-                for query in query_model2.unions:
-                    query.graph_triples[graph] = copy.copy(query.triples)
-                    query.rem_all_triples()
-                for column, conditions in query_model2.filter_clause.items():
-                    for condition in conditions:
-                        query_model1.add_filter_condition(column, condition)
-
-            # move the triples inside GRAPH keyword for the second dataset
-            for graph in query_model1.from_clause:
-                query_model1.graph_triples[graph] = copy.copy(query_model1.triples)
-                query_model1.rem_all_triples()
-                for optional_block in query_model1.optionals:
-                    optional_block.graph_triples[graph] = copy.copy(optional_block.triples)
-                    optional_block.rem_all_triples()
-                for query in query_model1.subqueries:
-                    query.graph_triples[graph] = copy.copy(query.triples)
-                    query.rem_all_triples()
-                for query in query_model1.optional_subqueries:
-                    query.graph_triples[graph] = copy.copy(query.triples)
-                    query.rem_all_triples()
-                for query in query_model1.unions:
-                    query.graph_triples[graph] = copy.copy(query.triples)
-                    query.rem_all_triples()
-
-        # remove the from clause
-        query_model1.from_clause.clear()
-        # union the prefixes
-        query_model1.add_prefixes(query_model2.prefixes)
-
-        query_model1.set_offset(min(query_model1.offset, query_model2.offset))
-        query_model1.set_limit(max(query_model1.limit, query_model2.limit))
-        query_model1.add_order_columns(query_model2.order_clause)
-        # TODO: WHY do this here?
-        # union the select columns
-        if len(query_model1.select_columns) > 0 and len(query_model1.select_columns) > 0:
-            query_model1.select_columns = query_model1.select_columns.union(query_model2.select_columns)
-        elif len(query_model1.select_columns) > 0:
-            query_model1.select_columns = query_model1.select_columns.union(query_model2.variables)
-        elif len(query_model2.select_columns) > 0:
-            query_model1.select_columns = query_model1.variables.union(query_model2.select_columns)
-        query_model1.variables = query_model1.variables.union(query_model2.variables)
-        if self.dataset.type() == "ExpandableDataset":
-            if self.second_dataset.type() == "ExpandableDataset":
-                query_model = self.__join_expandable_expandable(query_model1, query_model2)
-            else:  # ds2 is grouped while ds1 is expandable
-                query_model = self.__join_expandable_grouped(query_model1, query_model2, expandable_order=1)
-        else:  # ds1 is grouped
-            if self.second_dataset.type() == "ExpandableDataset":  # ds2 is expandable while ds1 is grouped
-                query_model = self.__join_expandable_grouped(query_model1, query_model2, expandable_order=2)
-            else:  # ds2 is grouped
-                query_model = self.__join_grouped_grouped(query_model1, query_model2)
-        return query_model
-        """
         else:
             # union the prefixes
             query_model1.add_prefixes(query_model2.prefixes)
@@ -215,13 +148,13 @@ class JoinOperator(QueryQueueOperator):
             return query_model
         else:  # outer join
             # TODO: fix this
-            #return JoinOperator._outer_join(query_model1, query_model2)
-            raise Exception("Outer Join Not Implemented Yet!")
+            return JoinOperator._outer_join(query_model1, query_model2)
+            #raise Exception("Outer Join Not Implemented Yet!")
 
     def __join_expandable_grouped_2_graphs(self, query_model, query_model1, query_model2, expandable_order=1):
         if self.join_type == JoinType.OuterJoin:  # outer join
-            raise Exception("Outer Join Not Implemented Yet!")
-            #return JoinOperator._outer_join(query_model1, query_model2)
+            #raise Exception("Outer Join Not Implemented Yet!")
+            return JoinOperator._outer_join(query_model1, query_model2)
         elif self.join_type == JoinType.InnerJoin:
             # add query model 2 as a subquery
             if expandable_order == 1:
@@ -520,6 +453,10 @@ class JoinOperator(QueryQueueOperator):
         joined_query_model.order_clause = copy.copy(query_model1.order_clause)
         QueryModel.clean_inner_qm(query_model1)
         QueryModel.clean_inner_qm(query_model2)
+        query_model1_copy = copy.deepcopy(query_model1)
+        query_model2_copy = copy.deepcopy(query_model2)
+        query_model1.add_optional_subquery(query_model2_copy)
+        query_model2.add_optional_subquery(query_model1_copy)
         joined_query_model.add_unions(query_model1)
         joined_query_model.add_unions(query_model2)
         return joined_query_model
