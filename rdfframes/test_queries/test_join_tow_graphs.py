@@ -1,3 +1,7 @@
+#import sys
+#sys.path.insert(1, '/home/amohamed/RDFframes/')
+from time import time
+
 from rdfframes.knowledge_graph import KnowledgeGraph
 from rdfframes.client.http_client import HttpClientDataFormat, HttpClient
 from rdfframes.client.sparql_endpoint_client import SPARQLEndpointClient
@@ -56,11 +60,11 @@ def join(join_type):
     actors = dbpedia_actors.join(yago_actors, 'name', join_type=join_type)
     print(actors.to_sparql())
 
-    #df = actors.execute(client, return_format=output_format)
-    #print(df.shape)
+    df = actors.execute(client, return_format=output_format)
+    print(df.shape)
 
 
-def join_grouped_expandable(join_type):
+def join_grouped(join_type):
     dbpedia_actors = graph1.feature_domain_range('dbpp:starring', 'film1', 'actor1') \
         .expand('actor1', [('dbpp:birthPlace', 'actor_country1'), ('dbpp:name', 'name')]) \
         .filter({'actor_country1': ['regex(str(?actor_country1), "USA")']}).group_by(['name']).count('film1')
@@ -75,12 +79,18 @@ def join_grouped_expandable(join_type):
     #df = actors.execute(client, return_format=output_format)
     #print(df.shape)
 
+start = time()
+join(JoinType.OuterJoin)
+duration = time()-start
+print("Duration of join 2 graphs outer join datasets = {} sec".format(duration))
 
-join_grouped_expandable(JoinType.OuterJoin)
+
+
 #join_warning(JoinType.InnerJoin)
 
 """
 Inner Join
+RDFFRames
 PREFIX  dbpp: <http://dbpedia.org/property/>
 PREFIX  dbpo: <http://dbpedia.org/ontology/>
 PREFIX  rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -90,21 +100,22 @@ PREFIX  dcterms: <http://purl.org/dc/terms/>
 PREFIX  rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX  dbpr: <http://dbpedia.org/resource/>
 
-SELECT *
+SELECT  *
 WHERE
   { GRAPH <http://dbpedia.org>
       { ?film1   dbpp:starring    ?actor1 .
         ?actor1  dbpp:birthPlace  ?actor_country1 ;
-                dbpp:name        ?name
+                 dbpp:name        ?name
         FILTER regex(str(?actor_country1), "USA")
       }
     GRAPH <http://yago-knowledge.org/>
       { ?actor2  yago:actedIn      ?film2 ;
-                yago:isCitizenOf  ?actor_country2 ;
-                yagoinfo:name     ?name
+                 yago:isCitizenOf  ?actor_country2 ;
+                 yagoinfo:name     ?name
         FILTER ( ?actor_country2 = yago:United_States )
       }
   }
+
 # 37569 Rows. -- 17215 msec.
 Unique names = 454 Rows. -- 661 msec.
 """

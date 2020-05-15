@@ -336,7 +336,7 @@ class SPARQLBuilder(object):
                                     cond_list += cond_string
                             else:
                                 cond_string = " ("
-                                cond_string += "year(xsd: dateTime(?%s)) %s" % (col_name, filter_con[i])
+                                cond_string += "year(xsd:dateTime(?%s)) %s" % (col_name, filter_con[i])
                                 cond_string += " )"
                                 if cond_list != "":
                                     cond_list += and_clause

@@ -150,7 +150,7 @@ class JoinOperator(QueryQueueOperator):
             return query_model
         else:  # outer join
             # TODO: fix this
-            return JoinOperator._outer_join(query_model1, query_model2)
+            return JoinOperator._outer_join_two_graphs(query_model, query_model1, query_model2)
             #raise Exception("Outer Join Not Implemented Yet!")
 
     def __join_expandable_grouped_2_graphs(self, query_model, query_model1, query_model2, expandable_order=1):
@@ -501,6 +501,51 @@ class JoinOperator(QueryQueueOperator):
             query_model2 = new_query_model2
         else:
             query_model2.add_optional_subquery(query_model1_copy)
+        joined_query_model.add_unions(query_model1)
+        joined_query_model.add_unions(query_model2)
+        return joined_query_model
+
+
+
+    @staticmethod
+    def _outer_join_two_graphs(query_model, query_model1, query_model2):
+        joined_query_model = query_model
+        query_model1_copy = copy.deepcopy(query_model1)
+        query_model2_copy = copy.deepcopy(query_model2)
+        #if len(query_model1.groupBy_columns) > 0:
+        if True:
+            new_query_model1 = QueryModel()
+            # TODO: Copy the from clause, prefixes, to the new_query_model2
+            new_query_model1.prefixes = copy.copy(query_model1.prefixes)  # all prefixes are already in query_model1
+            new_query_model1.variables = copy.copy(query_model1.variables)  # all prefixes are already in query_model1
+            new_query_model1.from_clause = copy.copy(query_model1.from_clause)
+            new_query_model1.select_columns = copy.copy(query_model1.select_columns)
+            new_query_model1.offset = query_model1.offset
+            new_query_model1.limit = query_model1.limit
+            new_query_model1.order_clause = copy.copy(query_model1.order_clause)
+            new_query_model1.add_graph_clause(query_model1)
+            QueryModel.clean_inner_qm(query_model1)
+            query_model1 = new_query_model1
+        else:
+            query_model1.add_optional_graph_cluase(query_model2_copy)
+        #if len(query_model2.groupBy_columns) > 0:
+        if True:
+            new_query_model2 = QueryModel()
+            # TODO: Copy the from clause, prefixes, to the new_query_model2
+            new_query_model2.prefixes = copy.copy(query_model2.prefixes)  # all prefixes are already in query_model1
+            new_query_model2.variables = copy.copy(query_model2.variables)  # all prefixes are already in query_model1
+            new_query_model2.from_clause = copy.copy(query_model2.from_clause)
+            new_query_model2.select_columns = copy.copy(query_model2.select_columns)
+            new_query_model2.offset = query_model2.offset
+            new_query_model2.limit = query_model2.limit
+            new_query_model2.order_clause = copy.copy(query_model2.order_clause)
+            new_query_model2.add_graph_clause(query_model2)
+            QueryModel.clean_inner_qm(query_model2)
+            query_model2 = new_query_model2
+        else:
+            query_model2.add_optional_graph_cluase(query_model1_copy)
+        new_query_model1.add_optional_graph_clause(query_model2_copy)
+        new_query_model2.add_optional_graph_clause(query_model1_copy)
         joined_query_model.add_unions(query_model1)
         joined_query_model.add_unions(query_model2)
         return joined_query_model
