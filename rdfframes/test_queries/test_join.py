@@ -64,10 +64,7 @@ expand_groupby_join(JoinType.RightOuterJoin) ## change the type here.
 duration = time()-start
 print("Duration ofRightOuter Join on expandable grouped datasets = {} sec".format(duration))
 
-start = time()
-expand_groupby_join(JoinType.OuterJoin) ## change the type here.
-duration = time()-start
-print("Duration of Outer join on expandable grouped datasets = {} sec".format(duration))
+
 
 
 
@@ -96,3 +93,7 @@ duration = time()-start
 print("Duration of Outer join on expandable datasets = {} sec".format(duration))
 
 
+start = time()
+expand_groupby_join(JoinType.OuterJoin) ## change the type here.
+duration = time()-start
+print("Duration of Outer join on expandable grouped datasets = {} sec".format(duration))

@@ -100,7 +100,7 @@ class JoinOperator(QueryQueueOperator):
                 if self.second_dataset.type() == "ExpandableDataset":  # ds2 is expandable while ds1 is grouped
                     query_model = self.__join_expandable_grouped_2_graphs(query_model, query_model1, query_model2, expandable_order=2)
                 else:  # ds2 is grouped
-                    query_model = self.__join_grouped_grouped(query_model1, query_model2)
+                    query_model = self.__join_grouped_grouped_2_graphs(query_model, query_model1, query_model2)
             return query_model
         else:
             # union the prefixes
@@ -242,9 +242,10 @@ class JoinOperator(QueryQueueOperator):
         new_query_model1.offset = query_model1.offset
         new_query_model1.limit = query_model1.limit
         new_query_model1.order_clause = copy.copy(query_model1.order_clause)
-        QueryModel.clean_inner_qm(query_model1)
+        #QueryModel.clean_inner_qm(query_model1)
         # make the subquery optional
-        new_query_model1.add_subquery(query_model1)
+        query_model1_copy = copy.deepcopy(query_model1)
+        new_query_model1.add_graph_clause(query_model1)
 
         new_query_model2 = QueryModel()
         # TODO: Copy the from clause, prefixes, to the new_query_model2
@@ -255,23 +256,32 @@ class JoinOperator(QueryQueueOperator):
         new_query_model2.offset = query_model2.offset
         new_query_model2.limit = query_model2.limit
         new_query_model2.order_clause = copy.copy(query_model2.order_clause)
-        QueryModel.clean_inner_qm(query_model2)
+        #QueryModel.clean_inner_qm(query_model2)
         # make the subquery optional
-        new_query_model2.add_subquery(query_model2)
+        query_model2_copy = copy.deepcopy(query_model2)
+        new_query_model2.add_graph_clause(query_model2)
         # add subqueries
         if self.join_type == JoinType.InnerJoin:
-            query_model.add_graph_clause(new_query_model1)
-            query_model.add_graph_clause(new_query_model2)
+            query_model.add_graph_clause(query_model1)
+            query_model.add_graph_clause(query_model2)
         elif self.join_type == JoinType.LeftOuterJoin:
-            query_model.add_graph_clause(new_query_model1)
-            query_model.add_optional_graph_clause(new_query_model2)
+            query_model.add_graph_clause(query_model1)
+            query_model.add_optional_graph_clause(query_model2)
         elif self.join_type == JoinType.RightOuterJoin:
-            query_model.add_optional_graph_clause(new_query_model1)
-            query_model.add_graph_clause(new_query_model2)
+            query_model.add_optional_graph_clause(query_model1)
+            query_model.add_graph_clause(query_model2)
         else:  # outer join
+            # inside query_model, add two queries.
             #query_model.add_unions(query_model1)
             #query_model.add_unions(query_model2)
-            raise Exception("Outer Join Not Implemented Yet!")
+            #raise Exception("Outer Join Not Implemented Yet!")
+            #QueryModel.clean_inner_qm(new_query_model1)
+            #QueryModel.clean_inner_qm(new_query_model2)
+            new_query_model1.add_optional_graph_clause(query_model2_copy)
+            new_query_model2.add_optional_graph_clause(query_model1_copy)
+            query_model.add_unions(new_query_model1)
+            query_model.add_unions(new_query_model2)
+            return query_model
         return query_model
 
     def __join_expandable_expandable(self, query_model1, query_model2):

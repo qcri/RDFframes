@@ -76,7 +76,7 @@ def join_grouped_expandable(join_type):
     #print(df.shape)
 
 
-join_grouped_expandable(JoinType.LeftOuterJoin)
+join_grouped_expandable(JoinType.OuterJoin)
 #join_warning(JoinType.InnerJoin)
 
 """
@@ -203,4 +203,40 @@ WHERE
         }
       }
   }
+"""
+
+
+"""
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX dbpp: <http://dbpedia.org/property/>
+PREFIX dbpr: <http://dbpedia.org/resource/>
+PREFIX dbpo: <http://dbpedia.org/ontology/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX yago: <http://yago-knowledge.org/resource/>
+PREFIX yagoinfo: <http://yago-knowledge.org/resource/infobox/en/>
+SELECT * 
+FROM <http://dbpedia.org>
+WHERE {
+	{
+	SELECT DISTINCT ?name  (COUNT( ?film1) AS ?count) 
+	WHERE {
+		?film1 dbpp:starring ?actor1 .
+		?actor1 dbpp:birthPlace ?actor_country1 .
+		?actor1 dbpp:name ?name .
+		FILTER ( regex(str(?actor_country1), "USA") ) 
+		} GROUP BY ?name 
+	}
+	UNION
+	{
+	SELECT DISTINCT ?name  (COUNT( ?film2) AS ?count) 
+	WHERE {
+		?actor2 yago:actedIn ?film2 .
+		?actor2 yago:isCitizenOf ?actor_country2 .
+		?actor2 yagoinfo:name ?name .
+		FILTER (  (?actor_country2 = yago:United_States ) ) 
+		} GROUP BY ?name 
+	}
+	}
+
 """
