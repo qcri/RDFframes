@@ -90,14 +90,15 @@ class JoinOperator(QueryQueueOperator):
                 query_model.select_columns = query_model1.variables.union(query_model2.select_columns)
             query_model.variables = query_model1.variables.union(query_model2.variables)
 
-            if self.dataset.type() == "ExpandableDataset":
-                if self.second_dataset.type() == "ExpandableDataset":
+            if not self.dataset.is_grouped: #if self.dataset.type() == "ExpandableDataset":
+                if not self.second_dataset.is_grouped: # if self.second_dataset.type() == "ExpandableDataset":
                     query_model = self.__join_expandable_expandable_2_graphs(query_model, query_model1, query_model2)
                 else:  # ds2 is grouped while ds1 is expandable
                     # TODO: fix this and everything after it
                     query_model = self.__join_expandable_grouped_2_graphs(query_model, query_model1, query_model2, expandable_order=1)
+                    self.dataset.is_grouped = True
             else:  # ds1 is grouped
-                if self.second_dataset.type() == "ExpandableDataset":  # ds2 is expandable while ds1 is grouped
+                if not self.second_dataset.is_grouped: #if self.second_dataset.type() == "ExpandableDataset":  # ds2 is expandable while ds1 is grouped
                     query_model = self.__join_expandable_grouped_2_graphs(query_model, query_model1, query_model2, expandable_order=2)
                 else:  # ds2 is grouped
                     query_model = self.__join_grouped_grouped_2_graphs(query_model, query_model1, query_model2)
@@ -118,13 +119,14 @@ class JoinOperator(QueryQueueOperator):
             elif len(query_model2.select_columns) > 0:
                 query_model1.select_columns = query_model1.variables.union(query_model2.select_columns)
             query_model1.variables = query_model1.variables.union(query_model2.variables)
-            if self.dataset.type() == "ExpandableDataset":
-                if self.second_dataset.type() == "ExpandableDataset":
+            if not self.dataset.is_grouped: #if self.dataset.type() == "ExpandableDataset":
+                if not self.second_dataset.is_grouped:  #if self.second_dataset.type() == "ExpandableDataset":
                     query_model = self.__join_expandable_expandable(query_model1, query_model2)
                 else:  # ds2 is grouped while ds1 is expandable
                     query_model = self.__join_expandable_grouped(query_model1, query_model2, expandable_order=1)
+                    self.dataset.is_grouped = True
             else:  # ds1 is grouped
-                if self.second_dataset.type() == "ExpandableDataset":  # ds2 is expandable while ds1 is grouped
+                if not self.second_dataset.is_grouped:  #if self.second_dataset.type() == "ExpandableDataset":  # ds2 is expandable while ds1 is grouped
                     query_model = self.__join_expandable_grouped(query_model1, query_model2, expandable_order=2)
                 else:  # ds2 is grouped
                     query_model = self.__join_grouped_grouped(query_model1, query_model2)
@@ -465,8 +467,40 @@ class JoinOperator(QueryQueueOperator):
         QueryModel.clean_inner_qm(query_model2)
         query_model1_copy = copy.deepcopy(query_model1)
         query_model2_copy = copy.deepcopy(query_model2)
-        query_model1.add_optional_subquery(query_model2_copy)
-        query_model2.add_optional_subquery(query_model1_copy)
+        #if len(query_model1.groupBy_columns) > 0:
+        if True:
+            new_query_model1 = QueryModel()
+            # TODO: Copy the from clause, prefixes, to the new_query_model2
+            new_query_model1.prefixes = copy.copy(query_model1.prefixes)  # all prefixes are already in query_model1
+            new_query_model1.variables = copy.copy(query_model1.variables)  # all prefixes are already in query_model1
+            new_query_model1.from_clause = copy.copy(query_model1.from_clause)
+            new_query_model1.select_columns = copy.copy(query_model1.select_columns)
+            new_query_model1.offset = query_model1.offset
+            new_query_model1.limit = query_model1.limit
+            new_query_model1.order_clause = copy.copy(query_model1.order_clause)
+            new_query_model1.add_subquery(query_model1)
+            QueryModel.clean_inner_qm(query_model1)
+            new_query_model1.add_optional_subquery(query_model2_copy)
+            query_model1 = new_query_model1
+        else:
+            query_model1.add_optional_subquery(query_model2_copy)
+        #if len(query_model2.groupBy_columns) > 0:
+        if True:
+            new_query_model2 = QueryModel()
+            # TODO: Copy the from clause, prefixes, to the new_query_model2
+            new_query_model2.prefixes = copy.copy(query_model2.prefixes)  # all prefixes are already in query_model1
+            new_query_model2.variables = copy.copy(query_model2.variables)  # all prefixes are already in query_model1
+            new_query_model2.from_clause = copy.copy(query_model2.from_clause)
+            new_query_model2.select_columns = copy.copy(query_model2.select_columns)
+            new_query_model2.offset = query_model2.offset
+            new_query_model2.limit = query_model2.limit
+            new_query_model2.order_clause = copy.copy(query_model2.order_clause)
+            new_query_model2.add_subquery(query_model2)
+            QueryModel.clean_inner_qm(query_model2)
+            new_query_model2.add_optional_subquery(query_model1_copy)
+            query_model2 = new_query_model2
+        else:
+            query_model2.add_optional_subquery(query_model1_copy)
         joined_query_model.add_unions(query_model1)
         joined_query_model.add_unions(query_model2)
         return joined_query_model

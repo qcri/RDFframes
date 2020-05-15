@@ -42,6 +42,7 @@ class ExpandableDataset(Dataset):
         self.query_queue.append_node(seed_node)
         self.columns.append(seed_col_name)
         self.agg_columns = []
+        self.is_grouped = False
 
     def expand(self, src_col_name, predicate_list):
         """

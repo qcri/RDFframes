@@ -40,6 +40,7 @@ class Dataset:
         self.columns = []
         self.old_columns = []
         self.cached = False
+        self.is_grouped = False
 
     def expand(self, src_col_name, predicate_list):
         """

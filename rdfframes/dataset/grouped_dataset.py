@@ -40,6 +40,7 @@ class GroupedDataset(Dataset):
         self.grouping_cols = grouping_cols
         self.agg_columns = []
         self.columns = grouping_cols.copy()
+        self.is_grouped = True
 
         # create groupby seed Operator and append it to the query tree
         gbsn = GroupBySeedOperator(self.name, groupby_node)

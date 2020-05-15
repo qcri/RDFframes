@@ -227,7 +227,7 @@ class SPARQLBuilder(object):
 
             :return: The string of the main query with the union queries
             """
-            unionQuery =""
+            unionQuery ="{ "
             if self.query_model.unions is not None:
                 for i in range(0,len(self.query_model.unions)):
                     unionQuery += "{\n"\
@@ -235,7 +235,7 @@ class SPARQLBuilder(object):
                     unionQuery += "}\n"
                     if i < len(self.query_model.unions)-1:
                        unionQuery += "UNION\n"
-            return unionQuery
+            return unionQuery+" }"
 
         def add_order_clause(self):
             """
