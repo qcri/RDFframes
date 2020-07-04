@@ -1,31 +1,33 @@
 """Main class represents a SPARQL query that generates a table-like dataset
 """
 import copy
-import time
-import pandas as pd
+import warnings
 
 from rdfframes.query_buffer.query_operators.shared.limit_operator import LimitOperator
 from rdfframes.query_buffer.query_operators.shared.offset_operator import OffsetOperator
 from rdfframes.query_buffer.query_operators.shared.sort_operator import SortOperator
 from rdfframes.query_buffer.query_operators.shared.select_operator import SelectOperator
+from rdfframes.query_buffer.query_operators.shared.join_operator import JoinOperator
+from rdfframes.query_buffer.query_operators.shared.expansion_operator import ExpansionOperator
 from rdfframes.query_buffer.query_queue import QueryQueue
 from rdfframes.query_builder.queue2querymodel import Queue2QueryModelConverter
 from rdfframes.utils.constants import JoinType
+from rdfframes.dataset.rdfpredicate import PredicateDirection
 from rdfframes.utils.helper_functions import is_uri
+from rdfframes.utils.constants import _TIMEOUT, _MAX_ROWS
 
 
 __author__ = """
 Abdurrahman Ghanem <abghanem@hbku.edu.qa>
-Aisha Mohamed <ahmohamed@qf.org.qa>
-Zoi Kaoudi <zkaoudi@hbku.edu.qa
+Aisha Mohamed <ahmohamed@hbku.edu.qa>
+Zoi Kaoudi <zkaoudi@hbku.edu.qa>
 Ghadeer Abuoda <gabuoda@hbku.edu.qa>
 """
 
 
 class Dataset:
     """
-    The Dataset abstract base class which represents a table filled by entities obtained by following
-    a particular path in the Knowledge Graph
+    The Dataset abstract base class which represents a table filled by data obtained from a Knowledge Graph
     """
 
     def __init__(self, graph, dataset_name):
@@ -38,7 +40,6 @@ class Dataset:
         self.name = dataset_name
         self.query_queue = QueryQueue(self)
         self.columns = []
-        self.old_columns = []
         self.cached = False
         self.is_grouped = False
 
@@ -50,29 +51,101 @@ class Dataset:
         Requires src_col_name in self.columns
         Ensures for each predicate, new_col_name in the new dataset
         :param src_col_name: the starting point
-        :param predicate_list: list of RDFPredicate objects each one containing: (1) predicate URI, (2) new column name,
+        :param predicate_list: list of RDF predicates each one containing: (1) predicate URI, (2) new column name,
          (3) optional flag, and (4) ingoing or outgoing flag
         :return: the same dataset object, but logically a new column is appended.
         """
-        pass
+        if src_col_name not in self.columns:
+            raise Exception("{} doesn't exist in the dataset".format(src_col_name))
+
+        if self.cached:
+            ds = self._cache_dataset()
+            return ds.expand(src_col_name, predicate_list)
+
+        for predicate in predicate_list:
+            if len(predicate) > 3:
+                direction = predicate[3]
+                is_optional = predicate[2]
+            else:
+                direction = PredicateDirection.OUTGOING
+                if len(predicate) > 2:
+                    is_optional = predicate[2]
+                else:
+                    is_optional = False
+            operator = ExpansionOperator(self.name, src_col_name, predicate[0], predicate[1],
+                                         direction, is_optional=is_optional)
+            self.query_queue.append_node(operator)
+            self.add_column(predicate[1])
+            self.add_column(predicate[0])
+        return self
 
     def join(self, dataset2, join_col_name1, join_col_name2=None, new_column_name=None, join_type=JoinType.InnerJoin):
         """
         Join this dataset with datset 2.
         :param dataset2:
         :param join_col_name1:
-
         :param join_col_name2:
         :param new_column_name:
         :param join_type:
         :return:
         """
-        pass
+        """
+        Join this dataset with datset 2. The join key in this dataset is join_col_name1.
+        The join key is dataset2 is join_col_name2 if passed. Otherwise, it is assumed to be the same (join_col_name1).
+        If new_col_name is passed, rename the join column in the new dataset to new_Col_name,.
+        :param dataset2:
+        :param join_col_name1:
+        :param join_col_name2:
+        :param new_column_name:
+        :param join_type:
+        :return:
+        """
+        if self.cached:
+            ds = self._cache_dataset()
+            return ds.join(dataset2, join_col_name1, join_col_name2, new_column_name, join_type)
 
-    def filter(self, predicate_dict):
+        if join_col_name1 not in self.columns:
+            raise Exception("column {} not in the dataset".format(join_col_name1))
+        # specify the join key in dataset2
+        if join_col_name2 is None:
+            if join_col_name1 not in dataset2.columns:
+                raise Exception("No join key specified for dataset2 and join_col_name1 is not in dataset2")
+            else:
+                join_col_name2 = join_col_name1
+        elif join_col_name2 not in dataset2.columns:
+            raise Exception("Join key {} doesn't exist in dataset2".format(join_col_name2))
+
+        warn_cols = []
+        for col in dataset2.columns:
+            if col != join_col_name2 and col in self.columns:
+                warn_cols.append(col)
+        if len(warn_cols) > 0:
+            warnings.warn("columns {} are common between dataset 1 and 2. All these columns will be used as "
+                          "join columns".format(warn_cols))
+
+        # find the new column name
+        if new_column_name is None:
+            new_column_name = join_col_name1
+        else: # new_column_name is not None
+            self.rem_column(join_col_name1)
+            self.add_column(new_column_name)
+
+        node = JoinOperator(self, dataset2, join_col_name1, join_col_name2, join_type, new_column_name)
+
+        # ds1.columns = union(ds1.columns, ds2.columns)
+        for col in dataset2.columns:
+            if col not in self.columns and col != join_col_name2:
+                self.add_column(col)
+
+        self.query_queue.append_node(node)
+        # TODO: if we allow the join between different graphs, Union the graphs
+
+        return self
+
+    def filter(self, conditions_dict):
         """
         Apply the given filters on the corresponding columns in the dataset.
-        :param predicate_dict: mapping from column name to a list of predicates to apply on the column. Format:
+        :param conditions_dict: mapping from column name to a list of predicates to apply on the column. Format:
         {'col_name': [pred1, pred2 ... etc], ...}
         :return: the same dataset object logically with the filtered column.
         """
@@ -88,12 +161,9 @@ class Dataset:
         invalid_cols = [col for col in col_list if col not in self.columns]
         if len(invalid_cols) > 0:
             raise Exception('Columns {} are not defined in the dataset'.format(invalid_cols))
-
         select_node = SelectOperator(self.name, col_list)
         self.query_queue.append_node(select_node)
-
         # change the dataset to contain only the new columns
-        self.old_columns = copy.copy(self.columns)
         self.columns = col_list
 
         return self
@@ -201,7 +271,7 @@ class Dataset:
         query_string = query_model.to_sparql()
         return query_string
 
-    def execute(self, client, return_format=None, output_file=None):
+    def execute(self, client, return_format=None, output_file=None, timeout = _TIMEOUT, limit = _MAX_ROWS):
         """
         converts this dataset to a sparql query, send it to the sparql endpoint or RDF engine and
         returns the result in the specified return format
@@ -210,9 +280,9 @@ class Dataset:
         :param output_file: file to save the results in
         :return:
         """
-        start_time = time.time()
         query_string = self.to_sparql()
-        res = client.execute_query(query_string, return_format=return_format, output_file=output_file)
+        res = client.execute_query(query_string, timeout=timeout, limit=limit, return_format=return_format,
+                                   output_file=output_file)
         return res
 
     def type(self):
@@ -241,7 +311,6 @@ class Dataset:
 
     def cache(self):
         self.cached = True
-        #return self._cache_dataset()
         return self
 
     def _cache_dataset(self):

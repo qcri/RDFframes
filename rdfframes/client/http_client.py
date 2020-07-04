@@ -134,17 +134,13 @@ class HttpClient(Client):
         :return: the result of the query in the requested format
         """
         self.return_format = return_format if return_format is not None else self.return_format
-        #final_result = None
         final_result = []
         for res in self._execute_query(query, return_format=return_format, export_file=output_file):
-            #print('data with type {} and length {} retrieved'.format(type(res).__name__, len(res)))
             if return_format == HttpClientDataFormat.PANDAS_DF:
-                #if final_result is None:
                 if len(final_result) <= 0:
                     final_result = [res]
                 else:
                     final_result.append(res)
-                    #final_result = pd.merge(final_result, res, how='outer')
             else:
                 raise Exception("return format {} is unimplemented".format(return_format))
         if return_format == HttpClientDataFormat.PANDAS_DF:

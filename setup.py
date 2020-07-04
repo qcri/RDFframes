@@ -8,7 +8,7 @@ path = pathlib.Path(__file__).parent
 readme_content = (path / "README.md").read_text()
 
 setup(name="rdfframes",
-      version="0.9.2",
+      version="0.9.3",
       description="Exposes RDF datasets from sparql endpoints for machine learning models in convenient formats like "
                   "pandas dataframe",
       long_description=readme_content,

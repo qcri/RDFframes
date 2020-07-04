@@ -15,8 +15,10 @@ class KnowledgeGraph:
     contains a group of convenience functions to initialize datasets before 
     applying any operations on them
     """
-    default_graphs = {'dbpedia': 'http://dbpedia.org',
-             'dblp': 'http://dblp.l3s.de'}
+    default_graphs = {
+        'dbpedia': 'http://dbpedia.org',
+        'dblp': 'http://dblp.l3s.de'
+    }
     default_graph_prefixes = {
         'dbpedia': {
             'dcterms': 'http://purl.org/dc/terms/',
@@ -47,11 +49,25 @@ class KnowledgeGraph:
         """
         self.graphs = {}
         self.graph_prefixes = {}
-        self.add_graph(graph_name, graph_uri, prefixes)
+        self._add_graph(graph_name, graph_uri, prefixes)
 
     def add_graph(self, graph_name=None, graph_uri=None, prefixes=None):
         """
         add more knowledge graph URIs to this KnowledgeGraph instance
+        :param graph_name: graph user defined name
+        :type graph_name: string
+        :param graph_uri: graph URI
+        :type graph_uri: string
+        :param prefixes: a dictionary of the prefixes to use in this graph. Keys
+            are the prefixes and values are the URIs.
+        :type prefixes: a dictionary where the key and value are strings.
+        :return: None or raise Exception
+        """
+        self._add_graph(graph_name, graph_uri, prefixes)
+
+    def _add_graph(self, graph_name=None, graph_uri=None, prefixes=None):
+        """
+        add a knowledge graph URI or a set of prefixes to this KnowledgeGraph instance.
         :param graph_name: graph user defined name
         :type graph_name: string
         :param graph_uri: graph URI
@@ -64,7 +80,7 @@ class KnowledgeGraph:
         if graph_name is not None:
             if len(graph_name) <= 0:
                 raise Exception("Graph name cannot be an empty string.")
-            if graph_uri is not None:
+            elif graph_uri is not None:
                 self.graphs[graph_name] = graph_uri
                 if prefixes is not None:
                     self.__add_graph_prefixes(graph_name, prefixes)
@@ -77,8 +93,7 @@ class KnowledgeGraph:
                 else:
                     self.__load_default_prefixes(graph_name)
             else:
-                raise Exception("Graph is not one of the default graphs.")
-
+                raise Exception("Graph {} is not one of the default graphs.".format(graph_name))
         elif graph_uri is not None:
             graph_name = "graph{}".format(len(self.graphs))
             self.graphs[graph_name] = graph_uri
@@ -107,8 +122,7 @@ class KnowledgeGraph:
             self.graph_prefixes[graph_name] = {}
 
         for prefix, prefix_uri in graph_prefixes.items():
-            if prefix not in self.graph_prefixes[graph_name]:
-                self.graph_prefixes[graph_name][prefix] = prefix_uri
+            self.graph_prefixes[graph_name][prefix] = prefix_uri
 
     def __load_default_prefixes(self, graph_name):
         """
@@ -127,7 +141,10 @@ class KnowledgeGraph:
             "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
             "dc": "http://purl.org/dc/elements/1.1/",
         }
-        self.__add_graph_prefixes(graph_name, default_prefixes)
+        if graph_name not in KnowledgeGraph.default_graph_prefixes:
+            self.__add_graph_prefixes(graph_name, default_prefixes)
+        else:
+            self.__add_graph_prefixes(graph_name, KnowledgeGraph.default_graph_prefixes[graph_name])
 
     def entities(self, class_name, new_dataset_name='dataset', entities_col_name='entity'):
         """
@@ -135,7 +152,7 @@ class KnowledgeGraph:
         Equivalent to the following sparql query:
             select distinct ?e
             where {
-                ?e  type ?class_class
+                ?e  rdf:type ?class_class
             }
         :param class_name: the name of the class
         :type class_name: string
@@ -146,9 +163,9 @@ class KnowledgeGraph:
         :return: new dataset with one column of the URIs entities of the class
         :rtype: Dataset
         """
-        #return ExpandableDataset(self, new_dataset_name, class_name, "class") \
-        #           .expand('class', [('rdf:type', entities_col_name, PredicateDirection.INCOMING)])
-        #            .filter(conditions_dict={'class': ['= {}'.format(class_name)]})
+        for graph in self.graph_prefixes:
+            if "rdf" not in self.graph_prefixes[graph]:
+                self.graph_prefixes[graph]['rdf'] = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         return ExpandableDataset(self, new_dataset_name, class_name, class_name) \
                     .expand(class_name, [
             ('rdf:type', entities_col_name, False, PredicateDirection.INCOMING)])
@@ -172,6 +189,9 @@ class KnowledgeGraph:
             matching features
         :rtype: Dataset
         """
+        for graph in self.graph_prefixes:
+            if "rdf" not in self.graph_prefixes[graph]:
+                self.graph_prefixes[graph]['rdf'] = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         return ExpandableDataset(self, new_dataset_name, class_name, class_name)\
             .expand(class_name, [('rdf:type', "entity", False, PredicateDirection.INCOMING)])\
             .expand("entity", [(features_col_name, "feature_value", False, PredicateDirection.OUTGOING)])
@@ -201,6 +221,9 @@ class KnowledgeGraph:
             the matching entities and their features
         :rtype: Dataset
         """
+        for graph in self.graph_prefixes:
+            if "rdf" not in self.graph_prefixes[graph]:
+                self.graph_prefixes[graph]['rdf'] = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         ds = ExpandableDataset(self, new_dataset_name, class_name, class_name)\
             .expand(class_name, [('rdf:type', entities_col_name, False, PredicateDirection.INCOMING)])
         predicate_list = []
@@ -228,6 +251,9 @@ class KnowledgeGraph:
             number of entities of this type
         :rtype: Dataset 
         """
+        for graph in self.graph_prefixes:
+            if "rdf" not in self.graph_prefixes[graph]:
+                self.graph_prefixes[graph]['rdf'] = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         return ExpandableDataset(self, new_dataset_name, "instance", "instance")\
             .expand("instance", [('rdf:type', classes_col_name, False, PredicateDirection.OUTGOING)])\
             .group_by([classes_col_name])\
@@ -256,6 +282,9 @@ class KnowledgeGraph:
             matching features and their frequency
         :rtype: Dataset
         """
+        for graph in self.graph_prefixes:
+            if "rdf" not in self.graph_prefixes[graph]:
+                self.graph_prefixes[graph]['rdf'] = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         return ExpandableDataset(self, new_dataset_name, class_name, class_name)\
             .expand(class_name, [('rdf:type', 'instance', False, PredicateDirection.INCOMING)])\
             .expand('instance', [(features_col_name, 'feature_value', False, PredicateDirection.OUTGOING)])\
@@ -282,6 +311,9 @@ class KnowledgeGraph:
             count of the matching entities
         :rtype: Dataset
         """
+        for graph in self.graph_prefixes:
+            if "rdf" not in self.graph_prefixes[graph]:
+                self.graph_prefixes[graph]['rdf'] = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         return ExpandableDataset(self, new_dataset_name, class_name, class_name)\
             .expand(class_name, [('rdf:type', 'instance', False, PredicateDirection.INCOMING)])\
             .count('instance', num_entities_col_name, unique=True)
@@ -310,7 +342,7 @@ class KnowledgeGraph:
         return ExpandableDataset(self, new_dataset_name, domain_col_name, domain_col_name) \
             .expand(domain_col_name, [(feature, range_col_name, False, PredicateDirection.OUTGOING)])
 
-    def dataset_with_entities(self, entities, new_dataset_name='dataset', entities_col_name='entities'):
+    def dataset_with_entity(self, entity, new_dataset_name='dataset'):
         """
         Creates a new one-column dataset filled with the passed entities
         :param entities: list of entities URIs
@@ -322,7 +354,7 @@ class KnowledgeGraph:
         :return: dataset with one column filled with the passed entities URIs
         :rtype: Dataset
         """
-        return ExpandableDataset(self, new_dataset_name, entities, entities_col_name)
+        return ExpandableDataset(self, new_dataset_name, entity)
 
     def describe_entity(self, entity, new_dataset_name='dataset', class_col_name='class', feature_col_name='feature'):
         """
@@ -330,7 +362,7 @@ class KnowledgeGraph:
         Equivalent to the query:
         select ?class ?p
         where {
-            ?e  type ?class
+            ?e  rdf:type ?class
             ?e ?p ?o
         }        
         :param entity: entity uri
@@ -342,6 +374,9 @@ class KnowledgeGraph:
         :return: (class, list of features)
         :rtype: tuple of (string, list of strings)
         """
+        for graph in self.graph_prefixes:
+            if "rdf" not in self.graph_prefixes[graph]:
+                self.graph_prefixes[graph]['rdf'] = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         return ExpandableDataset(self, new_dataset_name, entity, 'instance')\
             .expand('instance', [('rdf:type', class_col_name, False, PredicateDirection.OUTGOING)])\
             .expand('instance', [(feature_col_name, "feature_value", False, PredicateDirection.OUTGOING)])

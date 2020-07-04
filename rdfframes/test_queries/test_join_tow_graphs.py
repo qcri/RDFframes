@@ -1,5 +1,3 @@
-#import sys
-#sys.path.insert(1, '/home/amohamed/RDFframes/')
 from time import time
 
 from rdfframes.knowledge_graph import KnowledgeGraph

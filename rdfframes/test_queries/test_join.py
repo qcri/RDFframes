@@ -32,7 +32,7 @@ def expand_groupby_join(join_type):
   .expand('team', [('dbpp:president', 'president'), ('dbpp:sponsor', 'sponsor'), ('dbpp:name', 'name')])
   basketball_palyer_team = basketball_team.join(basketball_palyer,'team', join_type=join_type)
   print("SPARQL QUERY FOR JOIN TYPE {} \n{}\n".format(join_type, basketball_palyer_team.to_sparql()))
-  df = basketball_palyer_team.execute(client)
+  #df = basketball_palyer_team.execute(client)
   #print(basketball_palyer_team.to_sparql())
   #df = dataset.execute(client, return_format=output_format)
   #print(df.shape)
@@ -47,7 +47,7 @@ def expand_join(join_type):
   print(basketball_palyer_team.to_sparql())
   #df = basketball_palyer_team.execute(client)
 
-"""
+
 
 start = time()
 expand_groupby_join(JoinType.InnerJoin)
@@ -85,7 +85,7 @@ expand_join(JoinType.RightOuterJoin) ## change the type here.
 duration = time()-start
 print("Duration ofRightOuter Join on expandable datasets = {} sec".format(duration))
 
-"""
+
 
 start = time()
 expand_join(JoinType.OuterJoin) ## change the type here.

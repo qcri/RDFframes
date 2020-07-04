@@ -50,7 +50,6 @@ def test_expand_query():
     # create a knowledge graph to store the graph uri and prefixes
     graph = KnowledgeGraph('twitter', 'https://twitter.com',
                            prefixes={
-                               "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
                                "sioc": "http://rdfs.org/sioc/ns#",
                                "sioct": "http://rdfs.org/sioc/types#",
                                "to": "http://twitter.com/ontology/",
@@ -247,8 +246,8 @@ if __name__ == '__main__':
     #test_simple_query()
     #test_expand_query()
     #test_expand_query()
-    #test_select_query()
-    test_filter_query()
+    test_select_query()
+    #test_filter_query()
     #test_join_query()
     #test_sort_limit_offset_query()
     #test_groupby_query()

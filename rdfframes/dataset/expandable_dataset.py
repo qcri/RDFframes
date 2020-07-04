@@ -1,19 +1,13 @@
 """Represents a flat dataset
 """
-import copy
-import warnings
-
 from rdfframes.query_buffer.query_operators.expandable.seed_operator import SeedOperator
 from rdfframes.query_buffer.query_operators.shared.aggregation_operator import AggregationOperator
-from rdfframes.query_buffer.query_operators.shared.expansion_operator import ExpansionOperator
 from rdfframes.query_buffer.query_operators.shared.filter_operator import FilterOperator
 from rdfframes.query_buffer.query_operators.shared.groupby_operator import GroupByOperator
-from rdfframes.query_buffer.query_operators.shared.join_operator import JoinOperator
 from rdfframes.query_buffer.query_operators.shared.integer_count_node import IntegerCountOperator
 from rdfframes.dataset.dataset import Dataset
 from rdfframes.dataset.grouped_dataset import GroupedDataset
-from rdfframes.utils.constants import JoinType, AggregationFunction
-from rdfframes.dataset.rdfpredicate import  PredicateDirection
+from rdfframes.utils.constants import AggregationFunction
 
 __author__ = """
 Abdurrahman Ghanem <abghanem@hbku.edu.qa>
@@ -43,101 +37,6 @@ class ExpandableDataset(Dataset):
         self.columns.append(seed_col_name)
         self.agg_columns = []
         self.is_grouped = False
-
-    def expand(self, src_col_name, predicate_list):
-        """
-        Expand the dataset from the source column based on the given predicates. Each entry in the predicate list
-        should have a predicate URI, the new column name which will be used to name the new dataset column and a flag to
-        indicate whether the expansion is ingoing or outgoing from the source column
-        :param src_col_name: the starting column name
-        :param predicate_list: list of RDFPredicate objects
-        :return: the same dataset object, but logically a new column is appended. Actually a new node representing the
-        operation is added to the query_buffer
-        """
-        if src_col_name not in self.columns:
-            raise Exception("column {} not in the dataset".format(src_col_name))
-
-        if self.cached:
-            ds = self._cache_dataset()
-            return ds.expand(src_col_name, predicate_list)
-
-        for predicate in predicate_list:
-            #if isinstance(predicate, RDFPredicate):
-            #    node = ExpansionOperator(self.name, src_col_name, predicate.uri, predicate.new_col_name,
-            #                                 predicate.direction, is_optional=predicate.optional)
-            #    self.query_queue.append_node(node)
-            #    self.add_column(predicate.new_col_name)
-            #    self.add_column(predicate.uri)
-            #else:
-            if True:
-                if len(predicate) > 3:
-                    direction = predicate[3]
-                    is_optional = predicate[2]
-                else:
-                    direction = PredicateDirection.OUTGOING
-                    if len(predicate) > 2:
-                        is_optional = predicate[2]
-                    else:
-                        is_optional = False
-                node = ExpansionOperator(self.name, src_col_name, predicate[0], predicate[1],
-                                         direction, is_optional=is_optional)
-                self.query_queue.append_node(node)
-                self.add_column(predicate[1])
-                self.add_column(predicate[0])
-        return self
-
-    def join(self, dataset2, join_col_name1, join_col_name2=None, new_column_name=None, join_type=JoinType.InnerJoin):
-        """
-        Join this dataset with datset 2. The join key in this dataset is join_col_name1.
-        The join key is dataset2 is join_col_name2 if passed. Otherwise, it is assumed to be the same (join_col_name1).
-        If new_col_name is passed, rename the join column in the new dataset to new_Col_name,.
-        :param dataset2:
-        :param join_col_name1:
-        :param join_col_name2:
-        :param new_column_name:
-        :param join_type:
-        :return:
-        """
-        if self.cached:
-            ds = self._cache_dataset()
-            return ds.join(dataset2, join_col_name1, join_col_name2, new_column_name, join_type)
-
-        if join_col_name1 not in self.columns:
-            raise Exception("column {} not in the dataset".format(join_col_name1))
-        # specify the join key in dataset2
-        if join_col_name2 is None:
-            if join_col_name1 not in dataset2.columns:
-                raise Exception("No join key specified for dataset2 and join_col_name1 is not in dataset2")
-            else:
-                join_col_name2 = join_col_name1
-        elif join_col_name2 not in dataset2.columns:
-            raise Exception("Join key {} doesn't exist in dataset 2".format(join_col_name2))
-
-        warn_cols = []
-        for col in dataset2.columns:
-            if col != join_col_name2 and col in self.columns:
-                warn_cols.append(col)
-        if len(warn_cols) > 0:
-            warnings.warn("columns {} are common between dataset 1 and 2. All these columns will be used as join columns".format(warn_cols))
-
-        # find the new column name
-        if new_column_name is None:
-            new_column_name = join_col_name1
-        else: # new_column_name is not None
-            self.rem_column(join_col_name1)
-            self.add_column(new_column_name)
-
-        node = JoinOperator(self, dataset2, join_col_name1, join_col_name2, join_type, new_column_name)
-
-        # ds1.columns = union(ds1.columns, ds2.columns)
-        for col in dataset2.columns:
-            if col not in self.columns and col != join_col_name2:
-                self.add_column(col)
-
-        self.query_queue.append_node(node)
-        # TODO: if we allow the join between different graphs, Union the graphs
-
-        return self
 
     def filter(self, conditions_dict):
         """
@@ -185,7 +84,7 @@ class ExpandableDataset(Dataset):
 
     # aggregate functions
 
-    def sum(self, src_col_name=None, new_col_name='sum'):
+    def sum(self, src_col_name, new_col_name='sum'):
         """
         :param src_col_name: the column to find the sum of its values
         :param new_col_name: the new column name of the sum
@@ -203,14 +102,11 @@ class ExpandableDataset(Dataset):
         # TODO: Don't allow any more operations on the dataset
         agg_node = AggregationOperator(self.name, agg_col, AggregationFunction.SUM, new_col_name, None)
         self.query_queue.append_node(agg_node)
-        #self.add_column(new_col_name)
-        # change the dataset to contain only the new columns
-        self.old_columns = copy.copy(self.columns)
-        self.columns = new_col_name
+        self.columns = [src_col_name, new_col_name]
         self.agg_columns.append(new_col_name)
         return self
 
-    def avg(self, src_col_name=None, new_col_name='avg'):
+    def avg(self, src_col_name, new_col_name='avg'):
         """
         :param src_col_name: the column to find the max of its values
         :param new_col_name: the new column name of the max
@@ -228,13 +124,11 @@ class ExpandableDataset(Dataset):
         # TODO: Don't allow any more operations on the dataset
         agg_node = AggregationOperator(self.name, agg_col, AggregationFunction.AVG, new_col_name, None)
         self.query_queue.append_node(agg_node)
-        #self.add_column(new_col_name)
-        self.old_columns = copy.copy(self.columns)
-        self.columns = new_col_name
+        self.columns = [src_col_name, new_col_name]
         self.agg_columns.append(new_col_name)
         return self
 
-    def min(self, src_col_name=None, new_col_name='min'):
+    def min(self, src_col_name, new_col_name='min'):
         """
         :param src_col_name: the column to find the min of its values
         :param new_col_name: the new column name of the min
@@ -251,13 +145,11 @@ class ExpandableDataset(Dataset):
         # TODO: Don't allow any more operations on the dataset
         agg_node = AggregationOperator(self.name, agg_col, AggregationFunction.MIN, new_col_name, None)
         self.query_queue.append_node(agg_node)
-        #self.add_column(new_col_name)
-        self.old_columns = copy.copy(self.columns)
-        self.columns = new_col_name
+        self.columns = [src_col_name, new_col_name]
         self.agg_columns.append(new_col_name)
         return self
 
-    def max(self, src_col_name=None, new_col_name='max'):
+    def max(self, src_col_name, new_col_name='max'):
         """
         :param src_col_name: the column to find the max of its values
         :param new_col_name: the new column name of the max
@@ -274,9 +166,7 @@ class ExpandableDataset(Dataset):
         # TODO: Don't allow any more operations on the dataset
         agg_node = AggregationOperator(self.name, agg_col, AggregationFunction.MAX, new_col_name, None)
         self.query_queue.append_node(agg_node)
-        #self.add_column(new_col_name)
-        self.old_columns = copy.copy(self.columns)
-        self.columns = new_col_name
+        self.columns = [src_col_name, new_col_name]
         self.agg_columns.append(new_col_name)
         return self
 
@@ -303,17 +193,13 @@ class ExpandableDataset(Dataset):
             # TODO: Don't allow any more operations on the dataset
             agg_node = AggregationOperator(self.name, agg_col, AggregationFunction.COUNT, new_col_name, param)
             self.query_queue.append_node(agg_node)
-            #self.add_column(new_col_name)
-            self.old_columns = copy.copy(self.columns)
-            self.columns = new_col_name
+            self.columns = [src_col_name, new_col_name]
             self.agg_columns.append(new_col_name)
         else:
             # TODO: Don't allow any more operations on the dataser
             agg_node = IntegerCountOperator(self.name, new_col_name, param)
             self.query_queue.append_node(agg_node)
-            self.old_columns = copy.copy(self.columns)
-            self.columns = new_col_name
-            #self.add_column(new_col_name)
+            self.columns = [new_col_name]
             self.agg_columns.append(new_col_name)
         return self
 

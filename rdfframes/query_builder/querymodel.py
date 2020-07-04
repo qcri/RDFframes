@@ -126,7 +126,6 @@ class QueryModel(object):
         :return:
         """
         if len(unionquery.select_columns)<= 0 and len(unionquery.auto_generated_select_columns)<= 0:
-        #if len(unionquery.select_columns) <= 0:
             unionquery.select_all = True
         self.unions.append(unionquery)
         unionquery.parent_query_model = weakref.ref(self)
@@ -354,12 +353,6 @@ class QueryModel(object):
 
         # clean the inner query (self)
         QueryModel.clean_inner_qm(self)
-        #self.prefixes = {}
-        #self.rem_from_clause()
-        #self.limit = 0
-        #self.offset = 0
-        #self.order_clause = OrderedDict()
-        #self.rem_from_clause()
 
         return parent_query
 
@@ -371,7 +364,6 @@ class QueryModel(object):
             for t in involved_triples:
                 if t not in self.triples:
                     self.add_triple(*t)
-
 
     def is_defined_variable(self, var):
         return var in self.variables or any([subquery.is_defined_variable(var) for subquery in self.subqueries])
@@ -440,39 +432,6 @@ class QueryModel(object):
             return True
         else:
             return False
-    """
-    def get_triples(self):
-        triple_string = ""
-        for triple in self.triples:
-            triple1 = triple[1]
-            triple2 = triple[2]
-            if not is_uri(triple[1]) and triple[1].find(":") < 0:
-                triple1 = "?" + triple[1]
-            if not is_uri(triple[2]) and triple[2].find(":") < 0:
-                triple2 = "?" + triple[2]
-            triple = (triple[0], triple1, triple2)
-            triple_string += '\t?%s %s %s' % (triple[0], triple[1], triple[2]) + " .\n"
-        optional_string = self.get_optional_triples()
-        triple_string += '\t'.join(('\n' + optional_string.lstrip()).splitlines(True))
-        return triple_string
-
-    def get_optional_triples(self):
-        optional_string = ""
-        if len(self.optionals) > 0:
-            optional_string = "OPTIONAL {  \n"
-            for triple in self.optionals:
-                triple1 = triple[1]
-                triple2 = triple[2]
-                if not is_uri(triple[1]) and triple[1].find(":") < 0:
-                    triple1 = "?" + triple[1]
-                if not is_uri(triple[2]) and triple[2].find(":") < 0:
-                    triple2 = "?" + triple[2]
-                triple = (triple[0], triple1, triple2)
-                optional_string += '\t?%s %s %s' % (triple[0], triple[1], triple[2]) + " .\n"
-            optional_string += "}"
-
-        return optional_string
-        """
 
     def union(self, qm2):
         """
@@ -515,10 +474,10 @@ class QueryModel(object):
         2)
         :return: True if valid and False if not
         """
-        ## add the aggregation to expandable group
+        # add the aggregation to expandable group
 
-        ## group by in expandable dataset, raise exception if the select cols not in the group by
-        ### validate the prefix in the triple
+        # group by in expandable dataset, raise exception if the select cols not in the group by
+        # validate the prefix in the triple
         if self.parent_query_model is None:
             for triple in self.triples:
                 if not is_uri(triple[1]):
@@ -572,7 +531,6 @@ class QueryModel(object):
 
     def copy(self):
         return copy.deepcopy(self)
-
 
     def __repr__(self):
         return self.to_sparql()

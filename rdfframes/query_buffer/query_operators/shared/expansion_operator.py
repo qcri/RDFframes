@@ -65,16 +65,11 @@ class ExpansionOperator(QueryQueueOperator):
         # any expand operations on a grouped dataset result in a subquery
         if self.not_already_in_outer_query(ds, query_model):
             query_model = query_model.wrap_in_a_parent_query()
-            print("After wrapping becaue of the expansion, I should have nothing in the select node of the parent query")
         if triple is not None:
-            #print("self.is_optional", self.is_optional)
             if self.is_optional:
                 query_model.add_optional_triples([(triple[0],triple[1],triple[2])])
             else:
                 query_model.add_triple(triple[0],triple[1],triple[2])
-            #vars = [variable for variable in [triple[0], triple[1], triple[2]] if ":" not in variable]
-            #if len(vars) > 0:
-            #    query_model.transfer_select_triples_to_parent_query(vars)
         else:
             return ds, query_model, None
 

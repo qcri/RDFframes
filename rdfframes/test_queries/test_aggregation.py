@@ -37,6 +37,8 @@ def test_simple_query():
     sparql_query = dataset.to_sparql()
     print("sparql_query that returns the number of tweets per user without unique =\n{}\n".format(sparql_query))
 
+
+    # return all the instances of the tweet class
     dataset = graph.entities(class_name='sioc:microblogPost',
                              new_dataset_name='tweets',
                              entities_col_name='tweet')
@@ -44,7 +46,19 @@ def test_simple_query():
         ('sioc:has_creater', 'tweep', False),
         ('sioc:content', 'text', False)
     ])
-    dataset = dataset.count(unique=True)
+    dataset = dataset.group_by(['tweep']).count('tweet', new_col_name='n_tweets').sum('n_tweets')
+    sparql_query = dataset.to_sparql()
+    print("sparql_query that returns the number of tweets as the sum of tweets per user without unique =\n{}\n".format(sparql_query))
+
+
+    dataset = graph.entities(class_name='sioc:microblogPost',
+                             new_dataset_name='tweets',
+                             entities_col_name='tweet')
+    dataset = dataset.expand(src_col_name='tweet', predicate_list=[
+        ('sioc:has_creater', 'tweep', False),
+        ('sioc:content', 'text', False)
+    ])
+    dataset = dataset.count("tweet", unique=True)
     sparql_query = dataset.to_sparql()
     print("sparql_query that returns the number of tweets =\n{}\n".format(sparql_query))
 
