@@ -1,6 +1,4 @@
 from rdfframes.query_builder.querymodel import QueryModel
-from rdfframes.query_buffer.query_operators.shared.select_operator import SelectOperator
-from queue import Queue
 
 
 class Queue2QueryModelConverter(object):

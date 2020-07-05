@@ -27,7 +27,6 @@ class SPARQLBuilder(object):
             if self.query_model.is_optional:
                 self.query_string = self.__add_patterns()
                 return self.query_string
-
             if query_model.parent_query_model is None:  # if not a subquery
                 self.add_prefixes()
             self.add_select()
@@ -64,10 +63,8 @@ class SPARQLBuilder(object):
                 self.query_string += select_string
                 return
             elif len(self.query_model.select_columns) > 0 or len(self.query_model.auto_generated_select_columns) > 0:
-            #elif len(self.query_model.select_columns) > 0:
                 select_string = "SELECT DISTINCT "
                 for col in self.query_model.select_columns.union(self.query_model.auto_generated_select_columns):
-                #for col in self.query_model.select_columns:
                     if col in self.query_model.aggregate_clause:
                         agg_part = self.query_model.aggregate_clause[col]
                         agg_func = agg_part[0][0]
@@ -118,8 +115,8 @@ class SPARQLBuilder(object):
                 optional_string = ""
                 for optional_block in self.query_model.optionals:
                     query_string = optional_block.to_sparql()
-                    optional_string += "\tOPTIONAL {" + '\t'.join(('\n'+query_string.lstrip()).splitlines(True)) + "\n\t" + "\t}"
-                    #optional_string += "\tOPTIONAL {" + "{}".format(query_string) + "}\n"
+                    optional_string += "\tOPTIONAL {" + '\t'.join(('\n'+query_string.lstrip()).splitlines(True)) \
+                                       + "\n\t" + "\t}"
                 return optional_string
             else:
                 return ""
@@ -131,7 +128,8 @@ class SPARQLBuilder(object):
                 for graph_uri, graph_query in self.query_model.graph_clause.items():
                     query_builder.query_model = graph_query
                     query_string = query_builder.__add_patterns()
-                    graph_string +=  "\tGRAPH <{}>".format(graph_uri) + ' { '+ '\t'.join(('\n'+query_string.lstrip()).splitlines(True)) + "\n\t" + "\t}"
+                    graph_string +=  "\tGRAPH <{}>".format(graph_uri) + ' { '+ '\t'.\
+                        join(('\n'+query_string.lstrip()).splitlines(True)) + "\n\t" + "\t}"
                 return graph_string
             else:
                 return ""
@@ -147,7 +145,6 @@ class SPARQLBuilder(object):
                 return graph_string
             else:
                 return ""
-
 
         def __add_patterns(self):
             where_string = ""
