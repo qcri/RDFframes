@@ -245,7 +245,6 @@ def test_groupby_aggregation_query():
 if __name__ == '__main__':
     #test_simple_query()
     #test_expand_query()
-    #test_expand_query()
     test_select_query()
     #test_filter_query()
     #test_join_query()

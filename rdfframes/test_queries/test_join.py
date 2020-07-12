@@ -37,6 +37,17 @@ def expand_groupby_join(join_type):
   #df = dataset.execute(client, return_format=output_format)
   #print(df.shape)
 
+def groupby_expand_join(join_type):
+  basketball_palyer = graph.entities('dbpo:BasketballPlayer', entities_col_name='player')\
+	.expand('player', [('dbpp:team', 'team')])\
+	.group_by(['team']).count('player', 'count_basketball_players', True)
+
+  basketball_team = graph.entities('dbpo:BasketballTeam', entities_col_name='team')\
+  .expand('team', [('dbpp:president', 'president'), ('dbpp:sponsor', 'sponsor'), ('dbpp:name', 'name')])
+  basketball_palyer_team = basketball_palyer.join(basketball_team,'team', join_type=join_type)
+  print("SPARQL QUERY FOR JOIN TYPE {} \n{}\n".format(join_type, basketball_palyer_team.to_sparql()))
+
+
 def expand_join(join_type):
   basketball_palyer = graph.entities('dbpo:BasketballPlayer', entities_col_name='player')\
 		.expand('player', [('dbpp:nationality', 'nationality') ,('dbpp:birthPlace', 'place')\
@@ -55,17 +66,49 @@ duration = time()-start
 print("Duration of Inner join on expandable grouped datasets = {} sec".format(duration))
 
 start = time()
+groupby_expand_join(JoinType.InnerJoin)
+duration = time()-start
+print("Duration of Inner join on grouped expandable datasets = {} sec".format(duration))
+
+
+
+start = time()
 expand_groupby_join(JoinType.LeftOuterJoin) ## change the type here.
 duration = time()-start
 print("Duration of LeftOuter Join on expandable grouped datasets = {} sec".format(duration))
 
+
+start = time()
+groupby_expand_join(JoinType.LeftOuterJoin) ## change the type here.
+duration = time()-start
+print("Duration of LeftOuter Join on grouped expandable datasets = {} sec".format(duration))
+
+
+
+
 start = time()
 expand_groupby_join(JoinType.RightOuterJoin) ## change the type here.
 duration = time()-start
-print("Duration ofRightOuter Join on expandable grouped datasets = {} sec".format(duration))
+print("Duration of RightOuter Join on expandable grouped datasets = {} sec".format(duration))
+
+
+start = time()
+groupby_expand_join(JoinType.RightOuterJoin) ## change the type here.
+duration = time()-start
+print("Duration of RightOuter Join on grouped expandable  datasets = {} sec".format(duration))
 
 
 
+
+start = time()
+expand_groupby_join(JoinType.OuterJoin) ## change the type here.
+duration = time()-start
+print("Duration of Outer join on expandable grouped datasets = {} sec".format(duration))
+
+start = time()
+groupby_expand_join(JoinType.OuterJoin) ## change the type here.
+duration = time()-start
+print("Duration of Outer join on grouped expandable  datasets = {} sec".format(duration))
 
 
 start = time()
@@ -78,6 +121,7 @@ start = time()
 expand_join(JoinType.LeftOuterJoin) ## change the type here.
 duration = time()-start
 print("Duration of LeftOuter Join on expandable datasets = {} sec".format(duration))
+
 
 
 start = time()
@@ -93,7 +137,3 @@ duration = time()-start
 print("Duration of Outer join on expandable datasets = {} sec".format(duration))
 
 
-start = time()
-expand_groupby_join(JoinType.OuterJoin) ## change the type here.
-duration = time()-start
-print("Duration of Outer join on expandable grouped datasets = {} sec".format(duration))

@@ -85,11 +85,10 @@ class JoinOperator(QueryQueueOperator):
             return query_model
         else: # join two datasets extracted from the same graph
             # make query model 1 the outer query model the prefixes
-            query_model1 = JoinOperator.__make_parent(query_model1, query_model2)
             if not self.dataset.is_grouped:
                 if not self.second_dataset.is_grouped: # two expandable datasets
                     query_model = self.__join_expandable_expandable(query_model1, query_model2)
-                else:  # ds2 is grouped while ds1 is expandable
+                else:  # ds2 is grouped while ds1 is expandables
                     query_model = self.__join_expandable_grouped(query_model1, query_model2, expandable_order=1)
                     self.dataset.is_grouped = True
             else:  # ds1 is grouped
@@ -215,15 +214,17 @@ class JoinOperator(QueryQueueOperator):
 
         elif self.join_type == JoinType.LeftOuterJoin:
             # add the basic and optional graph patterns of dataset2 to dataset1 in one optional block
+            query_model1 = JoinOperator.__make_parent(query_model1, query_model2)
             QueryModel.clean_inner_qm(query_model2)
             query_model1.add_optional_subquery(query_model2)
             return query_model1
         elif self.join_type == JoinType.RightOuterJoin:
             query_model2 = JoinOperator.__make_parent(query_model2, query_model1)
             QueryModel.clean_inner_qm(query_model1)
-            query_model1.add_optional_subquery(query_model1)
+            query_model2.add_optional_subquery(query_model1)
             return query_model2
         else:  # outer join
+            # TODO: could be made simpler
             query_model = JoinOperator.__create_outer_quer_model(query_model1, query_model2)
             return JoinOperator._outer_join(query_model, query_model1, query_model2)
 
@@ -234,22 +235,42 @@ class JoinOperator(QueryQueueOperator):
             return JoinOperator._outer_join(joined_query_model, query_model1, query_model2)
         elif self.join_type == JoinType.InnerJoin :
                 # add query model 2 as a subquery
-                QueryModel.clean_inner_qm(query_model2)
-                query_model1.add_subquery(query_model2)
-                return query_model1
+                if expandable_order == 1:
+                    query_model1 = JoinOperator.__make_parent(query_model1, query_model2)
+                    QueryModel.clean_inner_qm(query_model2)
+                    query_model1.add_subquery(query_model2)
+                    return query_model1
+                else:
+                    query_model2 = JoinOperator.__make_parent(query_model2, query_model1)
+                    QueryModel.clean_inner_qm(query_model1)
+                    query_model2.add_subquery(query_model1)
+                    return query_model2
         elif ((expandable_order == 1 and self.join_type == JoinType.LeftOuterJoin) or\
             (expandable_order == 2 and self.join_type == JoinType.RightOuterJoin)):
             # make query model 2 an optional subquery
-            QueryModel.clean_inner_qm(query_model2)
-            query_model1.add_optional_subquery(query_model2)
-            return query_model1
+            if expandable_order == 1:
+                query_model1 = JoinOperator.__make_parent(query_model1, query_model2)
+                QueryModel.clean_inner_qm(query_model2)
+                query_model1.add_optional_subquery(query_model2)
+                return query_model1
+            else:
+                query_model2 = JoinOperator.__make_parent(query_model2, query_model1)
+                QueryModel.clean_inner_qm(query_model1)
+                query_model2.add_optional_subquery(query_model1)
+                return query_model2
         elif ((expandable_order == 2 and self.join_type == JoinType.LeftOuterJoin) or\
             (expandable_order == 1 and self.join_type == JoinType.RightOuterJoin)):
             # create an outer query and add the main dataset as a subquery and the optional dataset as optional subquery
-            joined_query_model = JoinOperator.__wrap(query_model1)
-            QueryModel.clean_inner_qm(query_model2)
-            joined_query_model.add_optional_subquery(query_model1)
-            joined_query_model.add_subquery(query_model2)
+            if expandable_order == 1:
+                expandable_qm, grouped_qm = query_model1, query_model2
+            else:
+                expandable_qm, grouped_qm = query_model2, query_model1
+            joined_query_model = JoinOperator.__wrap_in_subquery(expandable_qm)
+            joined_query_model = JoinOperator.__make_parent(joined_query_model, grouped_qm)
+            QueryModel.clean_inner_qm(expandable_qm)
+            QueryModel.clean_inner_qm(grouped_qm)
+            joined_query_model.add_optional_subquery(expandable_qm)
+            joined_query_model.add_subquery(grouped_qm)
             return joined_query_model
         else:
             raise Exception("Undefined case of expandable grouped join")
@@ -288,24 +309,22 @@ class JoinOperator(QueryQueueOperator):
         query_model2_copy = copy.deepcopy(query_model2)
         #if len(query_model1.groupBy_columns) > 0:
         if True:
-            new_query_model1 = JoinOperator.__wrap(query_model1)
-            new_query_model1.from_clause = copy.copy(query_model1_copy.from_clause)
-            new_query_model1.add_subquery(query_model1)
+            new_query_model1 = JoinOperator.__wrap_in_subquery(query_model1)
+            QueryModel.clean_inner_qm(query_model2_copy)
+            QueryModel.clean_inner_qm(query_model1_copy)
+            new_query_model1.add_subquery(query_model1_copy)
             new_query_model1.add_optional_subquery(query_model2_copy)
-            query_model1 = new_query_model1
         else:
             query_model1.add_optional_subquery(query_model2_copy)
         #if len(query_model2.groupBy_columns) > 0:
         if True:
-            new_query_model2 = JoinOperator.__wrap(query_model2)
-            new_query_model2.from_clause = copy.copy(query_model2_copy.from_clause)
-            new_query_model2.add_subquery(query_model2)
+            new_query_model2 = JoinOperator.__wrap_in_subquery(query_model2)
+            new_query_model2.add_subquery(query_model2_copy)
             new_query_model2.add_optional_subquery(query_model1_copy)
-            query_model2 = new_query_model2
         else:
             query_model2.add_optional_subquery(query_model1_copy)
-        joined_query_model.add_unions(query_model1)
-        joined_query_model.add_unions(query_model2)
+        joined_query_model.add_unions(new_query_model1)
+        joined_query_model.add_unions(new_query_model2)
         return joined_query_model
 
 
@@ -358,6 +377,24 @@ class JoinOperator(QueryQueueOperator):
         new_query_model.add_graph_clause(query_model)
         QueryModel.clean_inner_qm(query_model)
         return new_query_model
+
+    @staticmethod
+    def __wrap_in_subquery(query_model):
+        """
+        create an outer query containing the variables, select columns, offset, limit, order,
+        :param query_model:
+        :return:
+        """
+        new_query_model = QueryModel()
+        new_query_model.variables = copy.copy(query_model.variables)  # all prefixes are already in query_model1
+        new_query_model.from_clause = copy.copy(query_model.from_clause)
+        new_query_model.select_columns = copy.copy(query_model.select_columns)
+        new_query_model.offset = query_model.offset
+        new_query_model.limit = query_model.limit
+        new_query_model.order_clause = copy.copy(query_model.order_clause)
+        return new_query_model
+
+
 
     @staticmethod
     def _outer_join_two_graphs(query_model, query_model1, query_model2):
