@@ -59,6 +59,17 @@ def expand_join(join_type):
   #df = basketball_palyer_team.execute(client)
 
 
+def group_join(join_type):
+    basket_ball = graph.entities('dbpo:BasketballPlayer', entities_col_name='player') \
+        .expand('player', [('dbpp:birthPlace', 'place')]) \
+        .group_by(['place']).count('player', 'count_basketball_players', True)
+
+    tennis = graph.entities('dbpo:TennisPlayer', entities_col_name='player') \
+        .expand('player', [('dbpp:birthPlace', 'place')]) \
+        .group_by(['place']).count('player', 'count_tennis_players', True)
+    teams = basket_ball.join(tennis, 'place', join_type=join_type)
+    print(teams.to_sparql())
+
 
 start = time()
 expand_groupby_join(JoinType.InnerJoin)
@@ -98,8 +109,6 @@ duration = time()-start
 print("Duration of RightOuter Join on grouped expandable  datasets = {} sec".format(duration))
 
 
-
-
 start = time()
 expand_groupby_join(JoinType.OuterJoin) ## change the type here.
 duration = time()-start
@@ -137,3 +146,27 @@ duration = time()-start
 print("Duration of Outer join on expandable datasets = {} sec".format(duration))
 
 
+start = time()
+group_join(JoinType.InnerJoin) ## change the type here.
+duration = time()-start
+print("Duration of Inner join on expandable datasets = {} sec".format(duration))
+
+
+start = time()
+group_join(JoinType.LeftOuterJoin) ## change the type here.
+duration = time()-start
+print("Duration of LeftOuter Join on expandable datasets = {} sec".format(duration))
+
+
+
+start = time()
+group_join(JoinType.RightOuterJoin) ## change the type here.
+duration = time()-start
+print("Duration ofRightOuter Join on expandable datasets = {} sec".format(duration))
+
+
+
+start = time()
+group_join(JoinType.OuterJoin) ## change the type here.
+duration = time()-start
+print("Duration of Outer join on expandable datasets = {} sec".format(duration))

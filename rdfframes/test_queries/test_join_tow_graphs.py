@@ -46,7 +46,7 @@ def join_warning(join_type):
     print(actors.to_sparql())
 
 
-def join(join_type):
+def join_expand(join_type):
     dbpedia_actors = graph1.feature_domain_range('dbpp:starring', 'film1', 'actor1') \
         .expand('actor1', [('dbpp:birthPlace', 'actor_country1'), ('dbpp:name', 'name')]) \
         .filter({'actor_country1': ['regex(str(?actor_country1), "USA")']})#.select_cols(['name'])
@@ -58,8 +58,20 @@ def join(join_type):
     actors = dbpedia_actors.join(yago_actors, 'name', join_type=join_type)
     print(actors.to_sparql())
 
-    df = actors.execute(client, return_format=output_format)
-    print(df.shape)
+
+
+def join_expand_grouped(join_type):
+    dbpedia_actors = graph1.feature_domain_range('dbpp:starring', 'film1', 'actor1') \
+        .expand('actor1', [('dbpp:birthPlace', 'actor_country1'), ('dbpp:name', 'name')]) \
+        .filter({'actor_country1': ['regex(str(?actor_country1), "USA")']})#.select_cols(['name'])
+
+    yago_actors = graph2.feature_domain_range('yago:actedIn', 'actor2', 'film2') \
+        .expand('actor2', [('yago:isCitizenOf', 'actor_country2'), ('yagoinfo:name', 'name')]) \
+        .filter({'actor_country2': ['= yago:United_States']}).group_by(['name']).count('film2')
+
+    actors = dbpedia_actors.join(yago_actors, 'name', join_type=join_type)
+    print(actors.to_sparql())
+
 
 
 def join_grouped(join_type):
@@ -77,14 +89,30 @@ def join_grouped(join_type):
     #df = actors.execute(client, return_format=output_format)
     #print(df.shape)
 
-start = time()
-join(JoinType.OuterJoin)
-duration = time()-start
-print("Duration of join 2 graphs outer join datasets = {} sec".format(duration))
+join_types = [JoinType.InnerJoin, JoinType.LeftOuterJoin, JoinType.RightOuterJoin, JoinType.OuterJoin]
+
+"""
+for join_type in join_types:
+    start = time()
+    join_expand(join_type)
+    duration = time()-start
+    print("Duration of {} join between 2 expandable datasets from 2 graphs = {} sec".format(join_type, duration))
 
 
+for join_type in join_types:
+    start = time()
+    join_expand_grouped(join_type)
+    duration = time()-start
+    print("Duration of {} join between an expandable and grouped datasets from 2 graphs = {} sec".format(join_type, duration))
 
-#join_warning(JoinType.InnerJoin)
+"""
+
+for join_type in join_types:
+    start = time()
+    join_grouped(join_type)
+    duration = time()-start
+    print("Duration of {} join between 2 grouped datasets from 2 graphs = {} sec".format(join_type, duration))
+
 
 """
 Inner Join

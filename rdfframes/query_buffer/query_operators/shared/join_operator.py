@@ -70,11 +70,11 @@ class JoinOperator(QueryQueueOperator):
                                 "takes only with more than one graph")
             # create an outer query model
             query_model = JoinOperator.__create_outer_quer_model(query_model1, query_model2)
-
             if not self.dataset.is_grouped: #if self.dataset.type() == "ExpandableDataset":
                 if not self.second_dataset.is_grouped: # two expandable datasets
                     query_model = self.__join_expandable_expandable_2_graphs(query_model, query_model1, query_model2)
                 else:  # ds2 is grouped while ds1 is expandable
+                    print("1 *********************************")
                     query_model = self.__join_expandable_grouped_2_graphs(query_model, query_model1, query_model2, 1)
                     self.dataset.is_grouped = True
             else:  # ds1 is grouped while ds2 is expandable
@@ -129,7 +129,7 @@ class JoinOperator(QueryQueueOperator):
                 assert (expandable_order == 2)
                 old_query_model = query_model1
                 first = query_model2
-            new_query_model = JoinOperator.__wrap(old_query_model)
+            new_query_model = JoinOperator.__wrap_in_subquery(old_query_model)
             new_query_model.add_subquery(old_query_model)
             return self.__join_expandable_expandable_2_graphs(query_model, first, new_query_model)
 
@@ -142,16 +142,16 @@ class JoinOperator(QueryQueueOperator):
                 assert(expandable_order ==2)
                 old_query_model = query_model1
                 first = query_model2
-            new_query_model = JoinOperator.__wrap(old_query_model)
+            new_query_model = JoinOperator.__wrap_in_subquery(old_query_model)
             new_query_model.add_subquery(old_query_model)
             return self.__join_expandable_expandable_2_graphs(query_model, first, new_query_model)
 
         elif ((expandable_order == 2 and self.join_type == JoinType.LeftOuterJoin) or \
               (expandable_order == 1 and self.join_type == JoinType.RightOuterJoin)):
-            new_query_model1 = JoinOperator.__wrap(query_model1)
+            new_query_model1 = JoinOperator.__wrap_in_subquery(query_model1)
             new_query_model1.add_subquery(query_model1)
 
-            new_query_model2 = JoinOperator.__wrap(query_model2)
+            new_query_model2 = JoinOperator.__wrap_in_subquery(query_model2)
             new_query_model2.add_subquery(query_model2)
 
             query_model.add_optional_graph_clause(new_query_model1)
@@ -291,8 +291,7 @@ class JoinOperator(QueryQueueOperator):
             joined_query_model.add_subquery(query_model2)
             joined_query_model.add_optional_subquery(query_model1)
         else:  # outer join
-            joined_query_model.add_unions(query_model1)
-            joined_query_model.add_unions(query_model2)
+            return JoinOperator._outer_join(joined_query_model, query_model1, query_model2)
         return joined_query_model
 
     def __repr__(self):
@@ -403,21 +402,17 @@ class JoinOperator(QueryQueueOperator):
         #if len(query_model1.groupBy_columns) > 0:
         if True:
             new_query_model1 = JoinOperator.__wrap(query_model1)
-            new_query_model1.add_graph_clause(query_model1)
-            query_model1 = new_query_model1
         else:
             query_model1.add_optional_graph_cluase(query_model2_copy)
         #if len(query_model2.groupBy_columns) > 0:
         if True:
-            new_query_model2 = JoinOperator.__wrap_in_graph_clause(query_model2)
-            new_query_model2.add_graph_clause(query_model2)
-            query_model2 = new_query_model2
+            new_query_model2 = JoinOperator.__wrap(query_model2)
         else:
             query_model2.add_optional_graph_cluase(query_model1_copy)
-        query_model1.add_optional_graph_clause(query_model2_copy)
-        query_model2.add_optional_graph_clause(query_model1_copy)
-        query_model.add_unions(query_model1)
-        query_model.add_unions(query_model2)
+        new_query_model1.add_optional_graph_clause(query_model2_copy)
+        new_query_model2.add_optional_graph_clause(query_model1_copy)
+        query_model.add_unions(new_query_model1)
+        query_model.add_unions(new_query_model2)
         return query_model
 
     @staticmethod
