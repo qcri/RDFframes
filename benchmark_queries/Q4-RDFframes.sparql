@@ -10,13 +10,15 @@ PREFIX  dbpr: <http://dbpedia.org/resource/>
 SELECT  *
 WHERE
   { GRAPH <http://dbpedia.org>
-      { ?film   dbpp:starring    ?actor .
-        ?actor  dbpp:birthPlace  ?actor_country
-        FILTER regex(str(?actor_country), "USA")
+      { ?film1   dbpp:starring    ?actor1 .
+        ?actor1  dbpp:birthPlace  ?actor_country1 ;
+                 dbpp:name        ?name
+        FILTER regex(str(?actor_country1), "USA")
       }
     GRAPH <http://yago-knowledge.org/>
-      { ?actor  yago:actedIn      ?film ;
-                yago:isCitizenOf  ?actor_country
-        FILTER ( ?actor_country = yago:United_States )
+      { ?actor2  yago:actedIn      ?film2 ;
+                 yago:isCitizenOf  ?actor_country2 ;
+                 yagoinfo:name     ?name
+        FILTER ( ?actor_country2 = yago:United_States )
       }
   }

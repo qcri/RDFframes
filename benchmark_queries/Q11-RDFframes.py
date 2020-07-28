@@ -26,7 +26,7 @@ def join(join_type):
     print(actors.to_sparql())
 
 
-join(JoinType.InnerJoin)
+join(JoinType.OuterJoin)
 
 
 
