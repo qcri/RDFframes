@@ -1,0 +1,50 @@
+PREFIX  dbpp: <http://dbpedia.org/property/>
+PREFIX  dcterms: <http://purl.org/dc/terms/>
+PREFIX  dbpo: <http://dbpedia.org/ontology/>
+PREFIX  rdfs:  <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX  dbpr: <http://dbpedia.org/resource/>
+
+SELECT  *
+FROM <http://dbpedia.org>
+WHERE
+  { { SELECT  ?team ?count_basketball_players
+      WHERE
+        { { SELECT DISTINCT  ?team (COUNT(DISTINCT ?player) AS ?count_basketball_players)
+            WHERE
+              { SELECT DISTINCT  ?player ?team
+                WHERE
+                  { { SELECT  ?player
+                      WHERE
+                        { ?player  rdf:type  dbpo:BasketballPlayer }
+                    }
+                    { SELECT  ?player ?team
+                      WHERE
+                        { ?player  dbpp:team  ?team }
+                    }
+                  }
+              }
+            GROUP BY ?team
+          }
+        }
+    }
+    OPTIONAL
+    {
+      { SELECT  ?team
+        WHERE
+          { ?team  rdf:type  dbpo:BasketballTeam }
+      }
+    { SELECT  ?team ?president
+      WHERE
+        { ?team  dbpp:president  ?president }
+    }
+    { SELECT  ?team ?sponsor
+      WHERE
+        { ?team  dbpp:sponsor  ?sponsor }
+    }
+    { SELECT  ?team ?name
+      WHERE
+        { ?team  dbpp:name  ?name }
+    }
+    }
+  }
+"""

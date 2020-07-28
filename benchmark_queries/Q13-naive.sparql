@@ -1,0 +1,21 @@
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX dbpp: <http://dbpedia.org/property/>
+PREFIX dbpr: <http://dbpedia.org/resource/>
+PREFIX dbpo: <http://dbpedia.org/ontology/>
+SELECT DISTINCT ?film ?actor ?director ?movie_country ?producer 
+?language ?story ?runtime ?studio ?title ?genre
+FROM <http://dbpedia.org>
+WHERE {
+  {SELECT * WHERE {?film rdf:type dbpo:Film .}}
+  {SELECT * WHERE {?film dbpp:starring ?actor .}}
+  {SELECT * WHERE {OPTIONAL{ ?film dbpp:director ?director .}}}
+  {SELECT * WHERE {?film dbpp:country ?movie_country .}}
+  {SELECT * WHERE {OPTIONAL{ ?film dbpp:producer ?producer .}}}
+  {SELECT * WHERE {?film dbpp:language ?language .}}
+  {SELECT * WHERE {?film dbpp:story ?story .}}
+  {SELECT * WHERE {?film dbpp:runtime ?runtime .}}
+  {SELECT * WHERE {OPTIONAL{ ?film dbpp:studio ?studio .}}}
+  {SELECT * WHERE {?film dbpp:title ?title .}}
+  {SELECT * WHERE {?film dbpp:genre ?genre .}}
+  }

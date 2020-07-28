@@ -1,0 +1,60 @@
+
+PREFIX  dbpp: <http://dbpedia.org/property/>
+PREFIX  dcterms: <http://purl.org/dc/terms/>
+PREFIX  dbpo: <http://dbpedia.org/ontology/>
+PREFIX  rdfs:  <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX  dbpr: <http://dbpedia.org/resource/>
+
+SELECT DISTINCT  ?movie_country ?genre (COUNT(DISTINCT ?film) AS ?film_country_genre)
+FROM <http://dbpedia.org>
+WHERE
+  { { SELECT  *
+      WHERE
+        { ?film  rdf:type  dbpo:Film }
+    }
+    { SELECT  *
+      WHERE
+        { ?film  dbpp:starring  ?actor }
+    }
+    { SELECT  *
+      WHERE
+        { ?film  dbpp:country  ?movie_country }
+    }
+    { SELECT  *
+      WHERE
+        { ?film  dbpp:language  ?language }
+    }
+    { SELECT  *
+      WHERE
+        { ?film  dbpp:story  ?story }
+    }
+    { SELECT  *
+      WHERE
+        { ?film  dbpp:runtime  ?runtime }
+    }
+    { SELECT  *
+      WHERE
+        { ?film  dbpp:title  ?title }
+    }
+    { SELECT  *
+      WHERE
+        { ?film  dbpp:genre  ?genre }
+    }
+    OPTIONAL
+      { { SELECT  *
+          WHERE
+            { ?film  dbpp:director  ?director }
+        }
+      }
+    OPTIONAL
+      { SELECT  *
+        WHERE
+          { ?film  dbpp:producer  ?producer }
+      }
+    OPTIONAL
+      { SELECT  *
+        WHERE
+          { ?film  dbpp:studio  ?studio }
+      }
+  }
+GROUP BY ?movie_country ?genre
