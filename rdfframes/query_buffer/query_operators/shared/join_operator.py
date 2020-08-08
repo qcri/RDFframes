@@ -74,7 +74,6 @@ class JoinOperator(QueryQueueOperator):
                 if not self.second_dataset.is_grouped: # two expandable datasets
                     query_model = self.__join_expandable_expandable_2_graphs(query_model, query_model1, query_model2)
                 else:  # ds2 is grouped while ds1 is expandable
-                    print("1 *********************************")
                     query_model = self.__join_expandable_grouped_2_graphs(query_model, query_model1, query_model2, 1)
                     self.dataset.is_grouped = True
             else:  # ds1 is grouped while ds2 is expandable
@@ -186,6 +185,7 @@ class JoinOperator(QueryQueueOperator):
         return query_model
 
     def __join_expandable_expandable(self, query_model1, query_model2):
+        # if in this function then 2 datasets are expandable and from the same graph
         if len(query_model1.aggregate_clause) > 0 or len(query_model2.aggregate_clause) > 0:
             raise Exception("Can't join flat aggregated datasets")
         if self.join_type == JoinType.InnerJoin:
@@ -215,13 +215,53 @@ class JoinOperator(QueryQueueOperator):
         elif self.join_type == JoinType.LeftOuterJoin:
             # add the basic and optional graph patterns of dataset2 to dataset1 in one optional block
             query_model1 = JoinOperator.__make_parent(query_model1, query_model2)
-            QueryModel.clean_inner_qm(query_model2)
-            query_model1.add_optional_subquery(query_model2)
+            optional_block = query_model1.add_optional_triples(query_model2.triples)
+            for graph, triples in query_model2.graph_triples.items():
+                optional_block.add_graph_triple(graph, triples)
+            # append the optional patterns in dataset2 to optionals in dataset1
+            for optional_block in query_model2.optionals:
+                optional_block.add_optional_block(optional_block)
+            # add the filter graph patterns of dataset2 to dataset1
+            for column, conditions in query_model2.filter_clause.items():
+                for condition in conditions:
+                    optional_block.add_filter_condition(column, condition)
+            for query in query_model2.subqueries:
+                optional_block.add_subquery(query)
+            for query in query_model2.optional_subqueries:
+                optional_block.add_optional_subquery(query)
+            for query in query_model2.unions:
+                optional_block.add_unions(query)
+            # TODO: if there are graphs common between the two query models, join the inner graphs
+            optional_block.graph_clause.update(query_model2.graph_clause)
+            optional_block.optional_graph_clause.update(query_model2.optional_graph_clause)
+            # TODO: if there is a bug, uncomment these 2 lines and remove the optional_block;
+            #QueryModel.clean_inner_qm(query_model2)
+            #query_model1.add_optional_subquery(query_model2)
             return query_model1
         elif self.join_type == JoinType.RightOuterJoin:
             query_model2 = JoinOperator.__make_parent(query_model2, query_model1)
-            QueryModel.clean_inner_qm(query_model1)
-            query_model2.add_optional_subquery(query_model1)
+            optional_block = query_model2.add_optional_triples(query_model1.triples)
+            for graph, triples in query_model1.graph_triples.items():
+                optional_block.add_graph_triple(graph, triples)
+            # append the optional patterns in dataset2 to optionals in dataset1
+            for optional_block in query_model1.optionals:
+                optional_block.add_optional_block(optional_block)
+            # add the filter graph patterns of dataset2 to dataset1
+            for column, conditions in query_model1.filter_clause.items():
+                for condition in conditions:
+                    optional_block.add_filter_condition(column, condition)
+            for query in query_model1.subqueries:
+                optional_block.add_subquery(query)
+            for query in query_model1.optional_subqueries:
+                optional_block.add_optional_subquery(query)
+            for query in query_model1.unions:
+                optional_block.add_unions(query)
+            # TODO: if there are graphs common between the two query models, join the inner graphs
+            optional_block.graph_clause.update(query_model1.graph_clause)
+            optional_block.optional_graph_clause.update(query_model1.optional_graph_clause)
+            # TODO: if there is a bug, uncomment these 2 lines and remove the optional_block;
+            #QueryModel.clean_inner_qm(query_model1)
+            #query_model2.add_optional_subquery(query_model1)
             return query_model2
         else:  # outer join
             # TODO: could be made simpler

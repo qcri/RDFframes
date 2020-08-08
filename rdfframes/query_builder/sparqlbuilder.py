@@ -112,24 +112,24 @@ class SPARQLBuilder(object):
 
         def add_optional_clause(self):
             if len(self.query_model.optionals) > 0:
-                optional_string = ""
+                optional_string = "\t"
                 for optional_block in self.query_model.optionals:
                     query_string = optional_block.to_sparql()
-                    optional_string += "\tOPTIONAL {" + '\t'.join(('\n'+query_string.lstrip()).splitlines(True)) \
-                                       + "\n\t" + "\t}"
+                    optional_string += "OPTIONAL {" + '\t'.join(('\n'+query_string.lstrip()).splitlines(True)) \
+                                       + "\n\t}\n"
                 return optional_string
             else:
                 return ""
 
         def add_graph_clause(self):
             if len(self.query_model.graph_clause) > 0:
-                graph_string = ""
+                graph_string = "\t"
                 query_builder = SPARQLBuilder()
                 for graph_uri, graph_query in self.query_model.graph_clause.items():
                     query_builder.query_model = graph_query
                     query_string = query_builder.__add_patterns()
-                    graph_string +=  "\tGRAPH <{}>".format(graph_uri) + ' { '+ '\t'.\
-                        join(('\n'+query_string.lstrip()).splitlines(True)) + "\n\t" + "\t}"
+                    graph_string += "GRAPH <{}>".format(graph_uri) + '{'+ '\t'.\
+                        join(('\n'+query_string.lstrip()).splitlines(True)) + "\n\t}\n"
                 return graph_string
             else:
                 return ""
