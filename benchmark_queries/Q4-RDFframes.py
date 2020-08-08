@@ -2,7 +2,7 @@ from rdfframes.knowledge_graph import KnowledgeGraph
 from rdfframes.utils.constants import JoinType
 
 
-graph1 =  KnowledgeGraph(graph_name='dbpedia')
+graph1 = KnowledgeGraph(graph_name='dbpedia')
 graph2 = KnowledgeGraph(graph_name='yago',
                         graph_uri='http://yago-knowledge.org/',
                         prefixes={

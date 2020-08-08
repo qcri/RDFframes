@@ -3,6 +3,7 @@ PREFIX  dcterms: <http://purl.org/dc/terms/>
 PREFIX  rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX  dbpo: <http://dbpedia.org/ontology/>
 PREFIX  dbpr: <http://dbpedia.org/resource/>
+PREFIX  rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
 SELECT  *
 FROM <http://dbpedia.org>
@@ -47,5 +48,4 @@ WHERE
       WHERE
         { ?player  dbpp:team  ?team }
     }
-  };
-"""
+  }

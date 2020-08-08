@@ -1,18 +1,24 @@
-PREFIX dcterms: <http://purl.org/dc/terms/>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX dbpp: <http://dbpedia.org/property/>
-PREFIX dbpr: <http://dbpedia.org/resource/>
-PREFIX dbpo: <http://dbpedia.org/ontology/>
-SELECT *
+PREFIX  dbpp: <http://dbpedia.org/property/>
+PREFIX  dbpo: <http://dbpedia.org/ontology/>
+PREFIX  rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX  dcterms: <http://purl.org/dc/terms/>
+PREFIX  rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX  dbpr: <http://dbpedia.org/resource/>
+
+SELECT  *
 FROM <http://dbpedia.org>
-WHERE {
-        ?team rdf:type dbpo:BasketballTeam .
-        ?team dbpp:president ?president .
-        ?team dbpp:sponsor ?sponsor .
-        ?team dbpp:name ?name .
-        ?player rdf:type dbpo:BasketballPlayer .
-        ?player dbpp:nationality ?nationality .
-        ?player dbpp:birthPlace ?place .
-        ?player dbpp:birthDate ?birthDate .
-        ?player dbpp:team ?team .
-        }
+WHERE
+  { ?film  rdf:type       dbpo:Film ;
+           dbpp:starring  ?actor ;
+           dbpp:country   ?movie_country ;
+           dbpp:genre     ?genre ;
+           dbpp:director  ?director ;
+           dbpp:producer  ?producer ;
+           dbpp:language  ?language ;
+           dbpp:story     ?story ;
+           dbpp:runtime   ?runtime ;
+           dbpp:studio    ?studio ;
+           dbpp:title     ?title
+    FILTER ( ( ( ?genre IN (dbpr:Film_score, dbpr:Soundtrack, dbpr:Rock_music, dbpr:House_music, dbpr:Dubstep) ) &&
+    ( ?studio != "Eskay Movies" ) ) && ( ?movie_country IN (dbpr:United_States, dbpr:India) ) )
+  }

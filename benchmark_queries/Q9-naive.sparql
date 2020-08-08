@@ -1,9 +1,9 @@
-
 PREFIX  dbpp: <http://dbpedia.org/property/>
 PREFIX  dcterms: <http://purl.org/dc/terms/>
 PREFIX  dbpo: <http://dbpedia.org/ontology/>
 PREFIX  rdfs:  <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX  dbpr: <http://dbpedia.org/resource/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
 SELECT DISTINCT  ?movie_country ?genre (COUNT(DISTINCT ?film) AS ?film_country_genre)
 FROM <http://dbpedia.org>

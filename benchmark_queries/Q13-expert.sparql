@@ -1,24 +1,25 @@
-PREFIX dcterms: <http://purl.org/dc/terms/>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX dbpp: <http://dbpedia.org/property/>
-PREFIX dbpr: <http://dbpedia.org/resource/>
-PREFIX dbpo: <http://dbpedia.org/ontology/>
-SELECT * 
+PREFIX  dbpp: <http://dbpedia.org/property/>
+PREFIX  dbpo: <http://dbpedia.org/ontology/>
+PREFIX  rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX  dcterms: <http://purl.org/dc/terms/>
+PREFIX  rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX  dbpr: <http://dbpedia.org/resource/>
+
+SELECT  *
 FROM <http://dbpedia.org>
-WHERE {
-        ?film rdf:type dbpo:Film .
-        ?film dbpp:starring ?actor .
-        ?film dbpp:country ?movie_country .
-        ?film dbpp:language ?language .
-        ?film dbpp:story ?story .
-        ?film dbpp:runtime ?runtime .
-        ?film dbpp:title ?title .
-        ?film dbpp:genre ?genre .
-        OPTIONAL {
-                ?film dbpp:director ?director .
-                        }       OPTIONAL {
-                ?film dbpp:producer ?producer .
-                        }       OPTIONAL {
-                ?film dbpp:studio ?studio .
-                        }
-        }
+WHERE
+  { ?film  rdf:type       dbpo:Film ;
+           dbpp:starring  ?actor ;
+           dbpp:country   ?movie_country ;
+           dbpp:language  ?language ;
+           dbpp:story     ?story ;
+           dbpp:runtime   ?runtime ;
+           dbpp:title     ?title ;
+           dbpp:genre     ?genre
+    OPTIONAL
+      { ?film  dbpp:director  ?director }
+    OPTIONAL
+      { ?film  dbpp:producer  ?producer }
+    OPTIONAL
+      { ?film  dbpp:studio  ?studio }
+  }

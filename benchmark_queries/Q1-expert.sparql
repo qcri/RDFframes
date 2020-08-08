@@ -1,22 +1,22 @@
-PREFIX dcterms: <http://purl.org/dc/terms/>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX dbpp: <http://dbpedia.org/property/>
-PREFIX dbpr: <http://dbpedia.org/resource/>
-PREFIX dbpo: <http://dbpedia.org/ontology/>
-SELECT * 
+PREFIX  dbpp: <http://dbpedia.org/property/>
+PREFIX  dbpo: <http://dbpedia.org/ontology/>
+PREFIX  rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX  dcterms: <http://purl.org/dc/terms/>
+PREFIX  rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX  dbpr: <http://dbpedia.org/resource/>
+
+SELECT  *
 FROM <http://dbpedia.org>
-WHERE {
-        ?player rdf:type dbpo:BasketballPlayer .
-        ?player dbpp:nationality ?nationality .
-        ?player dbpp:birthPlace ?place .
-        ?player dbpp:birthDate ?birthDate .
-        ?player dbpp:team ?team .
-        OPTIONAL {
-                ?team rdf:type dbpo:BasketballTeam .
-                        ?team dbpp:president ?president .
-                        ?team dbpp:sponsor ?sponsor .
-                        ?team dbpp:name ?name .
-                        }
-        }
-
-
+WHERE
+  { ?player  rdf:type          dbpo:BasketballPlayer ;
+             dbpp:nationality  ?nationality ;
+             dbpp:birthPlace   ?place ;
+             dbpp:birthDate    ?birthDate ;
+             dbpp:team         ?team
+    OPTIONAL
+      { ?team  rdf:type        dbpo:BasketballTeam ;
+               dbpp:president  ?president ;
+               dbpp:sponsor    ?sponsor ;
+               dbpp:name       ?name
+      }
+  }
