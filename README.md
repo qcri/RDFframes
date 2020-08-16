@@ -1,4 +1,4 @@
-# RDFframes
+# [RDFFrames: Knowledge Graph Access for Machine Learning Tools](https://arxiv.org/abs/2002.03614)
 
 
 A Python library that enables data scientists to extract data from knowledge graphs encoded in [RDF](https://www.w3.org/TR/2014/REC-rdf11-concepts-20140225/) into familiar tabular formats using familiar procedural Python abstractions.
