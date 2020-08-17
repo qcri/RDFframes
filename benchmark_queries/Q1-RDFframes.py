@@ -1,7 +1,5 @@
 ''' 
 Get the nationality, place, date of birth for each basketball player, in addition to the sponsor, name, and president of his team (if available).
-from time import time
-
 '''
 
 from time import time
