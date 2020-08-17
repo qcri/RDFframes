@@ -1,3 +1,5 @@
+
+''' Get a list of American actors available in both DBpedia and YAGO graphs. '''
 from rdfframes.knowledge_graph import KnowledgeGraph
 from rdfframes.utils.constants import JoinType
 
