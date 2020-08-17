@@ -1,3 +1,5 @@
+''' Get the nationality, place, date of birth for each basketball player, in addition to the sponsor, name, and president of his team. ''' 
+
 from rdfframes.knowledge_graph import KnowledgeGraph
 from rdfframes.utils.constants import JoinType
 
