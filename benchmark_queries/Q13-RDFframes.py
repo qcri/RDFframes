@@ -1,4 +1,4 @@
-'''    Q13 & Get a list of films in DBpedia. For each film, return the actor, language,
+'''  Q13 & Get a list of films in DBpedia. For each film, return the actor, language,
 country, genre, story, studio in addition to the director, producer, and title (if available). '''
 
 from rdfframes.knowledge_graph import KnowledgeGraph
