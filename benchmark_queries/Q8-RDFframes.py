@@ -1,5 +1,5 @@
 
-''' Dataset1: Info. about the Films in DBpedia: actor, director, country, producer,
+''' Get information about the Films in DBpedia: actor, director, country, producer,
    language, title, genre, story, studio . Filter on country, studio and genre, runtime. '''
 
 
