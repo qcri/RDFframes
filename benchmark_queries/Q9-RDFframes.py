@@ -1,3 +1,8 @@
+
+''' Get the list of films in DBpedia that belong to the same genre and produced in the same country. For each film in each list,
+return the actors, country, story, language, genre, studio in addition to the director, producer, or title (if available). '''
+
+
 from rdfframes.knowledge_graph import KnowledgeGraph
 
 
