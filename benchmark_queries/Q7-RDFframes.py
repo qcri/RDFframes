@@ -1,3 +1,4 @@
+''' Get the list of basketball players in DBpedia, their teams, and the number of players in each team. ''' 
 from rdfframes.knowledge_graph import KnowledgeGraph
 
 
