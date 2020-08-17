@@ -1,3 +1,5 @@
+''' Get the sponsor, name, president, and the number of basketball players (if available) for each basketball team. '''
+
 from rdfframes.knowledge_graph import KnowledgeGraph
 from rdfframes.utils.constants import JoinType
 
