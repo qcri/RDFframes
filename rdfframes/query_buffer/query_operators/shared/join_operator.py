@@ -75,7 +75,7 @@ class JoinOperator(QueryQueueOperator):
                     query_model = self.__join_expandable_expandable_2_graphs(query_model, query_model1, query_model2)
                 else:  # ds2 is grouped while ds1 is expandable
                     query_model = self.__join_expandable_grouped_2_graphs(query_model, query_model1, query_model2, 1)
-                    self.dataset.is_grouped = True
+                    #self.dataset.is_grouped = True
             else:  # ds1 is grouped while ds2 is expandable
                 if not self.second_dataset.is_grouped:
                     query_model = self.__join_expandable_grouped_2_graphs(query_model, query_model1, query_model2, 2)
@@ -89,7 +89,7 @@ class JoinOperator(QueryQueueOperator):
                     query_model = self.__join_expandable_expandable(query_model1, query_model2)
                 else:  # ds2 is grouped while ds1 is expandables
                     query_model = self.__join_expandable_grouped(query_model1, query_model2, expandable_order=1)
-                    self.dataset.is_grouped = True
+                    #self.dataset.is_grouped = True
             else:  # ds1 is grouped
                 if not self.second_dataset.is_grouped:  # ds2 is expandable while ds1 is grouped
                     query_model = self.__join_expandable_grouped(query_model1, query_model2, expandable_order=2)
@@ -331,6 +331,7 @@ class JoinOperator(QueryQueueOperator):
             joined_query_model.add_subquery(query_model2)
             joined_query_model.add_optional_subquery(query_model1)
         else:  # outer join
+            query_model1.from_clause = copy.copy(joined_query_model.from_clause)
             return JoinOperator._outer_join(joined_query_model, query_model1, query_model2)
         return joined_query_model
 
@@ -377,7 +378,7 @@ class JoinOperator(QueryQueueOperator):
         :return: an outer query model
         """
         query_model = QueryModel()
-        query_model.from_clause.clear()
+        #query_model.from_clause.clear()
         query_model.add_prefixes(query_model1.prefixes)
         query_model.add_prefixes(query_model2.prefixes)
 
