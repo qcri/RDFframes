@@ -35,7 +35,7 @@ class GroupByOperator(QueryQueueOperator):
     def visit_node(self, query_model, ds, parent):
         return_query_model = query_model
 
-        if self.requires_nested_query(query_model):
+        if self.requires_nested_query(query_model, ds):
             raise Exception("GroupBy operation requires a nested query")
             return_query_model = query_model.wrap_in_a_parent_query()
             # add the group-by operation
@@ -64,11 +64,11 @@ class GroupByOperator(QueryQueueOperator):
 
         return ds, return_query_model, self.grouped_dataset
 
-    def requires_nested_query(self, query_model):
+    def requires_nested_query(self, query_model, ds):
         # check if the query model has select columns added by the user
         # that are not in the group by columns or aggregation columns
-        agg_cols = set([node.new_col_name
-                        for node in self.grouped_dataset.query_queue.get_nodes_of_type([GroupedAggregationOperator])])
+        agg_cols = set([node.new_col_name for node in ds.query_queue.get_nodes_of_type([GroupedAggregationOperator])])
+        #agg_cols = set([node.new_col_name for node in self.grouped_dataset.query_queue.get_nodes_of_type([GroupedAggregationOperator])])
         return len(query_model.select_columns.difference(agg_cols.union(self.grouping_cols))) > 0
 
     def __repr__(self):

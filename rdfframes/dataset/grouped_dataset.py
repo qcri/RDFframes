@@ -86,8 +86,8 @@ class GroupedDataset(Dataset):
         groupby_ds_name = GroupedDataset.generated_grouped_ds_name(self.name, groupby_cols_list)
         groupby_node = GroupByOperator(self.name, groupby_cols_list, groupby_ds_name)
         self.query_queue.append_node(groupby_node)
-
-        return GroupedDataset(self, groupby_cols_list, groupby_node, groupby_ds_name)
+        ds = GroupedDataset(self, groupby_cols_list, groupby_node, groupby_ds_name)
+        return ds
 
     # aggregate functions
 
