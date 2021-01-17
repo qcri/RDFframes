@@ -1,3 +1,8 @@
+
+''' Get information about the Films in DBpedia: actor, director, country, producer,
+   language, title, genre, story, studio . Filter on country, studio and genre, runtime. '''
+
+
 from rdfframes.knowledge_graph import KnowledgeGraph
 
 

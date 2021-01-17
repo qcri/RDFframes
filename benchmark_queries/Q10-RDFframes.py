@@ -1,3 +1,6 @@
+
+''' Get the list of athletes in DBpedia. For each athlete, return his birthplace and the number of players who were born in the same place. '''
+
 from rdfframes.knowledge_graph import KnowledgeGraph
 
 

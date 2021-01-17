@@ -1,3 +1,7 @@
+''' Get the actor, director, producer, language of the list of films in
+    DBpedia that produced by any studio in India or the United States excluding `Eskay Movies' studio,
+    and has one of the following genres (Film score, Soundtrack, Rock music, House music, or Dubstep). '''
+
 from rdfframes.knowledge_graph import KnowledgeGraph
 
 

@@ -1,3 +1,6 @@
+''' Get a list of the books in DBpedia that were written by American authors who wrote more than two books. 
+    For each author, return the birthPlace, country, education, and for each book return the title, subject, country (if available), and publisher (if available). '''
+
 
 from rdfframes.knowledge_graph import KnowledgeGraph
 from rdfframes.utils.constants import JoinType

@@ -1,3 +1,5 @@
+''' Get a list of actors available in DBpedia or YAGO graphs. '''
+
 from rdfframes.knowledge_graph import KnowledgeGraph
 from rdfframes.utils.constants import JoinType
 

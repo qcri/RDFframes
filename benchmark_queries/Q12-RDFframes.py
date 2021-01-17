@@ -1,3 +1,5 @@
+''' Get athlete players and their teams, group by teams, count players, expand the team's name. '''
+
 from rdfframes.knowledge_graph import KnowledgeGraph
 
 
