@@ -1,51 +1,74 @@
 PREFIX  dbpp: <http://dbpedia.org/property/>
+PREFIX  dbpo: <http://dbpedia.org/ontology/>
+PREFIX  rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX  dcterms: <http://purl.org/dc/terms/>
 PREFIX  rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX  dbpo: <http://dbpedia.org/ontology/>
 PREFIX  dbpr: <http://dbpedia.org/resource/>
-PREFIX  rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
 SELECT  *
 FROM <http://dbpedia.org>
 WHERE
-  { { SELECT  ?team
+  { { SELECT  *
       WHERE
-        { ?team  rdf:type  dbpo:BasketballTeam }
+        { ?film  rdf:type  dbpo:Film }
     }
-    { SELECT  ?team
+    { SELECT  *
       WHERE
-        { ?team  rdf:type  dbpo:BasketballTeam }
+        { ?film  dbpp:starring  ?actor }
     }
-    { SELECT  ?team ?president
+    { SELECT  *
       WHERE
-        { ?team  dbpp:president  ?president }
+        { ?film  dbpp:country  ?movie_country }
     }
-    { SELECT  ?team ?sponsor
+    { SELECT  *
       WHERE
-        { ?team  dbpp:sponsor  ?sponsor }
+        { ?film  dbpp:genre  ?genre }
     }
-    { SELECT  ?team ?name
+    { SELECT  *
       WHERE
-        { ?team  dbpp:name  ?name }
+        { ?film  dbpp:director  ?director }
     }
-    { SELECT  ?player
+    { SELECT  *
       WHERE
-        { ?player  rdf:type  dbpo:BasketballPlayer }
+        { ?film  dbpp:producer  ?producer }
     }
-    { SELECT  ?player ?nationality
+    { SELECT  *
       WHERE
-        { ?player  dbpp:nationality  ?nationality }
+        { ?film  dbpp:language  ?language }
     }
-    { SELECT  ?player ?place
+    { SELECT  *
       WHERE
-        { ?player  dbpp:birthPlace  ?place }
+        { ?film  dbpp:story  ?story }
     }
-    { SELECT  ?player ?birthDate
+    { SELECT  *
       WHERE
-        { ?player  dbpp:birthDate  ?birthDate }
+        { ?film  dbpp:studio  ?studio }
     }
-    { SELECT  ?player ?team
+    { SELECT  *
       WHERE
-        { ?player  dbpp:team  ?team }
+        { ?film  dbpp:title  ?title }
     }
+    { SELECT  *
+      WHERE
+        { ?film  dbpp:runtime  ?runtime }
+    }
+    { SELECT  *
+      WHERE
+        { ?film  dbpp:country  ?movie_country
+          FILTER ( ?movie_country IN (dbpr:United_States, dbpr:India) )
+        }
+    }
+    { SELECT  *
+      WHERE
+        { { ?film  dbpp:genre  ?genre }
+          FILTER ( ?genre IN (dbpr:Film_score, dbpr:Soundtrack, dbpr:Rock_music, dbpr:House_music, dbpr:Dubstep) )
+        }
+    }
+    { SELECT  *
+      WHERE
+        { { ?film  dbpp:studio  ?studio }
+          FILTER ( ?studio != "Eskay Movies" )
+        }
+    }
+  
   }
