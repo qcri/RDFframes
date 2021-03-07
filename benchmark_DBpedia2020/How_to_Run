@@ -1,0 +1,22 @@
+### example query using curl 
+curl --request POST 'http://10.161.202.101:8890/sparql/?'  --header 'Accept-Encoding: gzip' -w 'Total: %{time_total}s\n'  --data 'format=text/csv'  --data-urlencode 'query=
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX dbpp: <http://dbpedia.org/property/>
+PREFIX dbpr: <http://dbpedia.org/resource/>
+PREFIX dbpo: <http://dbpedia.org/ontology/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+SELECT *
+FROM <http://dbpedia2020.org>
+WHERE {
+	?team dbpp:name ?name .
+	{
+	SELECT DISTINCT ?team  (COUNT(DISTINCT ?player) AS ?count_basketball_players)
+	WHERE {
+		?player rdf:type dbpo:Athlete .
+		?player dbpp:team ?team .
+		} GROUP BY ?team
+	}
+	}
+
+' --output 'output.gz'
