@@ -5,21 +5,21 @@ PREFIX  dcterms: <http://purl.org/dc/terms/>
 PREFIX  rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX  dbpr: <http://dbpedia.org/resource/>
 
-SELECT  *
-FROM <http://dbpedia.org>
+SELECT DISTINCT *
+FROM <http://dbpedia2020.org>
 WHERE
-  { ?player  rdf:type          dbpo:BasketballPlayer ;
-                 dbpp:nationality  ?nationality ;
-                 dbpp:birthPlace   ?place ;
-                 dbpp:birthDate    ?birthDate ;
-                 dbpp:team         ?team
-      
-     
+  { ?film  rdf:type       dbpo:Film ;
+           dbpp:starring  ?actor ;
+           dbpp:country   ?movie_country ;
+           dbpp:language  ?language ;
+           dbpp:story     ?story ;
+           dbpp:runtime   ?runtime ;
+           dbpp:title     ?title ;
+           dbpp:genre     ?genre
     OPTIONAL
-      { 
-         ?team  rdf:type        dbpo:BasketballTeam ;
-           dbpp:president  ?president ;
-           dbpp:sponsor    ?sponsor ;
-           dbpp:name       ?name
-  }
+      { ?film  dbpp:director  ?director }
+    OPTIONAL
+      { ?film  dbpp:producer  ?producer }
+    OPTIONAL
+      { ?film  dbpp:studio  ?studio }
   }
