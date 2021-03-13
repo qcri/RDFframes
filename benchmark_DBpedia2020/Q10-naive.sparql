@@ -1,0 +1,108 @@
+PREFIX  dbpp: <http://dbpedia.org/property/>
+PREFIX  dbpo: <http://dbpedia.org/ontology/>
+PREFIX  rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX  dcterms: <http://purl.org/dc/terms/>
+PREFIX  rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX  dbpr: <http://dbpedia.org/resource/>
+
+SELECT DISTINCT  *
+FROM <http://dbpedia.org>
+WHERE
+  { { SELECT  *
+      WHERE
+        { { SELECT  *
+            WHERE
+              { { SELECT  *
+                  WHERE
+                    { ?film  rdf:type  dbpo:Film }
+                }
+                { SELECT  *
+                  WHERE
+                    { ?film  dbpp:starring  ?actor }
+                }
+                { SELECT  *
+                  WHERE
+                    { { ?film  dbpp:country  ?movie_country }
+                      FILTER ( ?movie_country IN (dbpr:United_States, dbpr:India) )
+                    }
+                }
+                { SELECT  *
+                  WHERE
+                    { { ?film  dbpp:genre  ?genre }
+                      FILTER ( ?genre IN (dbpr:Film_score, dbpr:Soundtrack, dbpr:Rock_music, dbpr:House_music, dbpr:Dubstep) )
+                    }
+                }
+                { SELECT  *
+                  WHERE
+                    { ?film  dbpp:language  ?language }
+                }
+                { SELECT  *
+                  WHERE
+                    { ?film  dbpp:story  ?story }
+                }
+                { SELECT  *
+                  WHERE
+                    { { ?film  dbpp:studio  ?studio }
+                      FILTER ( ?studio != "Eskay Movies" )
+                    }
+                }
+              }
+          }
+        }
+    }
+    { { SELECT  *
+        WHERE
+          { { SELECT  *
+              WHERE
+                { { SELECT  *
+                    WHERE
+                      { ?film  rdf:type  dbpo:Film }
+                  }
+                  { SELECT  *
+                    WHERE
+                      { ?film  dbpp:starring  ?actor }
+                  }
+                  { SELECT  *
+                    WHERE
+                      { ?film  dbpp:country  ?movie_country }
+                  }
+                  { SELECT  *
+                    WHERE
+                      { ?film  dbpp:genre  ?genre }
+                  }
+                  { SELECT  *
+                    WHERE
+                      { ?film  dbpp:language  ?language }
+                  }
+                  { SELECT  *
+                    WHERE
+                      { ?film  dbpp:story  ?story }
+                  }
+                  { SELECT  *
+                    WHERE
+                      { ?film  dbpp:studio  ?studio }
+                  }
+                  OPTIONAL
+                    { { SELECT  *
+                        WHERE
+                          { { ?film  dbpp:director  ?director } }
+                      }
+                    }
+                  OPTIONAL
+                    { { SELECT  *
+                        WHERE
+                          { { ?film  dbpp:producer  ?producer } }
+                      }
+                    }
+                  OPTIONAL
+                    { { SELECT  *
+                        WHERE
+                          { { ?film  dbpp:title  ?title } }
+                      }
+                    }
+                }
+            }
+          }
+      }
+    }
+  }
