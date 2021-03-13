@@ -5,7 +5,7 @@ from rdfframes.utils.constants import JoinType
 from rdfframes.client.http_client import HttpClientDataFormat, HttpClient
 from time import time
 
-graph1 = KnowledgeGraph(graph_name='dbpedia2020')
+graph1 = KnowledgeGraph(graph_name='dbpedia')
 graph2 = KnowledgeGraph(graph_name='yago',
                         graph_uri='http://yago-knowledge.org/',
                         prefixes={
