@@ -26,7 +26,6 @@ def join(join_type):
         .filter({'actor_country2': ['= yago:United_States']})
 
     actors = dbpedia_actors.join(yago_actors, 'name', join_type=join_type)
-    endpoint = 'http://10.161.202.101:8890/sparql/'
     output_format = HttpClientDataFormat.PANDAS_DF
     client = HttpClient(endpoint_url=endpoint, return_format=output_format)
     df = actors.execute(client, return_format=output_format)
