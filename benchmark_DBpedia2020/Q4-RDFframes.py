@@ -7,7 +7,7 @@ from rdfframes.knowledge_graph import KnowledgeGraph
 from rdfframes.utils.constants import JoinType
 from rdfframes.client.http_client import HttpClientDataFormat, HttpClient
 
-graph =  KnowledgeGraph(graph_name='dbpedia2020')
+graph =  KnowledgeGraph(graph_name='dbpedia')
 
 
 def expand_join(join_type):
