@@ -1,0 +1,66 @@
+PREFIX  dbpp: <http://dbpedia.org/property/>
+PREFIX  dbpo: <http://dbpedia.org/ontology/>
+PREFIX  rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX  dcterms: <http://purl.org/dc/terms/>
+PREFIX  rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX  dbpr: <http://dbpedia.org/resource/>
+
+SELECT  *
+FROM <http://dbpedia.org>
+WHERE
+  { { SELECT  *
+      WHERE
+        { { SELECT  ?movie_country ?studio ?genre
+            WHERE
+              { { SELECT  *
+                  WHERE
+                    { ?film  rdf:type  dbpo:Film }
+                }
+                { SELECT  *
+                  WHERE
+                    { ?film  dbpp:starring  ?actor }
+                }
+                { SELECT  *
+                  WHERE
+                    { ?film  dbpp:country  ?movie_country }
+                }
+                { SELECT  *
+                  WHERE
+                    { ?film  dbpp:genre  ?genre }
+                }
+                { SELECT  *
+                  WHERE
+                    { ?film  dbpp:language  ?language }
+                }
+                { SELECT  *
+                  WHERE
+                    { ?film  dbpp:story  ?story }
+                }
+                { SELECT  *
+                  WHERE
+                    { ?film  dbpp:studio  ?studio }
+                }
+                { SELECT  *
+                  WHERE
+                    { { ?film  dbpp:director  ?director } }
+                }
+                { SELECT  *
+                  WHERE
+                    { { ?film  dbpp:producer  ?producer } }
+                }
+                { SELECT  *
+                  WHERE
+                    { { ?film  dbpp:title  ?title } }
+                }
+                { SELECT  *
+                  WHERE
+                    { { ?film  dbpp:runtime  ?runtime } }
+                }
+              }
+          }
+          FILTER ( ( ( ?movie_country IN (dbpr:United_States, dbpr:India) )
+                    && ( ?genre IN (dbpr:Film_score, dbpr:Soundtrack, dbpr:Rock_music, dbpr:House_music, dbpr:Dubstep) ) )
+                  && ( ?studio != "Eskay Movies" ) )
+        }
+    }
+  }
