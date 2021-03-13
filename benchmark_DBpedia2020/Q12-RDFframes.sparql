@@ -1,24 +1,29 @@
-
-''' Get the list of films in DBpedia that belong to the same genre and produced in the same country. For each film in each list,
-return the actors, country, story, language, genre, studio in addition to the director, producer, or title (if available). '''
-
-
-from rdfframes.knowledge_graph import KnowledgeGraph
-
-
-graph = KnowledgeGraph(graph_name='dbpedia')
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX dbpp: <http://dbpedia.org/property/>
+PREFIX dbpr: <http://dbpedia.org/resource/>
+PREFIX dbpo: <http://dbpedia.org/ontology/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
 
-def expand_groupby_columns():
-    films = graph.entities('dbpo:Film', entities_col_name='film')\
-        .expand('film', [('dbpp:starring', 'actor'), ('dbpp:director','director', True),
-                         ('dbpp:country', 'movie_country'), ('dbpp:producer', 'producer', True),
-                         ('dbpp:language', 'language'), ('dbpp:story','story'), ('dbpp:runtime', 'runtime'),
-                         ('dbpp:studio' ,'studio', True), ('dbpp:title', 'title'), ('dbpp:genre', 'genre')])\
-        .group_by(['movie_country','genre']).count('film', 'film_country_genre', True)
-    print(films.to_sparql())
-
-
-expand_groupby_columns()
-
-
+SELECT DISTINCT ?movie_country ?genre  (COUNT(DISTINCT ?film) AS ?film_country_genre) 
+FROM <http://dbpedia.org>
+WHERE {
+        ?film rdf:type dbpo:Film .
+        ?film dbpp:starring ?actor .
+        ?film dbpp:country ?movie_country .
+        ?film dbpp:language ?language .
+        ?film dbpp:story ?story .
+        ?film dbpp:runtime ?runtime .
+        ?film dbpp:title ?title .
+        ?film dbpp:genre ?genre .
+        OPTIONAL {
+                ?film dbpp:director ?director .
+                }
+        OPTIONAL {
+                ?film dbpp:producer ?producer .
+                }
+        OPTIONAL {
+                ?film dbpp:studio ?studio .
+                }
+        } GROUP BY ?movie_country ?genre 
