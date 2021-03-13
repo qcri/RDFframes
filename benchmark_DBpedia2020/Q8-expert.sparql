@@ -1,0 +1,21 @@
+
+PREFIX  dbpp: <http://dbpedia.org/property/>
+PREFIX  dbpo: <http://dbpedia.org/ontology/>
+PREFIX  rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX  dcterms: <http://purl.org/dc/terms/>
+PREFIX  rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX  dbpr: <http://dbpedia.org/resource/>
+
+SELECT  *
+FROM <http://dbpedia.org>
+WHERE
+  { ?team    rdf:type          dbpo:BasketballTeam ;
+             dbpp:president    ?president ;
+             dbpp:sponsor      ?sponsor ;
+             dbpp:name         ?name .
+    ?player  rdf:type          dbpo:BasketballPlayer ;
+             dbpp:nationality  ?nationality ;
+             dbpp:birthPlace   ?place ;
+             dbpp:birthDate    ?birthDate ;
+             dbpp:team         ?team
+  }
