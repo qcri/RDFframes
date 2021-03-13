@@ -1,0 +1,127 @@
+PREFIX  dbpp: <http://dbpedia.org/property/>
+PREFIX  dcterms: <http://purl.org/dc/terms/>
+PREFIX  rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX  dbpo: <http://dbpedia.org/ontology/>
+PREFIX  dbpr: <http://dbpedia.org/resource/>
+
+SELECT  *
+FROM <http://dbpedia.org>
+WHERE
+  { {   { SELECT  *
+          WHERE
+            { { SELECT  *
+                WHERE
+                  { { SELECT  *
+                      WHERE
+                        { ?book  dbpp:author  ?author }
+                    }
+                    { SELECT  *
+                      WHERE
+                        { ?author  dbpp:birthPlace  ?author_country }
+                    }
+                    { SELECT  *
+                      WHERE
+                        { ?author  dbpp:education  ?education }
+                    }
+                    { SELECT  *
+                      WHERE
+                        { ?book  rdfs:label  ?work_name }
+                    }
+                    { SELECT  *
+                      WHERE
+                        { { ?book  dcterms:subject  ?subject }
+                          FILTER regex(str(?subject), "History")
+                        }
+                    }
+                  }
+              }
+              OPTIONAL
+                { { SELECT DISTINCT  ?author (COUNT(DISTINCT ?book) AS ?book_count)
+                    WHERE
+                      { { SELECT  *
+                          WHERE
+                            { ?book  dbpp:author  ?author }
+                        }
+                        { SELECT  *
+                          WHERE
+                            { ?author  dbpp:birthPlace  ?author_country }
+                        }
+                        { SELECT  *
+                          WHERE
+                            { ?author  dbpp:education  ?education }
+                        }
+                        { SELECT  *
+                          WHERE
+                            { ?book  rdfs:label  ?work_name }
+                        }
+                        { SELECT  *
+                          WHERE
+                            { { ?book  dcterms:subject  ?subject } }
+                        }
+                      }
+                    GROUP BY ?author
+                    HAVING ( COUNT(DISTINCT ?book) >= 2 )
+                  }
+                }
+            }
+        }
+      UNION
+        { SELECT  *
+          WHERE
+            { { SELECT DISTINCT  ?author (COUNT(DISTINCT ?book) AS ?book_count)
+                WHERE
+                  { { SELECT  *
+                      WHERE
+                        { ?book  dbpp:author  ?author }
+                    }
+                    { SELECT  *
+                      WHERE
+                        { ?author  dbpp:birthPlace  ?author_country }
+                    }
+                    { SELECT  *
+                      WHERE
+                        { ?author  dbpp:education  ?education }
+                    }
+                    { SELECT  *
+                      WHERE
+                        { ?book  rdfs:label  ?work_name }
+                    }
+                    { SELECT  *
+                      WHERE
+                        { { ?book  dcterms:subject  ?subject } }
+                    }
+                  }
+                GROUP BY ?author
+                HAVING ( COUNT(DISTINCT ?book) >= 2 )
+              }
+              OPTIONAL
+                { SELECT  *
+                  WHERE
+                    { { SELECT  *
+                        WHERE
+                          { ?book  dbpp:author  ?author }
+                      }
+                      { SELECT  *
+                        WHERE
+                          { ?author  dbpp:birthPlace  ?author_country }
+                      }
+                      { SELECT  *
+                        WHERE
+                          { ?author  dbpp:education  ?education }
+                      }
+                      { SELECT  *
+                        WHERE
+                          { ?book  rdfs:label  ?work_name }
+                      }
+                      { SELECT  *
+                        WHERE
+                          { { ?book  dcterms:subject  ?subject }
+                            FILTER regex(str(?subject), "History")
+                          }
+                      }
+                    }
+                }
+            }
+        }
+    }
+  }
