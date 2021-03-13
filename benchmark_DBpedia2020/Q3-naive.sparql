@@ -1,0 +1,50 @@
+PREFIX  dbpp: <http://dbpedia.org/property/>
+PREFIX  dbpo: <http://dbpedia.org/ontology/>
+PREFIX  rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX  yagoinfo: <http://yago-knowledge.org/resource/infobox/en/>
+PREFIX  yago: <http://yago-knowledge.org/resource/>
+PREFIX  dcterms: <http://purl.org/dc/terms/>
+PREFIX  rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX  dbpr: <http://dbpedia.org/resource/>
+
+SELECT  *
+WHERE
+  { GRAPH <http://dbpedia2020.org>
+      { { SELECT  *
+          WHERE
+            { { SELECT  *
+                WHERE
+                  { ?film1  dbpp:starring  ?actor1 }
+              }
+              { SELECT  *
+                WHERE
+                  { ?actor1  dbpp:birthPlace  ?actor_country1 }
+              }
+              { SELECT  *
+                WHERE
+                  { ?actor1  dbpp:name  ?name }
+              }
+            }
+        }
+        FILTER regex(str(?actor_country1), "USA")
+      }
+    GRAPH <http://yago-knowledge.org/>
+      { { SELECT  *
+          WHERE
+            { { SELECT  *
+                WHERE
+                  { ?actor2  yago:actedIn  ?film2 }
+              }
+              { SELECT  *
+                WHERE
+                  { ?actor2  yago:isCitizenOf  ?actor_country2 }
+              }
+              { SELECT  *
+                WHERE
+                  { ?actor2  yagoinfo:name  ?name }
+              }
+            }
+        }
+        FILTER ( ?actor_country2 = yago:United_States )
+      }
+  }
