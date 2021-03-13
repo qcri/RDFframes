@@ -1,0 +1,105 @@
+PREFIX  swrc: <http://swrc.ontoware.org/ontology#>
+PREFIX  yagoinfo: <http://yago-knowledge.org/resource/infobox/en/>
+PREFIX  dcterm: <http://purl.org/dc/terms/>
+PREFIX  yago: <http://yago-knowledge.org/resource/>
+PREFIX  xsd:  <http://www.w3.org/2001/XMLSchema#>
+PREFIX  rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX  dbpr: <http://dbpedia.org/resource/>
+PREFIX  dblprc: <http://dblp.l3s.de/d2r/resource/conferences/>
+PREFIX  dbpp: <http://dbpedia.org/property/>
+PREFIX  dbpo: <http://dbpedia.org/ontology/>
+PREFIX  rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX  dcterms: <http://purl.org/dc/terms/>
+PREFIX  dc:   <http://purl.org/dc/elements/1.1/>
+
+SELECT DISTINCT  *
+WHERE
+  { {   { SELECT DISTINCT  ?name1 ?paper ?author ?date
+          WHERE
+            { GRAPH <http://dbpedia.org>
+                { ?person1  rdf:type         dbpo:Person ;
+                            dbpp:birthPlace  ?country1 ;
+                            dbpp:name        ?name1 ;
+                            dbpp:spouse      ?spouse
+                  FILTER regex(str(?country1), "USA")
+                }
+              OPTIONAL
+                { GRAPH <http://dblp.l3s.de>
+                    { ?paper   dc:creator     ?author ;
+                               dcterm:issued  ?date .
+                      ?author  rdfs:label     ?name1
+                      FILTER ( year(xsd:dateTime(?date)) >= 2015 )
+                    }
+                }
+              OPTIONAL
+                { GRAPH <http://yago-knowledge.org/>
+                    { ?person2  rdf:type          ?p ;
+                                yagoinfo:name     ?name2 ;
+                                yago:isCitizenOf  ?country2 .
+                      ?p        rdfs:label        ?label
+                      FILTER ( ( ?label = "person"@eng ) && ( ?country2 = yago:United_States ) )
+                    }
+                }
+            }
+        }
+      UNION
+        { SELECT  *
+          WHERE
+            { GRAPH <http://dblp.l3s.de>
+                { ?paper   dc:creator     ?author ;
+                           dcterm:issued  ?date .
+                  ?author  rdfs:label     ?name1
+                  FILTER ( year(xsd:dateTime(?date)) >= 2015 )
+                }
+              OPTIONAL
+                { GRAPH <http://dbpedia.org>
+                    { ?person1  rdf:type         dbpo:Person ;
+                                dbpp:birthPlace  ?country1 ;
+                                dbpp:name        ?name1 ;
+                                dbpp:spouse      ?spouse
+                      FILTER regex(str(?country1), "USA")
+                    }
+                }
+              OPTIONAL
+                { GRAPH <http://yago-knowledge.org/>
+                    { ?person2  rdf:type          ?p ;
+                                yagoinfo:name     ?name2 .
+                      ?p        rdfs:label        ?label ;
+                                yago:isCitizenOf  ?country2
+                      FILTER ( ( ?label = "person"@eng ) && ( ?country2 = yago:United_States ) )
+                    }
+                }
+            }
+        }
+      UNION
+        { SELECT  *
+          WHERE
+            { GRAPH <http://yago-knowledge.org/>
+                { ?person2  rdf:type          ?p ;
+                            yagoinfo:name     ?name3 .
+                  ?p        rdfs:label        ?label ;
+                            yago:isCitizenOf  ?country2
+                  FILTER ( ( ?label = "person"@eng ) && ( ?country2 = yago:United_States ) )
+                }
+              OPTIONAL
+                { GRAPH <http://dblp.l3s.de>
+                    { ?paper   dc:creator     ?author ;
+                               dcterm:issued  ?date .
+                      ?author  rdfs:label     ?name3
+                      FILTER ( year(xsd:dateTime(?date)) >= 2015 )
+                    }
+                }
+              OPTIONAL
+                { GRAPH <http://dbpedia.org>
+                    { ?person1  rdf:type         dbpo:Person ;
+                                dbpp:birthPlace  ?country1 ;
+                                dbpp:name        ?name1 ;
+                                dbpp:spouse      ?spouse
+                      FILTER regex(str(?country1), "USA")
+                    }
+                }
+            }
+        }
+    }
+  }
+LIMIT   1000000
