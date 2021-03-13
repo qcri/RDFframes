@@ -1,0 +1,44 @@
+PREFIX  dbpp: <http://dbpedia.org/property/>
+PREFIX  dbpo: <http://dbpedia.org/ontology/>
+PREFIX  rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX  dcterms: <http://purl.org/dc/terms/>
+PREFIX  rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX  dbpr: <http://dbpedia.org/resource/>
+PREFIX  foaf: <http://xmlns.com/foaf/0.1/>
+
+SELECT DISTINCT  ?team ?count_players
+FROM <http://dbpedia.org>
+WHERE
+  { { SELECT DISTINCT  ?team (COUNT(DISTINCT ?player) AS ?count_players)
+      WHERE
+        { SELECT DISTINCT  ?player ?team ?name ?position ?country
+          WHERE
+            { { SELECT  ?player
+                WHERE
+                  { ?player  rdf:type  dbpo:BasketballPlayer }
+              }
+              { SELECT  ?player ?team
+                WHERE
+                  { ?player  dbpp:team  ?team }
+              }
+              { SELECT  ?player ?name
+                WHERE
+                  { ?player  foaf:name  ?name }
+              }
+              { SELECT  ?player ?position
+                WHERE
+                  { ?player  dbpo:position  ?position }
+              }
+              { SELECT  ?player ?career
+                WHERE
+                  { ?player  dbpo:careerStation  ?career }
+              }
+              { SELECT  ?player ?country
+                WHERE
+                  { ?player  dbpp:birthPlace  ?country }
+              }
+            }
+        }
+      GROUP BY ?team
+    }
+  }
