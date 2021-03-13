@@ -19,5 +19,7 @@ WHERE
            dbpp:runtime   ?runtime ;
            dbpp:studio    ?studio ;
            dbpp:title     ?title
-    FILTER ( ( ( ?movie_country IN (dbpr:United_States, dbpr:India) ) && ( ?genre IN (dbpr:Film_score, dbpr:Soundtrack, dbpr:Rock_music, dbpr:House_music, dbpr:Dubstep) ) ) && ( ?studio != "Eskay Movies" ) )
+    FILTER ( ( ( ?movie_country IN (dbpr:United_States, dbpr:India) ) 
+              && ( ?genre IN (dbpr:Film_score, dbpr:Soundtrack, dbpr:Rock_music, dbpr:House_music, dbpr:Dubstep) ) )
+              && ( ?studio != "Eskay Movies" ) )
   }
