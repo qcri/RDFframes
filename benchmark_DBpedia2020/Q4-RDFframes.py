@@ -16,7 +16,6 @@ def expand_join(join_type):
                          ('dbpp:birthDate','birthDate'),('dbpp:team', 'team')])
     basketball_team = graph.entities('dbpo:BasketballTeam', entities_col_name='team')\
       .expand('team', [('dbpp:president', 'president'), ('dbpp:sponsor', 'sponsor'), ('dbpp:name', 'name')])
-    #basketball_palyer_team = basketball_team.join(basketball_palyer,'team', join_type=join_type)
     basketball_palyer_team = basketball_palyer.join(basketball_team,'team', join_type=join_type)
     print(basketball_palyer_team.to_sparql()
 
