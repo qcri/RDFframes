@@ -9,7 +9,7 @@ PREFIX  dbpr: <http://dbpedia.org/resource/>
 
 SELECT  *
 WHERE
-  { GRAPH <http://dbpedia2020.org>
+  { GRAPH <http://dbpedia.org>
       { { SELECT  *
           WHERE
             { { SELECT  *
