@@ -13,7 +13,7 @@ WHERE
           WHERE
             { { SELECT  ?film1 ?actor1 ?actor_country1 ?name
                 WHERE
-                  { GRAPH <http://dbpedia2020.org>
+                  { GRAPH <http://dbpedia.org>
                       { { SELECT  *
                           WHERE
                             { ?film1  dbpp:starring  ?actor1 }
@@ -76,7 +76,7 @@ WHERE
               OPTIONAL
                 { SELECT  ?film1 ?actor1 ?actor_country1 ?name
                   WHERE
-                    { GRAPH <http://dbpedia2020.org>
+                    { GRAPH <http://dbpedia.org>
                         { { SELECT  *
                             WHERE
                               { ?film1  dbpp:starring  ?actor1 }
