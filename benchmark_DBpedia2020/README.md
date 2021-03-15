@@ -16,4 +16,4 @@ Q1-naive.sparql, and Q1-RDFframes.sparql.
 **Note** that all the different versions of the query(expert, RDFframes, naive) should return the same results and adhere to the same semantic.
 
 ### Run 
-To run these queries, use *curl_execute_example* script to issue the query to an RDF engine or SPARQL endpoint for an RDF store. 
+To run these queries, use *curl_execute_example* script to issue each query to an RDF engine or SPARQL endpoint for an RDF store. 
