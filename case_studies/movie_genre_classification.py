@@ -85,11 +85,13 @@
   x_train = sc.fit_transform(x_train)
   x_test = sc.fit_transform(x_test)
 
-  # Random Forest classifier
+  # Random Forest classifier train and predict 
   
   model=RandomForestClassifier(n_estimators=100)
   model.fit(x_train,y_train)
-  model.fit(x_train,y_train)
   y_pred=clf.predict(x_test)
-  print("Accuracy:",metrics.accuracy_score(y_test, y_pred))
+  
+  # Acurracy
+  
+  print("Accuracy:", metrics.accuracy_score(y_test, y_pred))
     
