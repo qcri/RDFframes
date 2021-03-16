@@ -7,10 +7,12 @@ This folder contains the end-to-end code for case studies presented in the paper
   
   ### Movies Genre Classification 
   
-  In this case study, we use RDFframes API to build a dataframe of movies from DBpedia knowledge graph (version 2020), along with the relevant information for the     task of movie genre classification. The dataframe then used to train a classifier to predict the genre for movies that do not have one, using any standard           classifier implemented in Python. The code is availble at __movie_genre_classification.py__ python file. 
+  In this case study, we use RDFframes API to build a dataframe of movies from DBpedia knowledge graph (version 2020), along with the relevant information for the     task of movie genre classification. The dataframe then used to train a classifier to predict the genre for movies that do not have one, using any standard           classifier implemented in Python. The code is available at __movie_genre_classification.py__ python file. 
 
  ### Songs Genre Classification 
  
-   In this case study, we use RDFframes API to build a dataframe of songs from DBpedia knowledge graph (version 2020), along with the relevant information for the    task of songs genre classification. The dataframe then used to train a classifier to predict the Music genre for each song, using any standard classifier implemented in Python. The code is availble at __songs_genre_classification.py__ python file. 
+   In this case study, we use RDFframes API to build a dataframe of songs from DBpedia knowledge graph (version 2020), along with the relevant information for the    task of songs genre classification. The dataframe then used to train a classifier to predict the Music genre for each song, using any standard classifier implemented in Python. The code is available at __songs_genre_classification.py__ python file. 
  
  ### Knowledge Graph Embbeding
+ 
+ In this case study, we demonstrate using RDFframes API to return a dataframe of the knowledge graph by filtering out any entity-to-literal triples. This step is a  necessary step for the data scientists to perform knowledge graph embedding on them. We extract a dataframe of entity-to-entity entity-to-literal triples. Then, we use AmpliGraph python Library to train an embedding model. The code is available at __KnowledgeGraph_Embedding.py__ python file. 
