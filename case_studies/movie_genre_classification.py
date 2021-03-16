@@ -80,7 +80,7 @@
   df = df.dropna(subset=['genre'])
   x = df[features]
   y = df['genre']
-  x_train, x_test, y_train, y_test = train_test_split(x, y, random_state=20)
+  x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.3)
   sc = StandardScaler()
   x_train = sc.fit_transform(x_train)
   x_test = sc.fit_transform(x_test)
