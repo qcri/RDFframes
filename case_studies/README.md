@@ -11,6 +11,6 @@ This folder contains the end-to-end code for case studies presented in the paper
 
  ### Songs Genre Classification 
  
-   In this case study, we use RDFframes API to build a dataframe of movies from DBpedia knowledge graph (version 2020), along with the relevant information for the    task of movie genre classification. The dataframe then used to train a classifier to predict the genre for movies that do not have one, using any standard          classifier implemented in Python. The code is availble at __songs_genre_classification.py__ python file. 
+   In this case study, we use RDFframes API to build a dataframe of songs from DBpedia knowledge graph (version 2020), along with the relevant information for the    task of songs genre classification. The dataframe then used to train a classifier to predict the Music genre for each song, using any standard classifier implemented in Python. The code is availble at __songs_genre_classification.py__ python file. 
  
  ### Knowledge Graph Embbeding
