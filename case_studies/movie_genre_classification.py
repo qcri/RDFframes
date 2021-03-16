@@ -5,8 +5,15 @@
   from rdfframes.dataset.rdfpredicate import RDFPredicate
   from rdfframes.utils.constants import JoinType
   from rdfframes.client.http_client import HttpClientDataFormat, HttpClient
+  
+  # External packages import: Sklearn, NTLK
+  from sklearn.model_selection import train_test_split
+  from sklearn.preprocessing import StandardScaler
+  from sklearn.ensemble import RandomForestClassifier
+  import re
+  import nltk
  
-   # Graph, client, and the SPARQL endpoint URI
+  # Graph, client, and the SPARQL endpoint URI
    
   graph = KnowledgeGraph(graph_uri='http://dbpedia.org',
                          prefixes= {'dcterms': 'http://purl.org/dc/terms/',
@@ -36,10 +43,7 @@
   df = movies.execute(client, return_format=output_format)
 
   # Preprocessing and preparation
-  import re
-  import nltk
-  
-  # for cleaning the URL
+ 
   regex = re.compile(
         r'^(?:http|ftp)s?://' # http:// or https://
         r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|' #domain...
@@ -47,7 +51,8 @@
         r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})' # ...or ip
         r'(?::\d+)?' # optional port
         r'(?:/?|[/?]\S+)$', re.IGNORECASE)
-        
+  
+  # for cleaning the URL
   def clean(dataframe):
     for i, row in df.iterrows():
       if df.loc[i]['genre'] != None:
@@ -69,8 +74,6 @@
   df = df[df['genre'].isin(list(most_frequent_genres['genre']))]
 
   # Features and factorization
-  from sklearn.model_selection import train_test_split
-  from sklearn.preprocessing import StandardScaler
 
   df= df.apply(lambda col: pd.factorize(col, sort=True)[0])
   features = ["movie_name", "actor_name", "actor_country","subject","movie_country", "subject"]
@@ -83,8 +86,7 @@
   x_test = sc.fit_transform(x_test)
 
   # Random Forest classifier
-  from sklearn.ensemble import RandomForestClassifier
-
+  
   model=RandomForestClassifier(n_estimators=100)
   model.fit(x_train,y_train)
   model.fit(x_train,y_train)
