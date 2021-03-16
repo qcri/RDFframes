@@ -6,8 +6,16 @@ RDFframes provides an easy-to-use, efficient, and scalable API for users who are
 The API calls are internally converted into optimized SPARQL queries, which are then executed on a local RDF engine or a remote SPARQL endpoint.
 The results are returned in tabular format, such as a pandas dataframe.
 
-## Installation via ``pip``
+## Modification to this website made in response to VLDBJ reviews:
+* Benchmark queries have been added to the website. 
+* Case Studies have been added to the case_studies folder.
+* Expand the explanation of the code in the RDFframes package. 
+* Expanding ''how to use'' in this README.  
 
+
+## Requirement to run RDFframes API:
+* An RDF database engine or a SPARQL endpoint for a knowledge graph store.
+* Installation via ``pip``
 
 You can directly install the library via pip by using:
 
