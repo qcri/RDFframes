@@ -1,4 +1,6 @@
 # example query using curl 
+# Modify the SPARQL endpoint to a SPARQL endpoint for an RDF engine. 
+
 curl --request POST 'http://10.161.202.101:8890/sparql/?'  --header 'Accept-Encoding: gzip' -w 'Total: %{time_total}s\n'  --data 'format=text/csv'  --data-urlencode 'query=
 PREFIX dcterms: <http://purl.org/dc/terms/>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
