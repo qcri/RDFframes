@@ -7,10 +7,10 @@ The API calls are internally converted into optimized SPARQL queries, which are 
 The results are returned in tabular format, such as a pandas dataframe.
 
 ## Modification to this website made in response to VLDBJ reviews:
-* Benchmark queries have been added to the website. In addition to the benchmark queries we performed on DBpedia 2016 (benchmark_DBpedia2016), we added a new list of queries for benchmarking RDFframe workload using DBpedia 2020 under the folder (benchmark_DBpedia2020). 
-* Case Studies have been added to the case_studies folder. All end-to-end code for each machine learning applications explained in the paper have been provided in this folder. The code includes both the RDFframes API usgae in addition to the usage of extternal libraries such as scikit-learn. 
-* Expand the explanation of the code in the RDFframes package. 
-* Expanding ''how to use'' in this README.  
+1. Benchmark queries have been added to the website. In addition to the benchmark queries we performed on DBpedia 2016 (benchmark_DBpedia2016), we added a new list of queries for benchmarking RDFframe workload using DBpedia 2020 under the folder (benchmark_DBpedia2020). 
+2. Case Studies have been added to the case_studies folder. All end-to-end code for each machine learning applications explained in the paper have been provided in this folder. The code includes both the RDFframes API usgae in addition to the usage of extternal libraries such as scikit-learn. 
+3. Expand the explanation of the code in the RDFframes package. 
+4.  Expanding ''how to use'' in this README.  
 
 
 ## Requirement to run RDFframes API:
