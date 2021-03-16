@@ -21,6 +21,7 @@ The results are returned in tabular format, such as a pandas dataframe.
    ```
    $ pip install RDFframes
    ```   
+ 3. Import RDFframes in your code as shown in the examples code for the case studies.
 ## Getting started
 
 First create a ``KnowledgeGraph`` to specify any namespaces that will be used in the query and optionally the graph name and URI.
