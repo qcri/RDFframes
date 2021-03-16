@@ -27,20 +27,18 @@
 
   # RDFFrames code for creating the dataframe
   
-  dataset = graph.feature_domain_range('dbpp:starring', 'movie', 'actor')\
-           .expand('actor', [('dbpp:birthPlace', 'actor_country'), ('rdfs:label', 'actor_name')])\
-           .expand('movie', [('rdfs:label', 'movie_name'),('dcterms:subject', 'subject'), ('dbpp:genre', 'genre', True)]).cache() 
-    
-  american_actors = dataset.filter({'actor_country': ['regex(str(?actor_country), "USA")']}) 
-  prolific_actors = dataset.group_by(['actor'])    .count('movie', 'movie_count', unique=True).filter({'movie_count': ['>= 100']})
-  movies = american_actors.join(prolific_actors, join_col_name1='actor', join_type=JoinType.OuterJoin).join(dataset, join_col_name1='actor')\
-          .select_cols([ "actor_name","movie_name","actor_country","genre","subject"]) 
-  sparql_query = movies.to_sparql()
+  songs = graph.entities('dbpo:Song', entities_col_name='song').expand('song', [('dbpp:album', 'album') ,('dbpp:artist', 'artist'),\
+                         ('dbpp:title','title'),('dbpp:lyrics', 'lyrics'), ('dbpp:writer', 'writer'), \
+                                                                                ('dbpp:studio', 'studio'),('dbpp:genre', 'genre')])\
+                                     .expand('album', [('dbpp:title', 'Album_title') ,('dbpp:artist', 'ALbum_artist')])\
+                                       .filter({'artist': ['langMatches(lang(?artist), "en")']})
+ 
+  sparql_query = songs.to_sparql()
   print(sparql_query)
   
-  #  execution
+  #  execution and return a dataframe of songs where artist has english name. 
  
-  df = movies.execute(client, return_format=output_format)
+  df = songs.execute(client, return_format=output_format)
 
   # Preprocessing and preparation
  
@@ -61,7 +59,9 @@
           df.at[i, 'genre'] = value.split('/')[-1]
     return dataframe
 
-  # Remove URL from the 'genre' and convert to label keys
+  # Drop Null and remove URL from the 'genre' and convert to label keys
+  
+  dfNo = df.dropna()
   df=clean(df)
 
   # Find the most most frequent genres
@@ -69,14 +69,14 @@
   all_genres_df = pd.DataFrame({'genre':list(all_genres.keys()), 'Count':list(all_genres.values())})
   all_genres_df.sort_values(by=['Count'],ascending=False)
   
-  # In this example, use 900 movies as a cut off for the frequent movies
-  most_frequent_genres = all_genres_df[all_genres_df['Count']> 900]
+  # In this example, use 1000 movies as a cut off for the frequent movies
+  most_frequent_genres = all_genres_df[all_genres_df['Count']> 1000]
   df = df[df['genre'].isin(list(most_frequent_genres['genre']))]
 
   # Features and factorization
 
   df= df.apply(lambda col: pd.factorize(col, sort=True)[0])
-  features = ["movie_name", "actor_name", "actor_country","subject","movie_country", "subject"]
+  features = ["song", "album", "title","studio","writer","ALbum_artist","ALbum_title"]
   df = df.dropna(subset=['genre'])
   x = df[features]
   y = df['genre']
