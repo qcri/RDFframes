@@ -16,15 +16,17 @@ In response to the reviews of our VLDBJ submission, we have made the following c
 4. Expanded the ''Requirements to Use RDFframes'' section in this README file (the next section).
 
 
-## Requirement to run RDFframes API:
-1. An RDF database engine or a SPARQL endpoint for a knowledge graph store. RDFframes handles all communication and integration issues with the engine. 
-2. Installation via ``pip``
-   
-   You can directly install the library via pip by using:
+## Requirement to Use RDFframes
+
+1. An RDF database engine storing one or more RDF knowledge graphs (e.g., Virtuoso), or SPARQL endpoints providing access to such knowledge graphs. RDFframes handles all communication and integration issues with the engine or endpoint. 
+
+2. Install the RDFframes library via pip by using:
    ```
    $ pip install RDFframes
    ```   
- 3. Import RDFframes in your code as shown in the examples code for the case studies.
+ 3. Import RDFframes in your code as shown in the example code in the case_studies folder.
+
+
 ## Getting started
 
 First create a ``KnowledgeGraph`` to specify any namespaces that will be used in the query and optionally the graph name and URI.
