@@ -9,7 +9,7 @@ This folder contains the end-to-end code for four example case studies using RDF
  
 ### Song Genre Classification 
  
-   This case study is similar to the Movie Genre Classification case study. However, instead of building a dataframe of movies, the case study uses the RDFframes API to build a dataframe of songs from DBpedia and features that can be used for classifying song genres. As in movie genre classification, the classifier used is a random forest classifier.  The code is in the  __songs_genre_classification.py__ file. 
+   This case study is similar to the Movie Genre Classification case study. However, instead of building a dataframe of movies, the case study uses the RDFframes API to build a dataframe of songs from DBpedia and features that can be used for classifying song genres. As in movie genre classification, the classifier used is a random forest classifier.  The code is in the  __song_genre_classification.py__ file. 
    
 ###  Topic Modeling
    In this case study, we show the use of RDFframes to query the DBLP bibliography dataset in RDF format to conduct topic modeling to identify the active areas of database research. Details of how active areas of database research are defined can be found in the VLDBJ paper. RDFframes produces a pandas dataframe that is used for topic modeling. Topic modeling relies on the rich PyData ecosystem: NLP libraries for stop-word removal and scikit-learn for topic modeling using SVD. The code is available in the __topic_modeling.py__ file. 
