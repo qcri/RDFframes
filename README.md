@@ -1,16 +1,19 @@
 # [RDFFrames: Knowledge Graph Access for Machine Learning Tools](https://arxiv.org/abs/2002.03614)
 
-
 A Python library that enables data scientists to extract data from knowledge graphs encoded in [RDF](https://www.w3.org/TR/2014/REC-rdf11-concepts-20140225/) into familiar tabular formats using familiar procedural Python abstractions.
 RDFframes provides an easy-to-use, efficient, and scalable API for users who are familiar with the PyData (Python for Data) ecosystem but are not experts in [SPARQL](https://www.w3.org/TR/sparql11-query/).
 The API calls are internally converted into optimized SPARQL queries, which are then executed on a local RDF engine or a remote SPARQL endpoint.
 The results are returned in tabular format, such as a pandas dataframe.
 
-## Modification to this website made in response to VLDBJ reviews:
-1. Benchmark queries have been added to the website. In addition to the benchmark queries we performed on DBpedia 2016 (benchmark_DBpedia2016), we added a new list of queries for benchmarking RDFframe workload using DBpedia 2020 under the folder (benchmark_DBpedia2020). 
-2. Case Studies have been added to the case_studies folder. The end-to-end code for each machine learning application explained in the paper has been provided in this folder. The code includes both the RDFframes API usage in addition to the usage of external libraries such as scikit-learn. 
-3. Expand the explanation of the code in the RDFframes package. 
-4.  Expanding ''how to use'' in this README.  
+## Modifications to this Website Made in Response to VLDBJ Reviews
+## (This section will be removed in the final version of the repository)
+
+In response to the reviews of our VLDBJ submission, we have made the following changes to this repository:
+
+1. Added the source code of all the case studies in the paper to the case_studies folder. The folder also includes a description of the case studies. The case study code includes both the RDFframes API calls and the machine learning code using external libraries such as scikit-learn. 
+2. Added all the synthetic queries used in the benchmark. The benchmark_DBpedia2016 folder contains the queries on the 2016 version of DBpedia (used in the original submission of the paper), and the benchmark_DBpedia2020 folder contains the queries on the 2020 version of DBpedia (used in the revised version of the paper). The folders include the RDFframes code for each query and the three variants of each query used in the benchmark (Expert-written SPARQL, Naive Query Generation, and RDFframes). The folders also include simple and detailed instructions on how to run the queries using curl to replicate the benchmark.
+3. Expanded the explanation of the RDFframes source code in the rdfframes folder.
+4. Expanded the ''Requirements to Use RDFframes'' section in this README file (the next section).
 
 
 ## Requirement to run RDFframes API:
