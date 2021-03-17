@@ -1,5 +1,6 @@
 # example query using curl 
-# Modify the SPARQL endpoint to a SPARQL endpoint for an RDF engine. 
+# Modify the URL of the SPARQL endpoint to the SPARQL endpoint for your RDF engine.
+# Modify the graph name to your graph name.
 
 curl --request POST 'http://10.161.202.101:8890/sparql/?'  --header 'Accept-Encoding: gzip' -w 'Total: %{time_total}s\n'  --data 'format=text/csv'  --data-urlencode 'query=
 PREFIX dcterms: <http://purl.org/dc/terms/>
