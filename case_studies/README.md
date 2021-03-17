@@ -6,11 +6,7 @@ This folder contains the end-to-end code for four example case studies using RDF
  
  In this case study, we use the RDFframes API to build a pandas dataframe of movies from the DBpedia knowledge graph (2020 version), along with features that can be used for the task of movie genre classification. The dataframe is then used to train a classifier to predict the genre for movies that do not have one (genre is an optional predicate). The classifier used in the case study is a random forest classifier from the scikit-learn library. The code is in the __movie_genre_classification.py__ file. 
   
-  
-  ### Movies Genre Classification 
-  
-  In this case study, we use RDFframes API to build a dataframe of movies from DBpedia knowledge graph (version 2020), along with the relevant information for the     task of movie genre classification. The dataframe then used to train a classifier to predict the genre for movies that do not have one, using any standard           classifier implemented in Python. The code is available at __movie_genre_classification.py__ python file. 
-
+ 
 ### Song Genre Classification 
  
    This case study is similar to the Movie Genre Classification case study. However, instead of building a dataframe of movies, the case study uses the RDFframes API to build a dataframe of songs from DBpedia and features that can be used for classifying song genres. As in movie genre classification, the classifier used is a random forest classifier.  The code is in the  __songs_genre_classification.py__ file. 
