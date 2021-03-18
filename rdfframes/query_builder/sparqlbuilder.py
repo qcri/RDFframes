@@ -8,7 +8,7 @@ Aisha Mohamed <ahmohamed@qf.org.qa>
 
 class SPARQLBuilder(object):
         """
-        This class will parse the self.self.query_modelto generate the SPARQL query.
+        This class will parse the self.self.query_model to generate the SPARQL query.
         """
         def __init__(self):
             """
