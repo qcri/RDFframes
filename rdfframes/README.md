@@ -8,7 +8,7 @@
 **dataset:** Package containing the definition of the _Dataset_ class, which represents a table (i.e., dataframe) filled with data obtained from a knowledge graph. The dataset can be an expandable dataset or a grouped dataset. An expandable dataset represents a table with entities obtained by path navigation in a knowledge graph. A grouped dataset is a special kind of dataset that results from running the _group by_ operator on a dataset object.
 
 
-**query_buffer:** Package containing two important components of RDFframes. 1)_Query queue_ which is the object that stores the sequence of API calls. Processing this queue produces the SPARQL query. 2)_Query operator_ which represents an expansion step of a dataset. Each operator is a node that is added to the _query queue_ when an API call is made. The nodes are added to the the _query queue_ in order to preserve the execution order of expansion call to be transformed later to SPARQL query. 
+**query_buffer:** Package containing two important components of _RDFframes_. 1)_Query queue_ which is the object that stores the sequence of API calls. Processing this queue produces the SPARQL query. 2)_Query operator_ which represents an expansion step of a dataset. Each operator is a node that is added to the _query queue_ when an API call is made. The nodes are added to the the _query queue_ in order to preserve the execution order of expansion call to be transformed later to SPARQL query. 
 
  Each operator is a node that is added to the query queue when a particular API call is made. The nodes are added to the queue in FIFO order to preserve the execution order of expansion calls, which are later transformed to a SPARQL query.
 
