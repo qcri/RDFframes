@@ -1,3 +1,4 @@
+
 # example query using curl 
 # Modify the URL of the SPARQL endpoint to the SPARQL endpoint for your RDF engine.
 # Modify the graph name to your graph name.
