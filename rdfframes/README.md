@@ -1,14 +1,18 @@
 ## RDFframes Source Code
 
 
-**knowledge_graph.py** represents one or more knowledge graphs (URIs). It contains a group of convenience functions to initialize datasets before applying any operations on them.
+**knowledge_graph.py:** High-level class representing one or more knowledge graphs. Each graph is identified by a URI. The class contains a group of convenience functions to initialize datasets before applying any operations on them.
 
-**client** package contains the implemention of the _client_ class and its different implementaions (sparql_endpoint_client and Http client ). It is the SPARQL client that handles communication with a SPARQL end-point or local RDF engine. 
+**client:** Package containing the definition of the _Client_ class and its two implementations. The _Client_ class is the SPARQL client that handles communication with the RDF engine. One implementation of the class communicates with an RDF engine over HTTP, and one communicates with a SPARQL endpoint.
 
-**dataset** package contains the implemention of the _dataset_ which represents a table filled by data obtained from a Knowledge Graph. The dataset can be an expandable dataset or a grouped dataset. The expandable dataset is a representation of a flat table filled by entities obtained by following a particular path in the Knowledge Graph. Grouped dataset represents a special kind of dataset resulted from running _group by_ operator on a dataset object.
+**dataset:** Package containing the definition of the _Dataset_ class, which represents a table (i.e., dataframe) filled with data obtained from a knowledge graph. The dataset can be an expandable dataset or a grouped dataset. An expandable dataset represents a table with entities obtained by path navigation in a knowledge graph. A grouped dataset is a special kind of dataset that results from running the _group by_ operator on a dataset object.
 
-**query_buffer** package encapsulates two important components of _RDFframes_. 1)_Query queue_ which is the object that stores the sequence of API calls. Processing this queue produces the SPARQL query. 2)_Query operator_ represents an expansion step of a dataset. Each operator is a node that will be added to the _query queue_ when an API call is made. The nodes are added in the _query queue_ in order to preserve the execution order of expansion call to be transformed later to SPARQL query. 
 
-**query_builder** package contains the implementation of the _query model_, _queue to query model_, and _query builder_. _Query model_ represents the intermediate representation between _query queue_ and the final SPARQL query. _Queue to query model_is the component responsible for reading the API calls' queue and map each operator to its associated SPARQL element in the _query model_. Finally, the _query builder_ parses the _query model _to generate and the final, optimized SPARQL query.
+**query_buffer:** Package containing two important components of RDFframes. 1)_Query queue_ which is the object that stores the sequence of API calls. Processing this queue produces the SPARQL query. 2)_Query operator_ which represents an expansion step of a dataset. Each operator is a node that is added to the _query queue_ when an API call is made. The nodes are added to the the _query queue_ in order to preserve the execution order of expansion call to be transformed later to SPARQL query. 
 
-**utils** package contains helper and auxiliary functions for the API work.
+ Each operator is a node that is added to the query queue when a particular API call is made. The nodes are added to the queue in FIFO order to preserve the execution order of expansion calls, which are later transformed to a SPARQL query.
+
+**query_builder:** Package containing the implementation of the of the _query model_, _queue to query model_, and _query builder_. _Query model_ is the intermediate representation between a _query queue_ and the final SPARQL query. The _queue to query model_component is responsible for reading tthe operators corresponding to API calls from the queue and mapping each operator to its associated SPARQL element in the _query model_. After the _query model_ is constructed, the _query builder_ parses the _query model _to generate and the final, optimized SPARQL query.
+
+
+**utils:** Package containing constants and helper functions used by the RDFframes implementation.
